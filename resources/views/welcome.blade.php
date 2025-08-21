@@ -56,7 +56,7 @@
                         </a>
                     @endif
                 @else
-                    <a href="{{ url('/dossiers') }}" class="px-6 py-2 bg-[#F53003] text-white rounded-md hover:bg-red-600">
+                    <a href="{{ url('/dossiers') }}" class="px-6 py-2 bg-[#F53003] border border-[#1b1b18] rounded-md hover:bg-[#1b1b18] hover:text-white">
                         Aller au Dashboard
                     </a>
                 @endguest
