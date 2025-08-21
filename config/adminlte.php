@@ -342,10 +342,10 @@ return [
             'can'  => 'dossiers.view',
           ],
 
-        ['header' => 'account_settings'],
+        ['header' => 'Mon compte'],
         [
             'text' => 'profile',
-            'url' => 'admin/settings',
+            'route'=> 'profile.edit',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
