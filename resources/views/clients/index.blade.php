@@ -104,7 +104,7 @@
   <form action="{{ route('clients.import') }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2">
     @csrf
     <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control" required>
-    <button class="btn btn-success">Importer</button>
+    <button class="btn btn-primary w-100">Importer</button>
   </form>
   </div>
 
