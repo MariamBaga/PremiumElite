@@ -3,6 +3,21 @@
 @section('adminlte_css_pre')
     <link rel="stylesheet" href="{{ asset('vendor/icheck-bootstrap/icheck-bootstrap.min.css') }}">
 @stop
+@section('adminlte_css')
+<style>
+    body.login-page, body.auth-page {
+        background: url('{{ asset('images/fibreoptique.png') }}') no-repeat center center fixed !important;
+        background-size: cover !important;
+    }
+
+    .login-box, .auth-box {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 20px;
+    }
+</style>
+@stop
+
 
 @php
     $loginUrl = View::getSection('login_url') ?? config('adminlte.login_url', 'login');
@@ -103,3 +118,4 @@
         </p>
     @endif -->
 @stop
+
