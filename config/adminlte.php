@@ -345,12 +345,13 @@ return [
         ['header' => 'Mon compte'],
         [
             'text' => 'profile',
-            'route'=> 'profile.edit',
+            'route'=> '',
+            //'route'=> 'profile.edit',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
             'text' => 'change_password',
-            'url' => 'admin/settings',
+            'url' => '',
             'icon' => 'fas fa-fw fa-lock',
         ],
         // [
