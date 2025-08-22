@@ -47,6 +47,14 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+use App\Http\Controllers\ClientImportController;
+
+Route::post('/clients/import', [ClientImportController::class, 'store'])
+    ->name('clients.import')
+    ->middleware('auth'); // si besoin
+
+    
+
 Route::get('/', function () {
     return view('welcome');
 });

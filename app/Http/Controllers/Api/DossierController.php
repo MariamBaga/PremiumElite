@@ -18,7 +18,7 @@ class DossierController extends Controller
             ->where('assigned_to', $request->user()->id)
             ->when($request->filled('statut'), fn($q)=>$q->where('statut', $request->statut))
             ->orderByDesc('id')
-            ->paginate(50);
+            ->paginate(20);
         return response()->json($dossiers);
     }
 

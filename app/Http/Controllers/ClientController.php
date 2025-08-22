@@ -31,7 +31,7 @@ class ClientController extends Controller
 
         $sort = $data['sort'] ?? 'created_at';
         $dir  = $data['dir']  ?? 'desc';
-        $per  = $data['per_page'] ?? 15;
+        $per  = $data['per_page'] ?? 10;
 
         $q = Client::query()
             // Filtres simples

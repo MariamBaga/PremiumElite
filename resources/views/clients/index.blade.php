@@ -50,6 +50,12 @@
         <small class="text-muted">Période affectation</small>
       </div>
 
+
+
+
+
+
+
       <div class="col-md-3">
         <div class="input-group">
           <select name="sort" class="form-control">
@@ -74,7 +80,7 @@
 
       <div class="col-md-2">
         <select name="per_page" class="form-control">
-          @foreach([15,25,50,100] as $n)
+          @foreach([10,15,50,100] as $n)
             <option value="{{ $n }}" @selected(request('per_page',15)==$n)>{{ $n }}/page</option>
           @endforeach
         </select>
@@ -87,7 +93,29 @@
       <div class="col-md-2 text-end">
         <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau client</a>
       </div>
+
+
+
+
     </form>
+
+      <!-- // Importer -->
+      <div class="col-md-3">
+  <form action="{{ route('clients.import') }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2">
+    @csrf
+    <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control" required>
+    <button class="btn btn-success">Importer</button>
+  </form>
+  </div>
+
+@if(session('success'))
+  <div class="alert alert-success mt-3">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+  <div class="alert alert-danger mt-3">{{ session('error') }}</div>
+@endif
+
+<!-- importe -->
 
     {{-- TABLEAU --}}
     <div class="table-responsive">

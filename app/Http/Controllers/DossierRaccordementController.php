@@ -22,7 +22,7 @@ class DossierRaccordementController extends Controller
             ->latest();
 
         return view('dossiers.index', [
-            'dossiers' => $query->paginate(15),
+            'dossiers' => $query->paginate(10),
             'statuts'  => StatutDossier::labels(),
         ]);
     }
