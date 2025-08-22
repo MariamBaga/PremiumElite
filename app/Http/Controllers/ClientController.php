@@ -13,25 +13,66 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
+        // Valider les filtres optionnels
+        $data = $request->validate([
+            'type'                 => 'nullable|in:residentiel,professionnel',
+            'search'               => 'nullable|string|max:200',
+            'numero_ligne'         => 'nullable|string|max:50',
+            'numero_point_focal'   => 'nullable|string|max:50',
+            'localisation'         => 'nullable|string|max:100',
+            'date_paiement_from'   => 'nullable|date',
+            'date_paiement_to'     => 'nullable|date',
+            'date_affect_from'     => 'nullable|date',
+            'date_affect_to'       => 'nullable|date',
+            'sort'                 => 'nullable|in:created_at,nom,prenom,raison_sociale,numero_ligne,numero_point_focal,localisation,date_paiement,date_affectation',
+            'dir'                  => 'nullable|in:asc,desc',
+            'per_page'             => 'nullable|integer|min:5|max:100',
+        ]);
+
+        $sort = $data['sort'] ?? 'created_at';
+        $dir  = $data['dir']  ?? 'desc';
+        $per  = $data['per_page'] ?? 15;
+
         $q = Client::query()
-            ->when($request->filled('type'), fn($qry)=>$qry->where('type',$request->type))
-            ->when($request->filled('search'), function($qry) use ($request) {
-                $s = '%'.$request->search.'%';
+            // Filtres simples
+            ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
+            ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%'.$data['numero_ligne'].'%'))
+            ->when(!empty($data['numero_point_focal']), fn($qry) => $qry->where('numero_point_focal', 'like', '%'.$data['numero_point_focal'].'%'))
+            ->when(!empty($data['localisation']), fn($qry) => $qry->where('localisation', 'like', '%'.$data['localisation'].'%'))
+
+            // Filtres par date (intervalle)
+            ->when(!empty($data['date_paiement_from']), fn($qry) => $qry->whereDate('date_paiement', '>=', $data['date_paiement_from']))
+            ->when(!empty($data['date_paiement_to']),   fn($qry) => $qry->whereDate('date_paiement', '<=', $data['date_paiement_to']))
+            ->when(!empty($data['date_affect_from']),   fn($qry) => $qry->whereDate('date_affectation', '>=', $data['date_affect_from']))
+            ->when(!empty($data['date_affect_to']),     fn($qry) => $qry->whereDate('date_affectation', '<=', $data['date_affect_to']))
+
+            // Recherche globale (on étend ta recherche existante)
+            ->when(!empty($data['search']), function($qry) use ($data) {
+                $s = '%'.$data['search'].'%';
                 $qry->where(function($sub) use ($s){
                     $sub->where('nom','like',$s)
                         ->orWhere('prenom','like',$s)
                         ->orWhere('raison_sociale','like',$s)
                         ->orWhere('telephone','like',$s)
                         ->orWhere('email','like',$s)
-                        ->orWhere('adresse_ligne1','like',$s);
+                        ->orWhere('adresse_ligne1','like',$s)
+                        ->orWhere('localisation','like',$s)
+                        ->orWhere('numero_ligne','like',$s)
+                        ->orWhere('numero_point_focal','like',$s);
                 });
             })
-            ->latest();
+
+            // Tri
+            ->orderBy($sort, $dir);
 
         return view('clients.index', [
-            'clients' => $q->paginate(15)->withQueryString(),
+            'clients'  => $q->paginate($per)->withQueryString(),
+            'sort'     => $sort,
+            'dir'      => $dir,
+            'per_page' => $per,
         ]);
     }
+
 
     public function create()
     {

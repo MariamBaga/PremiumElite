@@ -10,24 +10,41 @@ class Client extends Model
     use HasFactory;
     protected $fillable = [
         'type','nom','prenom','raison_sociale','telephone','email',
-        'adresse_ligne1','adresse_ligne2','ville','zone','latitude','longitude','metadonnees'
+        'adresse_ligne1','adresse_ligne2','ville','zone',
+        'numero_ligne','numero_point_focal','localisation',
+        'date_paiement','date_affectation',
+        'latitude','longitude','metadonnees'
     ];
 
     protected $casts = [
+        'latitude' => 'decimal:7',
+        'longitude'=> 'decimal:7',
         'metadonnees' => 'array',
-        'latitude'    => 'decimal:7',
-        'longitude'   => 'decimal:7',
+        'date_paiement' => 'date',
+        'date_affectation' => 'date',
     ];
 
-    public function dossiers() {
-        return $this->hasMany(DossierRaccordement::class);
-    }
 
-    public function displayName(): Attribute {
-        return Attribute::get(function () {
-            return $this->type === 'professionnel'
-                ? ($this->raison_sociale ?? 'Entreprise')
-                : trim(($this->prenom ?? '').' '.($this->nom ?? 'Client'));
-        });
+    protected function displayName(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value, $attributes) {
+                if (($attributes['type'] ?? 'residentiel') === 'professionnel') {
+                    return $attributes['raison_sociale'] ?? 'Entreprise';
+                }
+
+                $prenom = $attributes['prenom'] ?? '';
+                $nom    = $attributes['nom'] ?? '';
+                $name   = trim("$prenom $nom");
+
+                return $name !== '' ? $name : 'Client';
+            });
+        }
+
+
+           // 🔑 Relation manquante
+    public function dossiers()
+    {
+        return $this->hasMany(DossierRaccordement::class, 'client_id');
     }
 }
