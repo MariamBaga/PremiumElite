@@ -53,16 +53,22 @@ Route::post('/clients/import', [ClientImportController::class, 'store'])
     ->name('clients.import')
     ->middleware('auth'); // si besoin
 
-    
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    //return view('dashboard');
-    return redirect()->route('dossiers.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// routes/web.php
+use App\Http\Controllers\DashboardController;
+
+Route::middleware(['auth'])->get('/dashboard', [DashboardController::class,'index'])->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+                // Route::get('/dashboard', function () {
+                //     //return view('dashboard');
+                //     return redirect()->route('dossiers.index');
+                // })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

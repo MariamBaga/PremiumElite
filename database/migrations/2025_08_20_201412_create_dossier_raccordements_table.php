@@ -24,7 +24,9 @@ return new class extends Migration {
             $table->json('pieces_jointes')->nullable();           // liens de fichiers si besoin
             $table->timestamps();
 
-            $table->index(['statut', 'type_service', 'zone']);
+            $table->string('zone')->nullable();
+$table->index(['statut','type_service','zone'], 'dossiers_statut_type_zone_idx');
+
         });
     }
 
