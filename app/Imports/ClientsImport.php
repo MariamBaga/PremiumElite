@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class ClientsImport implements ToCollection, WithHeadingRow
 {
     // par défaut 1, mais on va auto-détecter dans collection()
-    protected int $headingRow = 1;
+    protected int $headingRow = 3;
 
     public function headingRow(): int
     {
