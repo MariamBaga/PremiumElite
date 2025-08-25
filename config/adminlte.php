@@ -327,11 +327,11 @@ return [
         //     'label' => 4,
         //     'label_color' => 'success',
         // ],
-        [
-            'text' => 'Tableau de bord',
-            'route'=> 'dashboard',
-            'icon' => 'fas fa-tachometer-alt',
-          ],
+        // [
+        //     'text' => 'Tableau de bord',
+        //     'route'=> 'dashboard',
+        //     'icon' => 'fas fa-tachometer-alt',
+        //   ],
 
 
         [
