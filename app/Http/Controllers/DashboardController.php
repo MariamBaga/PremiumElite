@@ -19,109 +19,134 @@ class DashboardController extends Controller
         $from = $request->date_from ? date('Y-m-d', strtotime($request->date_from)) : now()->subDays(30)->toDateString();
         $to   = $request->date_to   ? date('Y-m-d', strtotime($request->date_to))   : now()->toDateString();
 
-        // Statuts (en base tu stockes des strings ; adapte si besoin)
-        $STATUTS_OUVERTS = ['a_traiter','injoignable','pbo_sature','zone_depourvue','en_attente_materiel','replanifie'];
-        $STATUT_REA      = 'realise';
-        $STATUT_ANNULE   = 'annule';
+       // ========= 1) Expressions portables selon le SGBD =========
+    $driver = DB::getDriverName();
 
-        // KPIs globaux
-        $totalDossiers   = DossierRaccordement::count();
-        $ouverts         = DossierRaccordement::whereIn('statut', $STATUTS_OUVERTS)->count();
-        $realises        = DossierRaccordement::where('statut', $STATUT_REA)->count();
-        $annules         = DossierRaccordement::where('statut', $STATUT_ANNULE)->count();
+    // fonction pour extraire la date (YYYY-MM-DD) d'une colonne datetime
+    $dateExpr = function (string $col) use ($driver) {
+        return match ($driver) {
+            'mysql'  => "DATE($col)",          // MySQL
+            'pgsql'  => "$col::date",          // PostgreSQL
+            'sqlite' => "date($col)",          // SQLite (si format 'YYYY-MM-DD HH:MM:SS')
+            default  => "date($col)",
+        };
+    };
 
-        $tauxReussite = $realises + $annules > 0
-            ? round(100 * $realises / ($realises + $annules), 1)
-            : 0.0;
+    // différence en JOURS entre deux datetimes
+    $diffDaysExpr = match ($driver) {
+        'mysql'  => 'DATEDIFF(date_realisation, created_at)',
+        'pgsql'  => "DATE_PART('day', date_realisation - created_at)",
+        'sqlite' => 'julianday(date_realisation) - julianday(created_at)',
+        default  => 'julianday(date_realisation) - julianday(created_at)',
+    };
 
-        $pboSature      = DossierRaccordement::where('statut', 'pbo_sature')->count();
+    // différence en MINUTES entre deux datetimes (pour Intervention)
+    $diffMinutesExpr = match ($driver) {
+        'mysql'  => 'TIMESTAMPDIFF(MINUTE, debut, fin)',
+        'pgsql'  => "EXTRACT(EPOCH FROM (fin - debut)) / 60",
+        'sqlite' => '(julianday(fin) - julianday(debut)) * 1440',
+        default  => '(julianday(fin) - julianday(debut)) * 1440',
+    };
 
-        // Délai moyen (création -> date_realisation) sur la fenêtre / global fallback
-        $avgDelayQ = DossierRaccordement::where('statut', $STATUT_REA)
-            ->whereNotNull('date_realisation');
-        $avgDelayDays = (clone $avgDelayQ)
-            ->select(DB::raw('AVG(DATEDIFF(date_realisation, created_at)) as d'))->value('d');
-        $avgDelayDays = $avgDelayDays ? round($avgDelayDays, 1) : 0.0;
+    // ========= 2) Tes KPIs (inchangés) =========
+    $STATUTS_OUVERTS = ['a_traiter','injoignable','pbo_sature','zone_depourvue','en_attente_materiel','replanifie'];
+    $STATUT_REA      = 'realise';
+    $STATUT_ANNULE   = 'annule';
 
-        // Séries temporelles (créés / réalisés) sur la fenêtre
-        $createdSeries = DossierRaccordement::whereBetween(DB::raw('DATE(created_at)'), [$from,$to])
-            ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
-            ->groupBy('d')->orderBy('d')->get();
+    $totalDossiers = DossierRaccordement::count();
+    $ouverts       = DossierRaccordement::whereIn('statut', $STATUTS_OUVERTS)->count();
+    $realises      = DossierRaccordement::where('statut', $STATUT_REA)->count();
+    $annules       = DossierRaccordement::where('statut', $STATUT_ANNULE)->count();
 
-        $realisedSeries = DossierRaccordement::where('statut',$STATUT_REA)
-            ->whereBetween(DB::raw('DATE(date_realisation)'), [$from,$to])
-            ->selectRaw('DATE(date_realisation) as d, COUNT(*) as c')
-            ->groupBy('d')->orderBy('d')->get();
+    $tauxReussite = $realises + $annules > 0 ? round(100 * $realises / ($realises + $annules), 1) : 0.0;
+    $pboSature    = DossierRaccordement::where('statut', 'pbo_sature')->count();
 
-        // Répartition par statut (pour un donut)
-        $byStatut = DossierRaccordement::select('statut', DB::raw('COUNT(*) as c'))
-            ->groupBy('statut')->pluck('c','statut');
+    // ========= 3) Délai moyen (portable) =========
+    $avgDelayQ = DossierRaccordement::where('statut', $STATUT_REA)
+        ->whereNotNull('date_realisation');
 
-        // Par type de service
-        $byTypeService = DossierRaccordement::select('type_service', DB::raw('COUNT(*) as c'))
-            ->groupBy('type_service')->pluck('c','type_service');
+    $avgDelayDays = $avgDelayQ
+        ->selectRaw("AVG($diffDaysExpr) AS d")
+        ->value('d');
 
-        // Par zone (via clients)
-        $byZone = DossierRaccordement::query()
-            ->join('clients','clients.id','=','dossiers_raccordement.client_id')
-            ->select('clients.zone', DB::raw('COUNT(*) as c'))
-            ->groupBy('clients.zone')
-            ->orderByDesc('c')
-            ->limit(8)->get();
+    $avgDelayDays = $avgDelayDays ? round((float)$avgDelayDays, 1) : 0.0;
 
-        // Top techniciens (dossiers réalisés)
-        $topTechs = DossierRaccordement::query()
-            ->leftJoin('users','users.id','=','dossiers_raccordement.assigned_to')
-            ->where('dossiers_raccordement.statut',$STATUT_REA)
-            ->select('users.name', DB::raw('COUNT(*) as done'))
-            ->groupBy('users.name')
-            ->orderByDesc('done')->limit(5)->get();
+    // ========= 4) Séries temporelles (portable) =========
+    $from = $request->date_from ? date('Y-m-d', strtotime($request->date_from)) : now()->subDays(30)->toDateString();
+    $to   = $request->date_to   ? date('Y-m-d', strtotime($request->date_to))   : now()->toDateString();
 
-        // Interventions : volume + durée moyenne
-        $intervCount = Intervention::whereBetween(DB::raw('DATE(created_at)'), [$from,$to])->count();
-        $intervAvgDuration = Intervention::whereNotNull('debut')->whereNotNull('fin')
-            ->select(DB::raw('AVG(TIMESTAMPDIFF(MINUTE,debut,fin)) as m'))
-            ->value('m');
-        $intervAvgDuration = $intervAvgDuration ? round($intervAvgDuration) : 0;
+    $createdSeries = DossierRaccordement::whereBetween(DB::raw($dateExpr('created_at')), [$from, $to])
+        ->selectRaw($dateExpr('created_at') . ' AS d, COUNT(*) AS c')
+        ->groupBy('d')
+        ->orderBy('d')
+        ->get();
 
-        // Dernières activités
-        $lastDossiers      = DossierRaccordement::with(['client','technicien'])->latest()->limit(8)->get();
-        $lastInterventions = Intervention::with(['dossier.client','technicien'])->latest()->limit(8)->get();
+    $realisedSeries = DossierRaccordement::where('statut', $STATUT_REA)
+        ->whereBetween(DB::raw($dateExpr('date_realisation')), [$from, $to])
+        ->selectRaw($dateExpr('date_realisation') . ' AS d, COUNT(*) AS c')
+        ->groupBy('d')
+        ->orderBy('d')
+        ->get();
 
-        // Préparer données pour Chart.js (labels + datasets)
-$labels   = [];
-$created  = [];
-$realised = [];
+    // ========= 5) Répartitions (inchangées) =========
+    $byStatut = DossierRaccordement::select('statut', DB::raw('COUNT(*) as c'))
+        ->groupBy('statut')->pluck('c','statut');
 
-// construire toutes les dates du range
-for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
-    $key = date('Y-m-d', $d);
-    $labels[]  = $key;
-    $created[] = (int)($createdSeries->firstWhere('d', $key)->c ?? 0);
-    $realised[]= (int)($realisedSeries->firstWhere('d', $key)->c ?? 0);
-}
+    $byTypeService = DossierRaccordement::select('type_service', DB::raw('COUNT(*) as c'))
+        ->groupBy('type_service')->pluck('c','type_service');
 
-// 👉 Ici on ajoute ton calcul du cumul
-$createdCum = [];
-$realisedCum = [];
-$sumC = $sumR = 0;
-foreach ($created as $i => $v) {
-    $sumC += (int)$v;
-    $sumR += (int)($realised[$i] ?? 0);
-    $createdCum[]  = $sumC;
-    $realisedCum[] = $sumR;
-}
+    $byZone = DossierRaccordement::query()
+        ->join('clients','clients.id','=','dossiers_raccordement.client_id')
+        ->select('clients.zone', DB::raw('COUNT(*) as c'))
+        ->groupBy('clients.zone')
+        ->orderByDesc('c')
+        ->limit(8)->get();
 
+    $topTechs = DossierRaccordement::query()
+        ->leftJoin('users','users.id','=','dossiers_raccordement.assigned_to')
+        ->where('dossiers_raccordement.statut',$STATUT_REA)
+        ->select('users.name', DB::raw('COUNT(*) as done'))
+        ->groupBy('users.name')
+        ->orderByDesc('done')->limit(5)->get();
 
-return view('dashboard.index', compact(
-    'from','to',
-    'totalDossiers','ouverts','realises','annules','tauxReussite','pboSature','avgDelayDays',
-    'byStatut','byTypeService','byZone','topTechs',
-    'intervCount','intervAvgDuration',
-    'lastDossiers','lastInterventions', 'totalClients' ,
-    'labels','created','realised',
-    'createdCum','realisedCum' // 👈 ajoute ça
-));
+    // ========= 6) Interventions : minutes moyennes (portable) =========
+    $intervCount = Intervention::whereBetween(DB::raw($dateExpr('created_at')), [$from, $to])->count();
 
+    $intervAvgDuration = Intervention::whereNotNull('debut')->whereNotNull('fin')
+        ->selectRaw("AVG($diffMinutesExpr) AS m")
+        ->value('m');
+
+    $intervAvgDuration = $intervAvgDuration ? (int) round((float)$intervAvgDuration) : 0;
+
+    // ========= 7) Dernières activités + séries cumulées (inchangées) =========
+    $lastDossiers      = DossierRaccordement::with(['client','technicien'])->latest()->limit(8)->get();
+    $lastInterventions = Intervention::with(['dossier.client','technicien'])->latest()->limit(8)->get();
+
+    $labels = $created = $realised = [];
+    for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
+        $key = date('Y-m-d', $d);
+        $labels[]  = $key;
+        $created[] = (int)($createdSeries->firstWhere('d', $key)->c ?? 0);
+        $realised[]= (int)($realisedSeries->firstWhere('d', $key)->c ?? 0);
     }
+
+    $createdCum = $realisedCum = [];
+    $sumC = $sumR = 0;
+    foreach ($created as $i => $v) {
+        $sumC += (int)$v;
+        $sumR += (int)($realised[$i] ?? 0);
+        $createdCum[]  = $sumC;
+        $realisedCum[] = $sumR;
+    }
+
+    return view('dashboard.index', compact(
+        'from','to',
+        'totalDossiers','ouverts','realises','annules','tauxReussite','pboSature','avgDelayDays',
+        'byStatut','byTypeService','byZone','topTechs',
+        'intervCount','intervAvgDuration',
+        'lastDossiers','lastInterventions',
+        'labels','created','realised','createdCum','realisedCum',
+        'totalClients'
+    ));
+}
 }
