@@ -94,6 +94,14 @@
         <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau client</a>
       </div>
 
+      <div class="col-md-2 text-end">
+  <form action="{{ route('clients.deleteAll') }}" method="POST"
+        onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')">
+    @csrf
+    @method('DELETE')
+    <button class="btn btn-danger w-100">Supprimer tous</button>
+  </form>
+</div>
 
 
 

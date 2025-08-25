@@ -107,4 +107,12 @@ class ClientController extends Controller
         $client->delete();
         return redirect()->route('clients.index')->with('success','Client supprimé.');
     }
+
+
+    public function deleteAll()
+{
+    \App\Models\Client::truncate(); // vide toute la table (supprime + reset ID auto-incrément)
+    return redirect()->route('clients.index')->with('success', 'Tous les clients ont été supprimés avec succès.');
+}
+    
 }
