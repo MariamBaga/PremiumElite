@@ -26,5 +26,16 @@ class PermissionSeeder extends Seeder
         $super->givePermissionTo($perms);
         $com->givePermissionTo(['dossiers.view','dossiers.create']);
         $tech->givePermissionTo(['dossiers.view','dossiers.update','dossiers.update-status','dossiers.add-contact','dossiers.add-intervention']);
+
+
+        // dans PermissionSeeder
+foreach (['clients.view','clients.create','clients.update','clients.delete'] as $p) {
+    Permission::findOrCreate($p);
+}
+$admin->givePermissionTo(['clients.view','clients.create','clients.update','clients.delete']);
+$super->givePermissionTo(['clients.view','clients.create','clients.update']);
+$com->givePermissionTo(['clients.view','clients.create']);
+// technicien: pas de droits clients par défaut
+
     }
 }

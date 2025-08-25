@@ -25,9 +25,12 @@
           <option value="professionnel" @selected(request('type_service')==='professionnel')>Professionnel</option>
         </select>
       </div>
+      @can('dossiers.create')
+
       <div class="col">
         <a href="{{ route('dossiers.create') }}" class="btn btn-primary float-end">Nouveau dossier</a>
       </div>
+      @endcan
     </form>
 
     <table class="table table-striped">
