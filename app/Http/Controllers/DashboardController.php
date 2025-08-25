@@ -12,6 +12,9 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+
+        $totalClients = Client::count();
+
         // Fenêtre de temps filtrable (par défaut : 30 derniers jours)
         $from = $request->date_from ? date('Y-m-d', strtotime($request->date_from)) : now()->subDays(30)->toDateString();
         $to   = $request->date_to   ? date('Y-m-d', strtotime($request->date_to))   : now()->toDateString();
@@ -86,24 +89,39 @@ class DashboardController extends Controller
         $lastInterventions = Intervention::with(['dossier.client','technicien'])->latest()->limit(8)->get();
 
         // Préparer données pour Chart.js (labels + datasets)
-        $labels   = [];
-        $created  = [];
-        $realised = [];
-        // construire toutes les dates du range
-        for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
-            $key = date('Y-m-d', $d);
-            $labels[]  = $key;
-            $created[] = (int)($createdSeries->firstWhere('d', $key)->c ?? 0);
-            $realised[]= (int)($realisedSeries->firstWhere('d', $key)->c ?? 0);
-        }
+$labels   = [];
+$created  = [];
+$realised = [];
 
-        return view('dashboard.index', compact(
-            'from','to',
-            'totalDossiers','ouverts','realises','annules','tauxReussite','pboSature','avgDelayDays',
-            'byStatut','byTypeService','byZone','topTechs',
-            'intervCount','intervAvgDuration',
-            'lastDossiers','lastInterventions',
-            'labels','created','realised'
-        ));
+// construire toutes les dates du range
+for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
+    $key = date('Y-m-d', $d);
+    $labels[]  = $key;
+    $created[] = (int)($createdSeries->firstWhere('d', $key)->c ?? 0);
+    $realised[]= (int)($realisedSeries->firstWhere('d', $key)->c ?? 0);
+}
+
+// 👉 Ici on ajoute ton calcul du cumul
+$createdCum = [];
+$realisedCum = [];
+$sumC = $sumR = 0;
+foreach ($created as $i => $v) {
+    $sumC += (int)$v;
+    $sumR += (int)($realised[$i] ?? 0);
+    $createdCum[]  = $sumC;
+    $realisedCum[] = $sumR;
+}
+
+
+return view('dashboard.index', compact(
+    'from','to',
+    'totalDossiers','ouverts','realises','annules','tauxReussite','pboSature','avgDelayDays',
+    'byStatut','byTypeService','byZone','topTechs',
+    'intervCount','intervAvgDuration',
+    'lastDossiers','lastInterventions', 'totalClients' ,
+    'labels','created','realised',
+    'createdCum','realisedCum' // 👈 ajoute ça
+));
+
     }
 }

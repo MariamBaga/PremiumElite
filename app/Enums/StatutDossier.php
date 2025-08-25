@@ -24,4 +24,18 @@ enum StatutDossier: string
             self::ON->value             => 'On',
         ];
     }
+
+    public static function ouverts(): array
+{
+    return [
+        self::EN_APPEL->value,
+        self::EN_EQUIPE->value,
+        self::ON->value,
+    ];
+}
+
+public function isOuvert(): bool
+{
+    return in_array($this->value, self::ouverts(), true);
+}
 }

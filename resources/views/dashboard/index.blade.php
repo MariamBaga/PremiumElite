@@ -35,7 +35,7 @@
         <p>Dossiers ouverts</p>
       </div>
       <div class="icon"><i class="fas fa-folder-open"></i></div>
-      <a href="{{ route('dossiers.index', ['statut'=>'a_traiter']) }}" class="small-box-footer">Filtrer <i class="fas fa-arrow-circle-right"></i></a>
+      <a href="{{ route('dossiers.index', ['statut'=>'on']) }}" class="small-box-footer">Filtrer <i class="fas fa-arrow-circle-right"></i></a>
     </div>
   </div>
 
@@ -62,7 +62,21 @@
   </div>
 </div>
 
-<div class="row">
+<div class="col-lg-3 col-6">
+  <div class="small-box bg-warning">
+    <div class="inner">
+      <h3>{{ $totalClients }}</h3>
+      <p>Clients total</p>
+    </div>
+    <div class="icon"><i class="fas fa-users"></i></div>
+    <a href="{{ route('clients.index') }}" class="small-box-footer">
+      Voir les clients <i class="fas fa-arrow-circle-right"></i>
+    </a>
+  </div>
+</div>
+
+
+<!-- <div class="row">
   {{-- Courbe Créés vs Réalisés --}}
   <div class="col-lg-8">
     <div class="card">
@@ -85,7 +99,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 <div class="row">
   {{-- Bar par zone --}}
@@ -181,16 +195,20 @@
 
   // Graph: courbe volumes
   new Chart(document.getElementById('chartVolumes'), {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: 'Créés',    data: created,  fill: false, tension: .3 },
-        { label: 'Réalisés', data: realised, fill: false, tension: .3 },
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Créés',    data: created,  fill: false, tension: .3, spanGaps: true },
+      { label: 'Réalisés', data: realised, fill: false, tension: .3, spanGaps: true },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
 
   // Donut statuts
   new Chart(document.getElementById('chartStatuts'), {
