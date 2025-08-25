@@ -1,107 +1,156 @@
 <?php
-// app/Imports/ClientsImport.php
+
 namespace App\Imports;
 
 use App\Models\Client;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date as XlsDate;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ClientsImport implements ToCollection, WithHeadingRow
 {
-    // On garde les en-têtes tels quels (pas de snake)
-    public function headingRow(): int { return 1; }
+    // par défaut 1, mais on va auto-détecter dans collection()
+    protected int $headingRow = 1;
+
+    public function headingRow(): int
+    {
+        return $this->headingRow;
+    }
 
     public function collection(Collection $rows)
     {
-        foreach ($rows as $r) {
-            // 1) Récupérer via plusieurs libellés possibles (tolérant aux variantes)
-            $nomStructure   = $this->pick($r, ['IDENTIFICATION CLIENT (NOM/ STRUCTURE)','IDENTIFICATION CLIENT (NOM/STRUCTURE)','Client','Nom','Structure']);
-            $numLigne       = $this->pick($r, ['N° DE LIGNE','N° LIGNE','Numero ligne','No ligne']);
-            $numPointFocal  = $this->pick($r, ['N° POINT FOCAL','Point focal','Numero point focal']);
-            $localisation   = $this->pick($r, ['Localisation','Adresse','Adresse ligne 1']);
-            $datePay        = $this->pick($r, ['Date de paiement','Date paiement','Paiement']);
-            $dateAffect     = $this->pick($r, ['Date d’affectation','Date affectation','Affectation']);
+        // Détection dynamique : si la 1re ligne est vide ou bizarre → on corrige
+        if ($rows->count() > 0) {
+            $firstRow = array_keys($rows->first()->toArray());
 
-            if (empty($nomStructure) && empty($numLigne) && empty($numPointFocal)) {
-                continue; // ligne vide
+            // Cherche "identification" ou "ligne" dans les clés
+            $foundIndex = 1;
+            foreach ($firstRow as $k) {
+                $norm = $this->norm($k);
+                if (str_contains($norm, 'identificationclient')
+                    || str_contains($norm, 'nodeligne')
+                    || str_contains($norm, 'npointfocal')
+                ) {
+                    $foundIndex = 1; // déjà bon
+                    break;
+                }
             }
 
-            // 2) Déterminer résidentiel / professionnel
-            // très simple: si le nom semble "Entreprise" (majuscule + espace + mots clés), tu peux affiner selon tes données
-            $isCompany = preg_match('/(SARL|SA|SAS|SASU|EURL|S\.A\.|SOCIETE|ENTREPRISE)/i', (string)$nomStructure);
+            // si la première ligne n'est pas bonne → on force à 2
+            if ($this->allEmpty($rows->first())) {
+                $this->headingRow = 2;
+                Log::info("[ClientsImport] Correction: headingRow=2");
+                return; // relance à la 2e tentative avec la bonne ligne
+            }
+        }
+
+        Log::info('[ClientsImport] Début import', ['count' => $rows->count()]);
+
+        foreach ($rows as $idx => $r) {
+            $nomStructure  = $this->pick($r, ['IDENTIFICATION CLIENT (NOM/STRUCTURE)','identification_client_nom_structure']);
+            $numLigne      = $this->pick($r, ['N° DE LIGNE','n_de_ligne']);
+            $numPointFocal = $this->pick($r, ['N° POINT FOCAL','n_point_focal']);
+            $localisation  = $this->pick($r, ['Localisation']);
+            $datePay       = $this->pick($r, ['Date de paiement','date_de_paiement']);
+            $dateAffect    = $this->pick($r, ["Date d'affectation","date_d_affectation"]);
+
+            if (empty($nomStructure) && empty($numLigne) && empty($numPointFocal)) {
+                continue;
+            }
+
+            $isCompany = (bool) preg_match('/\b(SARL|SA|SAS|EURL|SOCIETE|ENTREPRISE)\b/i', (string)$nomStructure);
             [$prenom, $nom] = $this->splitName($nomStructure);
 
-            // 3) Parser les dates (gère Excel serial, dd/mm/yyyy, yyyy-mm-dd…)
             $datePaiement    = $this->parseDate($datePay);
             $dateAffectation = $this->parseDate($dateAffect);
 
-            // 4) Upsert: on évite les doublons par N° de ligne si fourni, sinon couple (nom_structure + point focal)
-            $unique = $numLigne
-                ? ['numero_ligne' => $numLigne]
-                : ['raison_sociale' => $nomStructure, 'numero_point_focal' => $numPointFocal];
+            $unique = !empty($numLigne)
+                ? ['numero_ligne' => (string) $numLigne]
+                : ['raison_sociale' => $nomStructure, 'numero_point_focal' => (string) $numPointFocal];
 
             Client::updateOrCreate($unique, [
-                'type'                => $isCompany ? 'professionnel' : 'residentiel',
-                'nom'                 => $isCompany ? null : $nom,
-                'prenom'              => $isCompany ? null : $prenom,
-                'raison_sociale'      => $isCompany ? $nomStructure : null,
-                'telephone'           => $this->pick($r, ['Téléphone','Telephone','Tel','Phone']),
-                'email'               => $this->pick($r, ['Email','Courriel','Mail']),
-                'adresse_ligne1'      => $localisation ?? '-',
-                'ville'               => $this->pick($r, ['Ville','City']),
-                'zone'                => $this->pick($r, ['Zone']),
-                'numero_ligne'        => $numLigne,
-                'numero_point_focal'  => $numPointFocal,
-                'localisation'        => $localisation,
-                'date_paiement'       => $datePaiement,
-                'date_affectation'    => $dateAffectation,
+                'type'               => $isCompany ? 'professionnel' : 'residentiel',
+                'nom'                => $isCompany ? null : $nom,
+                'prenom'             => $isCompany ? null : $prenom,
+                'raison_sociale'     => $isCompany ? $nomStructure : null,
+                'telephone'          => $this->pick($r, ['Telephone','Tel','Phone']),
+                'email'              => $this->pick($r, ['Email','Mail']),
+                'adresse_ligne1'     => $localisation ?? '-',
+                'ville'              => $this->pick($r, ['Ville','City']),
+                'zone'               => $this->pick($r, ['Zone']),
+                'numero_ligne'       => (string) $numLigne,
+                'numero_point_focal' => (string) $numPointFocal,
+                'localisation'       => $localisation,
+                'date_paiement'      => $datePaiement,
+                'date_affectation'   => $dateAffectation,
             ]);
         }
     }
 
-    private function pick($row, array $keys)
+    // -------- Helpers ----------
+    private function allEmpty($row): bool
     {
-        foreach ($keys as $k) {
-            // Essaye clé exacte puis version "slugifiée" pour tolérer espaces/accents
-            if (isset($row[$k])) return $this->clean($row[$k]);
-            foreach ($row as $key => $val) {
-                if (Str::slug($key) === Str::slug($k)) return $this->clean($val);
+        foreach ($row as $v) {
+            if ($v !== null && $v !== '') return false;
+        }
+        return true;
+    }
+
+    private function pick($row, array $labels)
+    {
+        foreach ($labels as $k) {
+            if ($row->has($k)) return $this->clean($row[$k]);
+        }
+        $wanted = array_map([$this,'norm'], $labels);
+        foreach ($row as $key => $val) {
+            if (in_array($this->norm((string)$key), $wanted, true)) {
+                return $this->clean($val);
             }
         }
         return null;
     }
 
-    private function clean($v) {
-        if (is_string($v)) $v = trim($v);
-        return $v === '' ? null : $v;
-    }
-
     private function parseDate($v)
     {
-        if (empty($v)) return null;
-        // Excel serial number
+        if ($v === null || $v === '') return null;
         if (is_numeric($v)) {
             try { return Carbon::instance(XlsDate::excelToDateTimeObject((float)$v))->startOfDay(); } catch (\Throwable $e) {}
         }
-        // Try common patterns
         foreach (['d/m/Y','d-m-Y','Y-m-d','m/d/Y'] as $fmt) {
             try { return Carbon::createFromFormat($fmt, (string)$v)->startOfDay(); } catch (\Throwable $e) {}
         }
-        // Fallback parse
         try { return Carbon::parse((string)$v)->startOfDay(); } catch (\Throwable $e) { return null; }
     }
 
-    private function splitName(string $full = null): array
+    private function splitName(?string $full): array
     {
         $full = trim((string)$full);
         if ($full === '') return [null, null];
         $parts = preg_split('/\s+/', $full);
         if (count($parts) >= 2) return [array_shift($parts), implode(' ', $parts)];
         return [null, $full];
+    }
+
+    private function clean($v)
+    {
+        if (is_string($v)) {
+            $v = preg_replace('/\p{Z}+/u', ' ', $v);
+            $v = str_replace(["\xC2\xA0"], ' ', $v);
+            $v = trim($v);
+        }
+        if (is_int($v) || is_float($v)) $v = (string)$v;
+        return $v === '' ? null : $v;
+    }
+
+    private function norm(string $s): string
+    {
+        $s = Str::ascii($s);
+        $s = strtolower($s);
+        $s = preg_replace('/[\p{Z}\s\W_]+/u', '', $s);
+        return $s;
     }
 }
