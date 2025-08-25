@@ -35,6 +35,10 @@ use App\Http\Controllers\ClientController;
 
 Route::middleware(['auth'])->group(function () {
 
+
+    Route::delete('/clients/delete-all', [App\Http\Controllers\ClientController::class, 'deleteAll'])
+    ->name('clients.deleteAll');
+
     // Clients CRUD
     Route::get('clients',            [ClientController::class,'index'])->name('clients.index');
     Route::get('clients/create',     [ClientController::class,'create'])->name('clients.create');
@@ -76,8 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::delete('/clients/delete-all', [App\Http\Controllers\ClientController::class, 'deleteAll'])
-    ->name('clients.deleteAll');
+
 
 
 require __DIR__.'/auth.php';

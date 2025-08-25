@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\DB;
+use App\Models\DossierRaccordement;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
@@ -109,10 +111,20 @@ class ClientController extends Controller
     }
 
 
+   
+
     public function deleteAll()
-{
-    \App\Models\Client::truncate(); // vide toute la table (supprime + reset ID auto-incrément)
-    return redirect()->route('clients.index')->with('success', 'Tous les clients ont été supprimés avec succès.');
-}
-    
+    {
+        DB::transaction(function () {
+            // 1) si tu veux AUSSI vider les dossiers liés aux clients :
+            DossierRaccordement::query()->delete(); // (ou truncate si pas de FK entrante)
+
+            // 2) ensuite, vider les clients
+            Client::query()->delete(); // <- PAS truncate
+        });
+
+        return redirect()->route('clients.index')
+            ->with('success', 'Tous les clients (et dossiers liés) ont été supprimés.');
+    }
+
 }
