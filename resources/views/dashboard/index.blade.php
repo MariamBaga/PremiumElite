@@ -35,7 +35,7 @@
         <p>Dossiers ouverts</p>
       </div>
       <div class="icon"><i class="fas fa-folder-open"></i></div>
-      <a href="{{ route('dossiers.index', ['statut'=>'on']) }}" class="small-box-footer">Filtrer <i class="fas fa-arrow-circle-right"></i></a>
+      <a href="{{ route('dossiers.index', ['statut'=>'en_appel']) }}" class="small-box-footer">Filtrer <i class="fas fa-arrow-circle-right"></i></a>
     </div>
   </div>
 

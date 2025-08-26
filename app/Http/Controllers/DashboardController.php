@@ -7,6 +7,7 @@ use App\Models\DossierRaccordement;
 use App\Models\Intervention;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Enums\StatutDossier;
 
 class DashboardController extends Controller
 {
@@ -49,17 +50,31 @@ class DashboardController extends Controller
     };
 
     // ========= 2) Tes KPIs (inchangés) =========
-    $STATUTS_OUVERTS = ['a_traiter','injoignable','pbo_sature','zone_depourvue','en_attente_materiel','replanifie'];
-    $STATUT_REA      = 'realise';
-    $STATUT_ANNULE   = 'annule';
+    // ========= 2) Tes KPIs adaptés à tes statuts =========
+// Statuts "ouverts" avec ce que tu as actuellement
+$STATUTS_OUVERTS = [
+    StatutDossier::EN_APPEL->value,
+    StatutDossier::EN_EQUIPE->value,
+    StatutDossier::INJOIGNABLE->value,
+    StatutDossier::PBO_SATURE->value,
+    StatutDossier::ZONE_DEPOURVUE->value,
+    StatutDossier::ON->value, // tu l'utilises, donc on l'inclut
+];
 
-    $totalDossiers = DossierRaccordement::count();
-    $ouverts       = DossierRaccordement::whereIn('statut', $STATUTS_OUVERTS)->count();
-    $realises      = DossierRaccordement::where('statut', $STATUT_REA)->count();
-    $annules       = DossierRaccordement::where('statut', $STATUT_ANNULE)->count();
+$STATUT_REA    = StatutDossier::REALISE->value;
 
-    $tauxReussite = $realises + $annules > 0 ? round(100 * $realises / ($realises + $annules), 1) : 0.0;
-    $pboSature    = DossierRaccordement::where('statut', 'pbo_sature')->count();
+// Pas de statut "annule" chez toi → on met 0 pour garder la compatibilité avec la vue
+$annules       = 0;
+
+$totalDossiers = DossierRaccordement::count();
+$ouverts       = DossierRaccordement::whereIn('statut', $STATUTS_OUVERTS)->count();
+$realises      = DossierRaccordement::where('statut', $STATUT_REA)->count();
+
+// Taux de réussite : avec tes statuts actuels, on définit "réussite" = réalisés / total
+$tauxReussite  = $totalDossiers > 0 ? round(100 * $realises / $totalDossiers, 1) : 0.0;
+
+$pboSature     = DossierRaccordement::where('statut', StatutDossier::PBO_SATURE->value)->count();
+
 
     // ========= 3) Délai moyen (portable) =========
     $avgDelayQ = DossierRaccordement::where('statut', $STATUT_REA)

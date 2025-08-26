@@ -91,6 +91,35 @@
     </div>
   </div>
 
+  @can('dossiers.assign')
+<div class="card mb-3">
+  <div class="card-header">Affectation à une équipe</div>
+  <div class="card-body">
+    <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}" class="row g-2">
+      @csrf
+      <div class="col-md-8">
+        <select name="assigned_team_id" class="form-control">
+          <option value="">— Aucune équipe —</option>
+          @foreach(\App\Models\Team::orderBy('name')->get() as $t)
+            <option value="{{ $t->id }}" @selected($dossier->assigned_team_id == $t->id)>
+              {{ $t->name }} @if($t->zone) — {{ $t->zone }} @endif
+            </option>
+          @endforeach
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-outline-primary w-100">Enregistrer</button>
+      </div>
+    </form>
+    @error('assigned_team_id') <div class="text-danger mt-2">{{ $message }}</div> @enderror
+
+    @if($dossier->team)
+      <div class="mt-2 text-muted">Équipe actuelle : <strong>{{ $dossier->team->name }}</strong></div>
+    @endif
+  </div>
+</div>
+@endcan
+
   <div class="col-lg-4">
     <div class="card mb-3">
       <div class="card-header">Affectation & Statut</div>

@@ -47,4 +47,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function teams()
+{
+    return $this->belongsToMany(Team::class, 'team_user')->withPivot('is_lead')->withTimestamps();
+}
+
+public function leadingTeams()
+{
+    return $this->hasMany(Team::class, 'lead_id');
+}
+
 }

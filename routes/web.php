@@ -1,85 +1,134 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-
-
+// Controllers
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DossierRaccordementController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientImportController;
+use App\Http\Controllers\TeamController;
 
-Route::middleware(['auth'])->group(function(){
+/*
+|--------------------------------------------------------------------------
+| Public / Welcome
+|--------------------------------------------------------------------------
+*/
+Route::get('/', fn() => view('welcome'))->name('welcome');
 
-    Route::get('dossiers', [DossierRaccordementController::class,'index'])->name('dossiers.index');
-    Route::get('dossiers/create', [DossierRaccordementController::class,'create'])->name('dossiers.create');
-    Route::post('dossiers', [DossierRaccordementController::class,'store'])->name('dossiers.store');
+/*
+|--------------------------------------------------------------------------
+| Authenticated area
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth','verified'])->group(function () {
 
-    Route::get('dossiers/{dossier}', [DossierRaccordementController::class,'show'])->name('dossiers.show');
-    Route::get('dossiers/{dossier}/edit', [DossierRaccordementController::class,'edit'])->name('dossiers.edit');
-    Route::put('dossiers/{dossier}', [DossierRaccordementController::class,'update'])->name('dossiers.update');
-    Route::delete('dossiers/{dossier}', [DossierRaccordementController::class,'destroy'])->name('dossiers.destroy');
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class,'index'])->name('dashboard');
 
-    Route::post('dossiers/{dossier}/assign', [DossierRaccordementController::class,'assign'])->name('dossiers.assign');
-    Route::post('dossiers/{dossier}/status', [DossierRaccordementController::class,'updateStatus'])->name('dossiers.status');
+    /*
+    |----------------------------------------------------------------------
+    | Dossiers
+    |----------------------------------------------------------------------
+    */
+    Route::get('dossiers',                  [DossierRaccordementController::class,'index'])->name('dossiers.index');
+    Route::get('dossiers/create',           [DossierRaccordementController::class,'create'])->name('dossiers.create');
+    Route::post('dossiers',                 [DossierRaccordementController::class,'store'])->name('dossiers.store');
+    Route::get('dossiers/{dossier}',        [DossierRaccordementController::class,'show'])->name('dossiers.show');
+    Route::get('dossiers/{dossier}/edit',   [DossierRaccordementController::class,'edit'])->name('dossiers.edit');
+    Route::put('dossiers/{dossier}',        [DossierRaccordementController::class,'update'])->name('dossiers.update');
+    Route::delete('dossiers/{dossier}',     [DossierRaccordementController::class,'destroy'])->name('dossiers.destroy');
 
-    Route::post('dossiers/{dossier}/tentatives', [DossierRaccordementController::class,'storeTentative'])->name('dossiers.tentatives.store');
+    Route::post('dossiers/{dossier}/assign',   [DossierRaccordementController::class,'assign'])->name('dossiers.assign');
+    Route::post('dossiers/{dossier}/status',   [DossierRaccordementController::class,'updateStatus'])->name('dossiers.status');
+    Route::post('dossiers/{dossier}/tentatives',    [DossierRaccordementController::class,'storeTentative'])->name('dossiers.tentatives.store');
     Route::post('dossiers/{dossier}/interventions', [DossierRaccordementController::class,'storeIntervention'])->name('dossiers.interventions.store');
 
+    /*
+    |----------------------------------------------------------------------
+    | Clients
+    |----------------------------------------------------------------------
+    */
+    Route::get('clients',                 [ClientController::class,'index'])->name('clients.index');
+    Route::get('clients/create',          [ClientController::class,'create'])->name('clients.create');
+    Route::post('clients',                [ClientController::class,'store'])->name('clients.store');
+    Route::get('clients/{client}',        [ClientController::class,'show'])->name('clients.show');
+    Route::get('clients/{client}/edit',   [ClientController::class,'edit'])->name('clients.edit');
+    Route::put('clients/{client}',        [ClientController::class,'update'])->name('clients.update');
+    Route::delete('clients/{client}',     [ClientController::class,'destroy'])->name('clients.destroy');
+
+    // Actions additionnelles clients
+    Route::delete('/clients/delete-all',  [ClientController::class, 'deleteAll'])->name('clients.deleteAll');
+    Route::post('/clients/import',        [ClientImportController::class, 'store'])->name('clients.import');
+
+    /*
+    |----------------------------------------------------------------------
+    | Teams (équipes) — explicites avec permissions Spatie
+    |----------------------------------------------------------------------
+    */
+   // Teams (équipes) — routes spécifiques AVANT {team}
+Route::get('teams/trash', [TeamController::class,'trash'])
+->middleware('permission:teams.view')->name('teams.trash');
+
+Route::get('teams/create', [TeamController::class,'create'])
+->middleware('permission:teams.create')->name('teams.create');
+
+Route::post('teams', [TeamController::class,'store'])
+->middleware('permission:teams.create')->name('teams.store');
+
+Route::get('teams', [TeamController::class,'index'])
+->middleware('permission:teams.view')->name('teams.index');
+
+Route::get('teams/{team}/edit', [TeamController::class,'edit'])
+->middleware('permission:teams.update')->name('teams.edit');
+
+Route::put('teams/{team}', [TeamController::class,'update'])
+->middleware('permission:teams.update')->name('teams.update');
+
+Route::delete('teams/{team}', [TeamController::class,'destroy'])
+->middleware('permission:teams.delete')->name('teams.destroy');
+
+Route::post('teams/{id}/restore', [TeamController::class,'restore'])
+->middleware('permission:teams.restore')->name('teams.restore');
+
+Route::delete('teams/{id}/force-delete', [TeamController::class,'forceDelete'])
+->middleware('permission:teams.force-delete')->name('teams.force-delete');
+
+// Chef & membres
+Route::post('teams/{team}/lead/{user}', [TeamController::class,'setLead'])
+->middleware('permission:teams.assign-lead')->name('teams.set-lead');
+
+Route::post('teams/{team}/members', [TeamController::class,'addMember'])
+->middleware('permission:teams.manage-members')->name('teams.members.add');
+
+Route::delete('teams/{team}/members/{user}', [TeamController::class,'removeMember'])
+->middleware('permission:teams.manage-members')->name('teams.members.remove');
+
+// En dernier : la show (paramétrée)
+Route::get('teams/{team}', [TeamController::class,'show'])
+->middleware('permission:teams.view')->name('teams.show');
+
+
+
+Route::post('dossiers/{dossier}/assign-team',
+    [DossierRaccordementController::class,'assignTeam']
+)->middleware('permission:dossiers.assign')->name('dossiers.assign-team');
+// (ou ->middleware('can:dossiers.assign') si tu n’utilises pas l’alias Spatie)
+
+    /*
+    |----------------------------------------------------------------------
+    | Profile (Breeze/Fortify)
+    |----------------------------------------------------------------------
+    */
+    Route::get('/profile',  [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',[ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile',[ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-
-
-
-
-use App\Http\Controllers\ClientController;
-
-Route::middleware(['auth'])->group(function () {
-
-
-    Route::delete('/clients/delete-all', [App\Http\Controllers\ClientController::class, 'deleteAll'])
-    ->name('clients.deleteAll');
-
-    // Clients CRUD
-    Route::get('clients',            [ClientController::class,'index'])->name('clients.index');
-    Route::get('clients/create',     [ClientController::class,'create'])->name('clients.create');
-    Route::post('clients',           [ClientController::class,'store'])->name('clients.store');
-    Route::get('clients/{client}',   [ClientController::class,'show'])->name('clients.show');
-    Route::get('clients/{client}/edit', [ClientController::class,'edit'])->name('clients.edit');
-    Route::put('clients/{client}',   [ClientController::class,'update'])->name('clients.update');
-    Route::delete('clients/{client}',[ClientController::class,'destroy'])->name('clients.destroy');
-
-});
-
-
-use App\Http\Controllers\ClientImportController;
-
-Route::post('/clients/import', [ClientImportController::class, 'store'])
-    ->name('clients.import')
-    ->middleware('auth'); // si besoin
-
-
-
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// routes/web.php
-use App\Http\Controllers\DashboardController;
-
- Route::middleware(['auth'])->get('/dashboard', [DashboardController::class,'index'])->middleware(['auth', 'verified'])  ->name('dashboard');
-
-                // Route::get('/dashboard', function () {
-                //     //return view('dashboard');
-                //     return redirect()->route('dossiers.index');
-                // })->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-
-
-
+/*
+|--------------------------------------------------------------------------
+| Auth scaffolding
+|--------------------------------------------------------------------------
+*/
 require __DIR__.'/auth.php';

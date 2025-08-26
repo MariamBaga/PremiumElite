@@ -9,33 +9,53 @@ use Spatie\Permission\Models\Permission;
 class PermissionSeeder extends Seeder
 {
     public function run(): void
+
+
     {
-        $perms = [
-            'dossiers.view','dossiers.create','dossiers.update','dossiers.delete',
-            'dossiers.assign','dossiers.update-status',
-            'dossiers.add-contact','dossiers.add-intervention'
-        ];
-        foreach ($perms as $p) Permission::findOrCreate($p);
+
+
+
+        $perms = ['dossiers.view', 'dossiers.create', 'dossiers.update', 'dossiers.delete', 'dossiers.assign', 'dossiers.update-status', 'dossiers.add-contact', 'dossiers.add-intervention'];
+        foreach ($perms as $p) {
+            Permission::findOrCreate($p);
+        }
 
         $admin = Role::findOrCreate('admin');
         $super = Role::findOrCreate('superviseur');
-        $tech  = Role::findOrCreate('technicien');
-        $com   = Role::findOrCreate('commercial');
+        $tech = Role::findOrCreate('technicien');
+        $com = Role::findOrCreate('commercial');
 
         $admin->givePermissionTo($perms);
         $super->givePermissionTo($perms);
-        $com->givePermissionTo(['dossiers.view','dossiers.create']);
-        $tech->givePermissionTo(['dossiers.view','dossiers.update','dossiers.update-status','dossiers.add-contact','dossiers.add-intervention']);
-
+        $com->givePermissionTo(['dossiers.view', 'dossiers.create']);
+        $tech->givePermissionTo(['dossiers.view', 'dossiers.update', 'dossiers.update-status', 'dossiers.add-contact', 'dossiers.add-intervention']);
 
         // dans PermissionSeeder
-foreach (['clients.view','clients.create','clients.update','clients.delete'] as $p) {
-    Permission::findOrCreate($p);
-}
-$admin->givePermissionTo(['clients.view','clients.create','clients.update','clients.delete']);
-$super->givePermissionTo(['clients.view','clients.create','clients.update']);
-$com->givePermissionTo(['clients.view','clients.create']);
-// technicien: pas de droits clients par défaut
+        foreach (['clients.view', 'clients.create', 'clients.update', 'clients.delete'] as $p) {
+            Permission::findOrCreate($p);
+        }
+        $admin->givePermissionTo(['clients.view', 'clients.create', 'clients.update', 'clients.delete']);
+        $super->givePermissionTo(['clients.view', 'clients.create', 'clients.update']);
+        $com->givePermissionTo(['clients.view', 'clients.create']);
+        // technicien: pas de droits clients par défaut
+
+
+
+
+
+
+        $teamPerms = [
+            'teams.view','teams.create','teams.update','teams.delete', // CRUD
+            'teams.restore','teams.force-delete',                      // corbeille
+            'teams.assign-lead','teams.manage-members'                 // chef & membres
+          ];
+          foreach ($teamPerms as $p) Permission::findOrCreate($p);
+
+          // Attribution rapide (exemple)
+          $admin->givePermissionTo($teamPerms);
+          $super->givePermissionTo(['teams.view','teams.create','teams.update','teams.assign-lead','teams.manage-members']);
+          $tech->givePermissionTo(['teams.view']);
+          $com->givePermissionTo([]);
 
     }
 }

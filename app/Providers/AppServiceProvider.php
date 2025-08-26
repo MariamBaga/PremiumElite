@@ -9,6 +9,9 @@ use App\Policies\DossierRaccordementPolicy;
 use Maatwebsite\Excel\HeadingRowImport;
 use Maatwebsite\Excel\HeadingRowFormatter;
 
+use App\Models\Team;
+use App\Policies\TeamPolicy;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +32,18 @@ class AppServiceProvider extends ServiceProvider
         // (Optionnel) Laisser toujours passer les admins
         Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
+        });
+
+
+
+
+
+
+        Gate::policy(Team::class, TeamPolicy::class);
+
+        // Admin bypass (si Spatie est en place et le role admin existe)
+        Gate::before(function ($user, $ability) {
+            return method_exists($user, 'hasRole') && $user->hasRole('admin') ? true : null;
         });
     }
 }

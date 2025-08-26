@@ -4,14 +4,15 @@ namespace App\Models;
 
 use App\Enums\StatutDossier;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Team;
 
 class DossierRaccordement extends Model
 {
-    
+
     protected $table = 'dossiers_raccordement';
 
     protected $fillable = [
-        'client_id','reference','type_service','pbo','pm','statut',
+        'client_id','reference','type_service','pbo','pm','statut','assigned_team_id',
         'description','tags','assigned_to','date_planifiee','date_realisation','pieces_jointes'
     ];
 
@@ -28,6 +29,10 @@ class DossierRaccordement extends Model
     public function tentatives()   { return $this->hasMany(TentativeContact::class, 'dossier_id'); }
     public function interventions(){ return $this->hasMany(Intervention::class, 'dossier_id'); }
     public function statuts()      { return $this->hasMany(DossierStatusHistory::class, 'dossier_id'); }
+    public function team()
+{
+    return $this->belongsTo(Team::class, 'assigned_team_id');
+}
 
     protected static function booted(): void
     {

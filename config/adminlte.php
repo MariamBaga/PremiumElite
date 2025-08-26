@@ -348,6 +348,24 @@ return [
             'can'  => 'dossiers.view',
           ],
 
+
+
+          ['header' => 'EQUIPES'],
+
+          [
+            'text' => 'Équipes',
+            'route'=> 'teams.index',
+            'icon' => 'fas fa-people-group',
+            'can'  => 'teams.view',
+          ],
+          [
+            'text' => 'Corbeille équipes',
+            'route'=> 'teams.trash',
+            'icon' => 'fas fa-trash',
+            'can'  => 'teams.view',
+          ],
+
+
         ['header' => 'Mon compte'],
         [
             'text' => 'profile',

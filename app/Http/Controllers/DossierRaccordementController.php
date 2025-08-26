@@ -6,6 +6,7 @@ use App\Models\{DossierRaccordement, Client, TentativeContact, Intervention};
 use App\Http\Requests\{StoreDossierRequest, UpdateDossierRequest, UpdateStatutRequest, StoreTentativeRequest, StoreInterventionRequest};
 use App\Enums\StatutDossier;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 
 class DossierRaccordementController extends Controller
@@ -100,4 +101,23 @@ class DossierRaccordementController extends Controller
         $dossier->interventions()->create($request->validated()+['technicien_id'=>auth()->id()]);
         return back()->with('success','Intervention enregistrée');
     }
+
+
+
+public function assignTeam(Request $request, DossierRaccordement $dossier)
+{
+    $this->authorize('assign', DossierRaccordement::class); // ou middleware can:dossiers.assign
+
+    $data = $request->validate([
+        'assigned_team_id' => ['nullable', Rule::exists('teams','id')],
+    ]);
+
+    $dossier->update([
+        'assigned_team_id' => $data['assigned_team_id'] ?? null,
+    ]);
+
+    return back()->with('success', $data['assigned_team_id']
+        ? 'Équipe assignée au dossier.'
+        : 'Équipe retirée du dossier.');
+}
 }
