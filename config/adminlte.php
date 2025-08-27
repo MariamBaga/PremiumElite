@@ -359,7 +359,7 @@ return [
             'can'  => 'teams.view',
           ],
           [
-            'text' => 'Corbeille équipes',
+            'text' => 'Corbeille',
             'route'=> 'teams.trash',
             'icon' => 'fas fa-trash',
             'can'  => 'teams.view',
