@@ -38,6 +38,9 @@
               @endcan
             </td>
           </tr>
+
+
+    
         @empty
           <tr><td colspan="4" class="text-muted">Corbeille vide.</td></tr>
         @endforelse

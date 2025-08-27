@@ -31,6 +31,13 @@ class Team extends Model
         return $this->hasMany(DossierRaccordement::class, 'assigned_team_id');
     }
 
+    // app/Models/Team.php
+public function teamDossiers(){ return $this->hasMany(TeamDossier::class); }
+
+// app/Models/DossierRaccordement.php
+public function teamItem(){ return $this->hasOne(TeamDossier::class, 'dossier_id'); }
+
+
     /* ---------- Logique chef d’équipe ---------- */
 
     // Définit un chef (en forçant l’unicité)

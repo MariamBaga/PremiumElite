@@ -8,11 +8,38 @@ use App\Models\Intervention;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Enums\StatutDossier;
+use App\Models\TeamDossier;
+
+
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+
+
+
+
+        // Par équipe
+$teamKpis = TeamDossier::selectRaw('team_id, etat, COUNT(*) c')
+->actifs()
+->groupBy('team_id','etat')
+->get()
+->groupBy('team_id');
+
+// Global (actifs dans la corbeille)
+$corbeilleActifs = TeamDossier::actifs()->count();
+
+// Pour affichage : nombre de “contraintes” actives
+$contraintesActives = TeamDossier::where('etat','contrainte')->count();
+
+// Reports planifiés à venir
+$reportsAVenir = TeamDossier::where('etat','reporte')
+->whereNotNull('date_report')
+->where('date_report','>=',now())->count();
+
+
+
 
         $totalClients = Client::count();
 

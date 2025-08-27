@@ -95,22 +95,27 @@
 <div class="card mb-3">
   <div class="card-header">Affectation à une équipe</div>
   <div class="card-body">
-    <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}" class="row g-2">
-      @csrf
-      <div class="col-md-8">
+  <form method="POST" action="{{ route('dossiers.assign', $dossier) }}">
+    @csrf
+    <div class="mb-3">
+        <label for="assigned_team_id" class="form-label">Équipe assignée</label>
         <select name="assigned_team_id" class="form-control">
-          <option value="">— Aucune équipe —</option>
-          @foreach(\App\Models\Team::orderBy('name')->get() as $t)
-            <option value="{{ $t->id }}" @selected($dossier->assigned_team_id == $t->id)>
-              {{ $t->name }} @if($t->zone) — {{ $t->zone }} @endif
-            </option>
-          @endforeach
+            <option value="">-- Aucune équipe --</option>
+            @foreach(\App\Models\Team::all() as $team)
+                <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>
+                    {{ $team->name }}
+                </option>
+            @endforeach
         </select>
-      </div>
-      <div class="col-md-4">
-        <button class="btn btn-outline-primary w-100">Enregistrer</button>
-      </div>
-    </form>
+    </div>
+    <div class="mb-3">
+        <label for="date_planifiee">Date planifiée</label>
+        <input type="datetime-local" name="date_planifiee" class="form-control" value="{{ $dossier->date_planifiee }}">
+    </div>
+    <button class="btn btn-primary">Assigner</button>
+</form>
+
+
     @error('assigned_team_id') <div class="text-danger mt-2">{{ $message }}</div> @enderror
 
     @if($dossier->team)
@@ -165,5 +170,7 @@
       </div>
     </div>
   </div>
+
+
 </div>
 @stop

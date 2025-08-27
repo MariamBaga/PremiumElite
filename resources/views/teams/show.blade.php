@@ -126,6 +126,40 @@
     @endif
   </div>
 
+  {{-- Créer un nouveau user + ajouter --}}
+
+  @can('teams.manage-members')
+    <div class="card">
+      <div class="card-header">Créer & ajouter un nouveau membre</div>
+      <div class="card-body">
+        <form method="POST" action="{{ route('teams.members.create-user',$team) }}" class="row g-2">
+          @csrf
+          <div class="col-12">
+            <input name="name" class="form-control" placeholder="Nom complet" required>
+          </div>
+          <div class="col-12">
+            <input type="email" name="email" class="form-control" placeholder="Email" required>
+          </div>
+          <div class="col-12">
+            <input type="password" name="password" class="form-control" placeholder="Mot de passe (optionnel)">
+            <small class="text-muted">Si vide : <code>password123</code></small>
+          </div>
+          {{-- Optionnel : Spatie role --}}
+          {{-- <div class="col-12">
+            <select name="role" class="form-control">
+              <option value="">-- Rôle (optionnel) --</option>
+              <option value="technicien">Technicien</option>
+              <option value="superviseur">Superviseur</option>
+            </select>
+          </div> --}}
+          <div class="col-12">
+            <button class="btn btn-primary w-100">Créer & ajouter</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    @endcan
+
   <div class="col-lg-4">
     <div class="card">
       <div class="card-header">Actions</div>
@@ -143,5 +177,10 @@
       </div>
     </div>
   </div>
+
+
+
+
+
 </div>
 @stop

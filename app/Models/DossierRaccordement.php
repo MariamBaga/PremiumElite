@@ -34,6 +34,9 @@ class DossierRaccordement extends Model
     return $this->belongsTo(Team::class, 'assigned_team_id');
 }
 
+
+
+
     protected static function booted(): void
     {
         static::creating(function(self $dossier){

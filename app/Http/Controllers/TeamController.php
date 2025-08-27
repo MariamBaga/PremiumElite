@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\DossierRaccordement;
+use Illuminate\Support\Facades\Hash;
 
 class TeamController extends Controller
 {
@@ -171,6 +172,39 @@ class TeamController extends Controller
         $team = Team::onlyTrashed()->findOrFail($id);
         $team->forceDelete();
         return redirect()->route('teams.trash')->with('success','Équipe supprimée définitivement.');
+    }
+
+
+
+
+     /**
+     * Créer un nouvel utilisateur + l’ajouter à l’équipe
+     * (pratique pour créer rapidement un technicien)
+     */
+    public function createAndAddMember(Request $request, Team $team)
+    {
+        $data = $request->validate([
+            'name'     => 'required|string|max:120',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'nullable|string|min:6',
+            'role'     => 'nullable|string' // si Spatie
+        ]);
+
+        $password = $data['password'] ?? 'password123'; // valeur par défaut
+        $user = User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => Hash::make($password),
+        ]);
+
+        // Spatie (optionnel)
+        if (!empty($data['role']) && method_exists($user, 'assignRole')) {
+            $user->assignRole($data['role']);
+        }
+
+        $team->members()->attach($user->id);
+
+        return back()->with('success',"Utilisateur créé et ajouté à l’équipe.");
     }
 
     // ----- Actions rapides -----

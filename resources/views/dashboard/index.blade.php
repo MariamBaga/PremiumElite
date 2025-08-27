@@ -75,7 +75,6 @@
   </div>
 </div>
 
-
 <!-- <div class="row">
   {{-- Courbe Créés vs Réalisés --}}
   <div class="col-lg-8">
@@ -195,20 +194,19 @@
 
   // Graph: courbe volumes
   new Chart(document.getElementById('chartVolumes'), {
-  type: 'line',
-  data: {
-    labels,
-    datasets: [
-      { label: 'Créés',    data: created,  fill: false, tension: .3, spanGaps: true },
-      { label: 'Réalisés', data: realised, fill: false, tension: .3, spanGaps: true },
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true } }
-  }
-});
-
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Créés',    data: created,  fill: false, tension: .3, spanGaps: true },
+        { label: 'Réalisés', data: realised, fill: false, tension: .3, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
 
   // Donut statuts
   new Chart(document.getElementById('chartStatuts'), {

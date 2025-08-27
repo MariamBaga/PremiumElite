@@ -23,8 +23,15 @@
         @can('teams.restore')
         <a href="{{ route('teams.trash') }}" class="btn btn-outline-secondary">Corbeille</a>
         @endcan
+
+
       </div>
+
+
     </form>
+
+
+
 
     <table class="table table-hover">
       <thead><tr><th>Nom</th><th>Zone</th><th>Chef</th><th>Membres</th><th class="text-end">Actions</th></tr></thead>
@@ -38,6 +45,16 @@
           <td class="text-end">
             @can('teams.view')<a class="btn btn-sm btn-outline-secondary" href="{{ route('teams.show',$t) }}">Ouvrir</a>@endcan
             @can('teams.update')<a class="btn btn-sm btn-outline-primary" href="{{ route('teams.edit',$t) }}">Éditer</a>@endcan
+
+            @can('teams.manage-members')
+  <a href="{{ route('teams.show',$t) }}#create-user" class="btn btn-sm btn-outline-success">
+    ➕ Créer membre
+  </a>
+@endcan
+
+<a class="btn btn-sm btn-outline-dark" href="{{ route('teams.inbox',$t) }}">Corbeille équipe</a>
+
+
             @can('teams.delete')
             <form class="d-inline" method="POST" action="{{ route('teams.destroy',$t) }}" onsubmit="return confirm('Mettre en corbeille ?')">
               @csrf @method('DELETE')

@@ -16,6 +16,7 @@ use App\Http\Controllers\TeamController;
     use App\Http\Controllers\MapController;
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Public / Welcome
@@ -111,6 +112,11 @@ Route::post('teams/{team}/members', [TeamController::class,'addMember'])
 Route::delete('teams/{team}/members/{user}', [TeamController::class,'removeMember'])
 ->middleware('permission:teams.manage-members')->name('teams.members.remove');
 
+
+// 🆕 Créer un nouvel utilisateur et l’ajouter à l’équipe
+Route::post('teams/{team}/members/create-user', [TeamController::class,'createAndAddMember'])
+    ->middleware('permission:teams.manage-members')->name('teams.members.create-user');
+
 // En dernier : la show (paramétrée)
 Route::get('teams/{team}', [TeamController::class,'show'])
 ->middleware('permission:teams.view')->name('teams.show');
@@ -133,6 +139,22 @@ Route::post('dossiers/{dossier}/assign-team',
 });
 
 
+
+use App\Http\Controllers\TeamInboxController;
+
+Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function () {
+    Route::get('inbox', [TeamInboxController::class,'index'])
+        ->middleware('permission:teams.view')->name('teams.inbox');
+
+    Route::post('inbox/{dossier}/close', [TeamInboxController::class,'close'])
+        ->middleware('permission:teams.manage-members')->name('teams.inbox.close');
+
+    Route::post('inbox/{dossier}/constraint', [TeamInboxController::class,'constraint'])
+        ->middleware('permission:teams.manage-members')->name('teams.inbox.constraint');
+
+    Route::post('inbox/{dossier}/reschedule', [TeamInboxController::class,'reschedule'])
+        ->middleware('permission:teams.manage-members')->name('teams.inbox.reschedule');
+});
 
 
 
