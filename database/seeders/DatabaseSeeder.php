@@ -20,12 +20,10 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ClientSeeder::class,
             TeamSeeder::class,
+            ExtensionSeeder::class
         ]);
 
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+       
     }
 }

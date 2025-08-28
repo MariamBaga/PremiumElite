@@ -43,7 +43,6 @@ class PermissionSeeder extends Seeder
 
 
 
-
         $teamPerms = [
             'teams.view','teams.create','teams.update','teams.delete', // CRUD
             'teams.restore','teams.force-delete',                      // corbeille
@@ -56,6 +55,21 @@ class PermissionSeeder extends Seeder
           $super->givePermissionTo(['teams.view','teams.create','teams.update','teams.assign-lead','teams.manage-members']);
           $tech->givePermissionTo(['teams.view']);
           $com->givePermissionTo([]);
+
+
+
+
+        // Extensions
+$extPerms = ['extensions.view','extensions.create','extensions.update','extensions.delete'];
+foreach ($extPerms as $p) \Spatie\Permission\Models\Permission::findOrCreate($p);
+
+// Accorder (exemple)
+$admin->givePermissionTo($extPerms);
+$super->givePermissionTo($extPerms);
+$tech->givePermissionTo(['extensions.view']);
+$com->givePermissionTo(['extensions.view']);
+
+
 
     }
 }

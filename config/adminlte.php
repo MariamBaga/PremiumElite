@@ -350,6 +350,8 @@ return [
 
 
 
+
+
           ['header' => 'EQUIPES'],
 
           [
@@ -366,18 +368,36 @@ return [
           ],
 
 
-        ['header' => 'Mon compte'],
-        [
-            'text' => 'profile',
-            'route'=> '',
-            //'route'=> 'profile.edit',
-            'icon' => 'fas fa-fw fa-user',
+
+
+
+          [
+            'text' => 'Extensions FTTH',
+            'route'=> 'extensions.index',
+            'icon' => 'fas fa-project-diagram',
+            'can' => 'extensions.view', // si tu veux protéger par permission
         ],
+
+
         [
-            'text' => 'change_password',
-            'url' => '',
-            'icon' => 'fas fa-fw fa-lock',
+            'text' => 'Map',
+            'route'=> 'map.index',
+            'icon' => 'fas fa-project-diagram',
+            'can' => 'extensions.view', // si tu veux protéger par permission
         ],
+
+        // ['header' => 'Mon compte'],
+        // [
+        //     'text' => 'profile',
+        //     'route'=> '',
+        //     //'route'=> 'profile.edit',
+        //     'icon' => 'fas fa-fw fa-user',
+        // ],
+        // [
+        //     'text' => 'change_password',
+        //     'url' => '',
+        //     'icon' => 'fas fa-fw fa-lock',
+        // ],
         // [
         //     'text' => 'multilevel',
         //     'icon' => 'fas fa-fw fa-share',
@@ -470,7 +490,7 @@ return [
 
     'plugins' => [
         'Datatables' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'js',

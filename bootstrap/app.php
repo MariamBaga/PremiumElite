@@ -17,12 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         //
          // ✅ Enregistre les alias Spatie ici
          $middleware->alias([
+
+            
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
+    ->withExceptions(function (Exceptions $exceptions)  {
         //
 
 

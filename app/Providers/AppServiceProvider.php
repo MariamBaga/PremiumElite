@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+
+
+        
         if (class_exists(HeadingRowFormatter::class)) {
             HeadingRowFormatter::default('none');
         }

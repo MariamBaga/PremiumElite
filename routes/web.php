@@ -159,23 +159,38 @@ Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function (
 
 
 
-//     Route::middleware(['auth','verified'])->group(function(){
-//         Route::get('tickets', [TicketController::class,'index'])->name('tickets.index');
-//         Route::get('tickets/create', [TicketController::class,'create'])->name('tickets.create');
-//         Route::post('tickets', [TicketController::class,'store'])->name('tickets.store');
-//         Route::get('tickets/{ticket}', [TicketController::class,'show'])->name('tickets.show');
-//         Route::put('tickets/{ticket}', [TicketController::class,'update'])->name('tickets.update');
-//     });
+    Route::middleware(['auth','verified'])->group(function(){
+        Route::get('tickets', [TicketController::class,'index'])->name('tickets.index');
+        Route::get('tickets/create', [TicketController::class,'create'])->name('tickets.create');
+        Route::post('tickets', [TicketController::class,'store'])->name('tickets.store');
+        Route::get('tickets/{ticket}', [TicketController::class,'show'])->name('tickets.show');
+        Route::put('tickets/{ticket}', [TicketController::class,'update'])->name('tickets.update');
+    });
+
+
+
+    Route::get('clients/data', [ClientController::class, 'data'])->name('clients.data');
 
 
 
 
+Route::middleware(['auth','verified'])->group(function(){
+    Route::get('map', [MapController::class,'index'])->name('map.index');
+    Route::get('map/data', [MapController::class,'data'])->name('map.data'); // GeoJSON
+});
 
 
-// Route::middleware(['auth','verified'])->group(function(){
-//     Route::get('map', [MapController::class,'index'])->name('map.index');
-//     Route::get('map/data', [MapController::class,'data'])->name('map.data'); // GeoJSON
-// });
+
+use App\Http\Controllers\ExtensionController;
+
+Route::get('extensions',                 [ExtensionController::class,'index'])->name('extensions.index');
+Route::get('extensions/create',          [ExtensionController::class,'create'])->name('extensions.create');
+Route::post('extensions',                [ExtensionController::class,'store'])->name('extensions.store');
+Route::get('extensions/{extension}',     [ExtensionController::class,'show'])->name('extensions.show');
+Route::get('extensions/{extension}/edit',[ExtensionController::class,'edit'])->name('extensions.edit');
+Route::put('extensions/{extension}',     [ExtensionController::class,'update'])->name('extensions.update');
+Route::delete('extensions/{extension}',  [ExtensionController::class,'destroy'])->name('extensions.destroy');
+
 /*
 |--------------------------------------------------------------------------
 | Auth scaffolding

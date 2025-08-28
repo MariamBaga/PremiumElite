@@ -111,7 +111,7 @@ class ClientController extends Controller
     }
 
 
-   
+
 
     public function deleteAll()
     {
