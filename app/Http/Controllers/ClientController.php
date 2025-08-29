@@ -8,6 +8,7 @@ use App\Models\DossierRaccordement;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
@@ -111,6 +112,31 @@ class ClientController extends Controller
     }
 
 
+
+public function exportToDossiers(Request $request)
+{
+    $data = $request->validate([
+        'client_ids'       => 'required|array|min:1',
+        'client_ids.*'     => 'exists:clients,id',
+        'nature'           => 'required|in:raccordement,maintenance',
+        'assigned_team_id' => 'nullable|exists:teams,id',
+    ]);
+
+    $created = 0;
+    foreach ($data['client_ids'] as $cid) {
+        DossierRaccordement::create([
+            'client_id'        => $cid,
+            'reference'        => 'DR-'.date('Y').'-'.str_pad(DossierRaccordement::max('id')+1, 5, '0', STR_PAD_LEFT),
+            'type_service'     => 'residentiel',  // ou détecter depuis client->type
+            'nature'           => $data['nature'],
+            'statut'           => 'en_equipe',    // direct dans corbeille équipe / boîte d’équipe
+            'assigned_team_id' => $data['assigned_team_id'] ?? null,
+        ]);
+        $created++;
+    }
+
+    return back()->with('success', "$created dossiers créés.");
+}
 
 
     public function deleteAll()

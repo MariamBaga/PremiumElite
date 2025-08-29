@@ -14,7 +14,7 @@ return [
     'sign_in' => 'Connexion',
     'log_out' => 'Déconnexion',
     'toggle_navigation' => 'Basculer la navigation',
-    'login_message' => 'Connectez-vous pour commencer une session',
+    'login_message' => 'Connectez-vous pour commencer ',
     'register_message' => 'Enregistrement d\'un nouveau membre',
     'password_reset_message' => 'Réinitialisation du mot de passe',
     'reset_password' => 'Réinitialisation du mot de passe',

@@ -18,6 +18,17 @@ class DashboardController extends Controller
     {
 
 
+        // Ex: top perfs sur 7 jours
+$perfs = \App\Models\DossierRaccordement::query()
+->where('statut','realise')
+->whereNotNull('assigned_team_id')
+->whereDate('date_realisation','>=',now()->subDays(7)->toDateString())
+->selectRaw('assigned_team_id, DATE(date_realisation) as d, COUNT(*) as n')
+->groupBy('assigned_team_id','d')
+->orderBy('d','desc')
+->get();
+
+
 
 
         // Par équipe
@@ -188,7 +199,7 @@ $pboSature     = DossierRaccordement::where('statut', StatutDossier::PBO_SATURE-
         'intervCount','intervAvgDuration',
         'lastDossiers','lastInterventions',
         'labels','created','realised','createdCum','realisedCum',
-        'totalClients'
+        'totalClients',
     ));
 }
 }

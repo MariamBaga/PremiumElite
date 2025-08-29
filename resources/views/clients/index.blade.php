@@ -106,18 +106,39 @@
 
             </form>
 
-                   <!-- Bouton Supprimer tous
-    <div class="col-md-2 text-end">
-        <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-              onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-              class="d-inline-block">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-danger w-100">
-                Supprimer tous
-            </button>
-        </form>
-    </div> -->
+
+            <!-- <form method="POST" action="{{ route('clients.export-to-dossiers') }}">
+                @csrf
+                <div class="d-flex gap-2 mb-2">
+                    <select name="nature" class="form-control" style="max-width:220px">
+                        <option value="raccordement">Créer dossiers de raccordement</option>
+                        <option value="maintenance">Créer tickets (maintenance)</option>
+                    </select>
+                    <select name="assigned_team_id" class="form-control" style="max-width:220px">
+                        <option value="">-- Assigner à une équipe (optionnel) --</option>
+                        @foreach (\App\Models\Team::orderBy('name')->get() as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        @endforeach
+                    </select>
+                    <button class="btn btn-primary">Créer pour la sélection</button>
+                </div>
+
+            
+            </form> -->
+
+
+            <!-- Bouton Supprimer tous
+        <div class="col-md-2 text-end">
+            <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                  onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                  class="d-inline-block">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger w-100">
+                    Supprimer tous
+                </button>
+            </form>
+        </div> -->
 
 
             <!-- // Importer -->

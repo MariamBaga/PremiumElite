@@ -121,6 +121,46 @@
     @if($dossier->team)
       <div class="mt-2 text-muted">Équipe actuelle : <strong>{{ $dossier->team->name }}</strong></div>
     @endif
+
+
+    @can('dossiers.update')
+    <form method="POST" action="{{ route('dossiers.rapport.save',$dossier) }}" class="card card-body mb-3">
+  @csrf
+  <div class="row g-2">
+    <div class="col-md-3">
+      <label>État</label>
+      <select name="etat" class="form-control" required>
+        <option value="pon">En cours (PON)</option>
+        <option value="contraintes">Contrainte</option>
+        <option value="reporte">Reporté</option>
+        <option value="realise">Réalisé</option>
+      </select>
+    </div>
+    <div class="col-md-3"><label>MSAN</label><input name="msan" class="form-control"></div>
+    <div class="col-md-3"><label>FAT</label><input name="fat" class="form-control"></div>
+    <div class="col-md-3"><label>Port</label><input name="port" class="form-control"></div>
+
+    <div class="col-md-3"><label>Port disponible</label><input name="port_disponible" class="form-control"></div>
+    <div class="col-md-3"><label>Type de câble</label><input name="type_cable" class="form-control" value="CPC"></div>
+    <div class="col-md-3"><label>Linéaire (m)</label><input type="number" name="lineaire_m" class="form-control"></div>
+    <div class="col-md-3"><label>Puissance FAT (dBm)</label><input type="number" step="0.01" name="puissance_fat_dbm" class="form-control"></div>
+    <div class="col-md-3"><label>Puissance PTO (dBm)</label><input type="number" step="0.01" name="puissance_pto_dbm" class="form-control"></div>
+
+    <div class="col-md-3"><label>Date de report</label><input type="datetime-local" name="date_report" class="form-control"></div>
+    <div class="col-md-6"><label>Contrainte (si applicable)</label><input name="contrainte" class="form-control" placeholder="Ex: Client absent, poteau manquant, PBO saturé..."></div>
+
+    <div class="col-12">
+      <label>Détails du rapport (JSON libre)</label>
+      <textarea name="rapport_installation[poteaux]" class="form-control" placeholder="Poteaux trav.: 8; Poteaux armés: 7; GPS..."></textarea>
+      {{-- tu peux structurer par champs si tu veux reproduire mot à mot ton exemple WhatsApp --}}
+    </div>
+  </div>
+  <div class="mt-2 text-end">
+    <button class="btn btn-primary">Enregistrer</button>
+  </div>
+</form>
+    @endcan
+
   </div>
 </div>
 @endcan

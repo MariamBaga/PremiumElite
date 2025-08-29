@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->json('tags')->nullable();                     // ["VIP","prioritaire","gros_debit"]
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete(); // technicien
+            $table->foreignId('assigned_team_id')->nullable()->index();
             $table->timestamp('date_planifiee')->nullable();
             $table->timestamp('date_realisation')->nullable();
             $table->json('pieces_jointes')->nullable();           // liens de fichiers si besoin
@@ -26,6 +27,8 @@ return new class extends Migration {
 
             $table->string('zone')->nullable();
 $table->index(['statut','type_service','zone'], 'dossiers_statut_type_zone_idx');
+
+
 
         });
     }

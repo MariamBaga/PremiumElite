@@ -27,21 +27,25 @@
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
-  <label>Date planifiée</label>
-
-  <div class="input-group date" id="dtp_planifiee" data-target-input="nearest">
-      <input
-          type="text"
-          name="date_planifiee"
-          class="form-control datetimepicker-input"
-          data-target="#dtp_planifiee"
-          value="{{ old('date_planifiee', isset($dossier) ? optional($dossier->date_planifiee)->format('Y-m-d H:i') : '') }}"
-      />
-      <div class="input-group-append" data-target="#dtp_planifiee" data-toggle="datetimepicker">
-          <div class="input-group-text"><i class="far fa-clock"></i></div>
-      </div>
-  </div>
+    <label>Date planifiée</label>
+    <div class="input-group date" id="dtp_planifiee" data-target-input="nearest">
+        <input
+            type="text"
+            name="date_planifiee"
+            class="form-control datetimepicker-input @error('date_planifiee') is-invalid @enderror"
+            data-target="#dtp_planifiee"
+            value="{{ old('date_planifiee', isset($dossier) ? optional($dossier->date_planifiee)->format('Y-m-d H:i') : '') }}"
+            placeholder="YYYY-MM-DD HH:mm"
+        />
+        <div class="input-group-append" data-target="#dtp_planifiee" data-toggle="datetimepicker">
+            <div class="input-group-text"><i class="far fa-clock"></i></div>
+        </div>
+    </div>
+    @error('date_planifiee')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
 </div>
+
 
                     <div class="col-md-6 mb-3">
                         <label>PBO</label>
@@ -66,14 +70,14 @@
 
 
     @push('js')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    $('#dtp_planifiee').datetimepicker({
-        format: 'YYYY-MM-DD HH:mm'
-    });
-});
-</script>
-@endpush
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                $('#dtp_planifiee').datetimepicker({
+                    format: 'YYYY-MM-DD HH:mm'
+                });
+            });
+        </script>
+    @endpush
 
 
 @stop

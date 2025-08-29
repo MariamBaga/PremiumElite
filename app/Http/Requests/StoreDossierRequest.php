@@ -16,7 +16,8 @@ class StoreDossierRequest extends FormRequest
             'description' => 'nullable|string',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:30',
-            'date_planifiee' => 'nullable|date',
+            'date_planifiee' => 'nullable|date_format:d/m/Y',
+
             'assigned_to' => 'nullable|exists:users,id',
         ];
     }

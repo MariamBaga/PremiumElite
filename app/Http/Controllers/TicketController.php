@@ -32,18 +32,30 @@ class TicketController extends Controller
     public function store(Request $r)
     {
         $data = $r->validate([
-            'client_id'        =>'nullable|exists:clients,id',
-            'dossier_id'       =>'nullable|exists:dossiers_raccordement,id',
-            'assigned_team_id' =>'nullable|exists:teams,id',
-            'type'             =>'required|in:panne,signalement,maintenance',
-            'priorite'         =>'required|in:faible,normal,haute,critique',
-            'titre'            =>'required|string|max:180',
-            'description'      =>'nullable|string',
+            'client_id'        => 'nullable|exists:clients,id',
+            'dossier_id'       => 'nullable|exists:dossiers_raccordement,id',
+            'assigned_team_id' => 'nullable|exists:teams,id',
+            'type'             => 'required|in:panne,signalement,maintenance',
+            'priorite'         => 'required|in:faible,normal,haute,critique',
+            'titre'            => 'required|string|max:180',
+            'description'      => 'nullable|string',
         ]);
+
+        // Au moins un des deux:
+        if (empty($data['client_id']) && empty($data['dossier_id'])) {
+            return back()->withErrors(['client_id' => 'Sélectionne un client ou un dossier.'])
+                         ->withInput();
+        }
+
         $data['opened_by'] = auth()->id();
+        // Valeurs par défaut côté contrôleur (au cas où la migration ne les met pas)
+        $data['statut']    = 'ouvert';
+
         $ticket = Ticket::create($data);
-        return redirect()->route('tickets.show',$ticket)->with('success','Ticket créé');
+
+        return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket créé');
     }
+
 
     public function show(Ticket $ticket)
     {

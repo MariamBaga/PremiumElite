@@ -14,7 +14,7 @@ class Ticket extends Model
     protected $casts = ['date_resolution'=>'datetime'];
 
     protected static function booted(): void {
-        static::creating(function(self $t){
+        static::creating(function($t){
             if (empty($t->reference)) {
                 $seq = str_pad((string)((self::max('id') ?? 0) + 1), 5, '0', STR_PAD_LEFT);
                 $t->reference = 'TK-'.date('Y').'-'.$seq;

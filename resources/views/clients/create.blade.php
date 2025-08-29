@@ -90,10 +90,16 @@
         <div class="col-md-3 mb-3">
           <label>Date de paiement</label>
           <input type="date" name="date_paiement" class="form-control" value="{{ old('date_paiement') }}">
+          @error('date_paiement')
+    <div class="invalid-feedback d-block">{{ $message }}</div>
+@enderror
         </div>
         <div class="col-md-3 mb-3">
           <label>Date d’affectation</label>
           <input type="date" name="date_affectation" class="form-control" value="{{ old('date_affectation') }}">
+          @error('date_affectation')
+    <div class="invalid-feedback d-block">{{ $message }}</div>
+@enderror
         </div>
 
         {{-- Géo --}}

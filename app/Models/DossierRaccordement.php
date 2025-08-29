@@ -14,11 +14,16 @@ class DossierRaccordement extends Model
     protected $fillable = [
         'client_id','reference','type_service','pbo','pm','statut','assigned_team_id',
         'description','tags','assigned_to','date_planifiee','date_realisation','pieces_jointes'
+        // ...
+ , 'nature',
+  'rapport_installation','msan','fat','port','port_disponible','type_cable',
+  'lineaire_m','puissance_fat_dbm','puissance_pto_dbm'
     ];
 
     protected $casts = [
         'statut'           => StatutDossier::class,
         'tags'             => 'array',
+        'rapport_installation' => 'array',
         'pieces_jointes'   => 'array',
         'date_planifiee'   => 'datetime',
         'date_realisation' => 'datetime',
