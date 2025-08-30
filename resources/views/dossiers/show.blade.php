@@ -8,7 +8,7 @@
       <div class="card-header">Informations</div>
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-3">Client</dt><dd class="col-sm-9">{{ $dossier->client->displayName }} ({{ $dossier->client->telephone }})</dd>
+          <dt class="col-sm-3">Abonné</dt><dd class="col-sm-9">{{ $dossier->client->displayName }} ({{ $dossier->client->telephone }})</dd>
           <dt class="col-sm-3">Statut</dt><dd class="col-sm-9"><span class="badge bg-info">{{ \App\Enums\StatutDossier::labels()[$dossier->statut->value] }}</span></dd>
           <dt class="col-sm-3">Technicien</dt><dd class="col-sm-9">{{ $dossier->technicien?->name ?? '-' }}</dd>
           <dt class="col-sm-3">Planifiée</dt><dd class="col-sm-9">{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') ?? '-' }}</dd>
@@ -123,7 +123,7 @@
     @endif
 
 
-    @can('dossiers.update')
+    <!-- @can('dossiers.update')
     <form method="POST" action="{{ route('dossiers.rapport.save',$dossier) }}" class="card card-body mb-3">
   @csrf
   <div class="row g-2">
@@ -160,7 +160,7 @@
   </div>
 </form>
     @endcan
-
+ -->
   </div>
 </div>
 @endcan

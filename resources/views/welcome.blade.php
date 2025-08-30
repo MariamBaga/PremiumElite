@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Premium Elite</title>
+        <title>OptimuX</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -44,7 +44,7 @@
 
         <!-- Section Bienvenue -->
         <main class="text-center">
-            <h1 class="text-4xl font-bold mb-4">Bienvenue sur <span class="text-[#F53003]">Premium Elite</span></h1>
+            <h1 class="text-4xl font-bold mb-4">Bienvenue sur <span class="text-[#F53003]">OptimuX</span></h1>
             <p class="text-lg text-[#706f6c]">Connectez-vous pour accéder à votre espace personnel</p>
 
             <div class="mt-6 flex gap-4 justify-center">

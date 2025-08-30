@@ -9,7 +9,9 @@ use App\Http\Controllers\DossierRaccordementController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientImportController;
 use App\Http\Controllers\TeamController;
-
+use App\Http\Controllers\Ftth\FicheController as FtthFicheController;
+use App\Http\Controllers\Ftth\CreateController as FtthCreateController;
+use App\Http\Controllers\Ftth\IndexController as FtthIndexController;
     // routes/web.php (dans le group auth)
     use App\Http\Controllers\TicketController;
 
@@ -68,6 +70,12 @@ Route::middleware(['auth','verified'])->group(function () {
     // Actions additionnelles clients
     Route::delete('/clients/delete-all',  [ClientController::class, 'deleteAll'])->name('clients.deleteAll');
     Route::post('/clients/import',        [ClientImportController::class, 'store'])->name('clients.import');
+
+
+      /** Pages uniques (si tu utilises les vues fusionnées proposées) */
+      Route::get('/ftth',          FtthIndexController::class)->name('ftth.index');     // index unique (listes)
+      Route::get('/ftth/create',   FtthCreateController::class)->name('ftth.create');   // création client+dossier
+      Route::get('/ftth/fiche',    FtthFicheController::class)->name('ftth.fiche');     // fiche client/dossier
 
     /*
     |----------------------------------------------------------------------
@@ -199,6 +207,9 @@ Route::get('extensions/{extension}',     [ExtensionController::class,'show'])->n
 Route::get('extensions/{extension}/edit',[ExtensionController::class,'edit'])->name('extensions.edit');
 Route::put('extensions/{extension}',     [ExtensionController::class,'update'])->name('extensions.update');
 Route::delete('extensions/{extension}',  [ExtensionController::class,'destroy'])->name('extensions.destroy');
+
+
+
 
 /*
 |--------------------------------------------------------------------------

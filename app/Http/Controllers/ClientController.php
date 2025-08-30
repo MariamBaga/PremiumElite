@@ -85,7 +85,7 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $client = Client::create($request->validated());
-        return redirect()->route('clients.show', $client)->with('success','Client créé avec succès.');
+        return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner créé avec succès.');
     }
 
     public function show(Client $client)
@@ -102,13 +102,13 @@ class ClientController extends Controller
     public function update(UpdateClientRequest $request, Client $client)
     {
         $client->update($request->validated());
-        return redirect()->route('clients.show', $client)->with('success','Client mis à jour.');
+        return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner mis à jour.');
     }
 
     public function destroy(Client $client)
     {
         $client->delete();
-        return redirect()->route('clients.index')->with('success','Client supprimé.');
+        return redirect()->route('ftth.index')->with('success','Dossier d\'abonner supprimé.');
     }
 
 

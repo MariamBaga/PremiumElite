@@ -114,7 +114,7 @@
       </div>
 
       <button class="btn btn-primary">Enregistrer</button>
-      <a href="{{ route('clients.index') }}" class="btn btn-secondary">Annuler</a>
+      <a href="{{ route('ftth.index') }}" class="btn btn-secondary">Annuler</a>
     </form>
   </div>
 </div>

@@ -1,6 +1,6 @@
 @extends('adminlte::page')
-@section('title','Modifier client')
-@section('content_header')<h1>Modifier le client #{{ $client->id }}</h1>@stop
+@section('title','Modifier Dossier Abonné')
+@section('content_header')<h1>Modifier le Dossier Abonné #{{ $client->id }}</h1>@stop
 
 @section('content')
 <div class="card">

@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Client #' . $client->id)
+@section('title', 'Dossier d\'abonner' . $client->id)
 @section('content_header')
     <h1>
-        Client #{{ $client->id }}
+    Dossier d\'abonner  #{{ $client->id }}
         <small class="text-muted">— {{ $client->displayName }}</small>
     </h1>
 @stop
