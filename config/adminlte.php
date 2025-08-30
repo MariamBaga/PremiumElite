@@ -327,6 +327,14 @@ return [
         //     'label' => 4,
         //     'label_color' => 'success',
         // ],
+
+         [
+            'text' => 'Utilisateurs',
+            'route'=> 'admin.coordinators.index',
+            'icon' => 'fas fa-user-friends',
+              'can' => 'coordinators.view'
+          ],
+
         [
             'text' => 'Tableau de bord',
             'route'=> 'dashboard',

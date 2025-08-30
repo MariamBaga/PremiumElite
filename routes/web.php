@@ -16,7 +16,7 @@ use App\Http\Controllers\Ftth\IndexController as FtthIndexController;
     use App\Http\Controllers\TicketController;
 
     use App\Http\Controllers\MapController;
-
+   
 
 
 /*
@@ -207,6 +207,19 @@ Route::get('extensions/{extension}',     [ExtensionController::class,'show'])->n
 Route::get('extensions/{extension}/edit',[ExtensionController::class,'edit'])->name('extensions.edit');
 Route::put('extensions/{extension}',     [ExtensionController::class,'update'])->name('extensions.update');
 Route::delete('extensions/{extension}',  [ExtensionController::class,'destroy'])->name('extensions.destroy');
+
+
+
+use App\Http\Controllers\Admin\CoordinatorController;
+
+Route::middleware(['auth','verified','role:admin'])->prefix('admin')->group(function () {
+    Route::get('coordinators', [CoordinatorController::class, 'index'])->name('admin.coordinators.index');
+    Route::get('coordinators/create', [CoordinatorController::class, 'create'])->name('admin.coordinators.create');
+    Route::post('coordinators', [CoordinatorController::class, 'store'])->name('admin.coordinators.store');
+    Route::get('coordinators/{user}/edit', [CoordinatorController::class, 'edit'])->name('admin.coordinators.edit');
+    Route::put('coordinators/{user}', [CoordinatorController::class, 'update'])->name('admin.coordinators.update');
+    Route::delete('coordinators/{user}', [CoordinatorController::class, 'destroy'])->name('admin.coordinators.destroy');
+});
 
 
 

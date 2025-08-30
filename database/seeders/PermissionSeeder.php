@@ -13,6 +13,11 @@ class PermissionSeeder extends Seeder
 
     {
 
+// Permissions des coordinateurs
+$coordPerms = ['coordinators.view','coordinators.create','coordinators.update','coordinators.delete'];
+foreach ($coordPerms as $p) Permission::findOrCreate($p);
+
+
 
 
         $perms = ['dossiers.view', 'dossiers.create', 'dossiers.update', 'dossiers.delete', 'dossiers.assign', 'dossiers.update-status', 'dossiers.add-contact', 'dossiers.add-intervention'];
@@ -38,7 +43,9 @@ class PermissionSeeder extends Seeder
         $super->givePermissionTo(['clients.view', 'clients.create', 'clients.update']);
         $com->givePermissionTo(['clients.view', 'clients.create']);
         // technicien: pas de droits clients par défaut
-
+// Attribution uniquement à l'admin
+$admin->givePermissionTo($coordPerms);
+// superviseur et autres: pas de droit
 
 
 
