@@ -41,6 +41,8 @@ class DossierRaccordementController extends Controller
 
     public function store(StoreDossierRequest $request)
     {
+        $data = $request->validated();
+$data['created_by'] = auth()->id(); // ← ajoute le créateur
         $this->authorize('create', DossierRaccordement::class);
         $dossier = DossierRaccordement::create($request->validated());
         return redirect()->route('dossiers.show', $dossier)->with('success','Dossier créé');
@@ -48,6 +50,10 @@ class DossierRaccordementController extends Controller
 
     public function show(DossierRaccordement $dossier)
     {
+        if ($dossier->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Accès refusé');
+        }
+
         $this->authorize('view', $dossier);
         $dossier->load(['client','technicien','tentatives.user','interventions.technicien','statuts.user']);
         return view('dossiers.show', compact('dossier'));
@@ -55,6 +61,10 @@ class DossierRaccordementController extends Controller
 
     public function edit(DossierRaccordement $dossier)
     {
+        if ($dossier->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Accès refusé');
+        }
+
         $this->authorize('update', $dossier);
         return view('dossiers.edit', [
             'dossier'=>$dossier->load('client'),

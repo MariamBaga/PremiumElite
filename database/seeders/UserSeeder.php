@@ -13,6 +13,7 @@ class UserSeeder extends Seeder
     {
         // On récupère (ou crée si besoin) les rôles de ton PermissionSeeder
         $admin       = Role::firstOrCreate(['name' => 'admin']);
+        $superadmin       = Role::firstOrCreate(['name' => 'superadmin']);
         $superviseur = Role::firstOrCreate(['name' => 'superviseur']);
         $technicien  = Role::firstOrCreate(['name' => 'technicien']);
         $commercial  = Role::firstOrCreate(['name' => 'commercial']);
@@ -22,6 +23,10 @@ class UserSeeder extends Seeder
             ['name' => 'Superviseur Test', 'email' => 'superviseur@test.com', 'role' => $superviseur],
             ['name' => 'Technicien Test',  'email' => 'technicien@test.com',  'role' => $technicien],
             ['name' => 'Commercial Test',  'email' => 'commercial@test.com',  'role' => $commercial],
+
+               // 👉 Ton utilisateur réel
+            ['name' => 'Hurbain Houngnon', 'email' => 'hurbain.houngnon@premiumentreprise.com', 'role' => $superadmin, 'password' => 'Hurbain@2025'],
+
         ];
 
         foreach ($users as $u) {

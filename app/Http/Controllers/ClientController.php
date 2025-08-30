@@ -37,6 +37,9 @@ class ClientController extends Controller
         $per  = $data['per_page'] ?? 10;
 
         $q = Client::query()
+             // Si ce n’est pas un superadmin, on ne montre que ses clients
+    ->when(!auth()->user()->hasRole('superadmin'), fn($qry) => $qry->where('created_by', auth()->id()))
+
             // Filtres simples
             ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
             ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%'.$data['numero_ligne'].'%'))
@@ -79,23 +82,33 @@ class ClientController extends Controller
 
     public function create()
     {
+       
         return view('clients.create');
     }
 
     public function store(StoreClientRequest $request)
     {
+        $data = $request->validated();
+        $data['created_by'] = auth()->id(); // ← ici
         $client = Client::create($request->validated());
+
         return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner créé avec succès.');
     }
 
     public function show(Client $client)
     {
+        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Accès refusé');
+        }
         $client->loadCount('dossiers');
         return view('clients.show', compact('client'));
     }
 
     public function edit(Client $client)
     {
+        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Accès refusé');
+        }
         return view('clients.edit', compact('client'));
     }
 

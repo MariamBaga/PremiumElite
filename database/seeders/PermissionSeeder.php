@@ -29,6 +29,8 @@ foreach ($coordPerms as $p) Permission::findOrCreate($p);
         $super = Role::findOrCreate('superviseur');
         $tech = Role::findOrCreate('technicien');
         $com = Role::findOrCreate('commercial');
+        $superadmin = Role::findOrCreate('superadmin'); // Nouveau rôle
+
 
         $admin->givePermissionTo($perms);
         $super->givePermissionTo($perms);
@@ -66,6 +68,7 @@ $admin->givePermissionTo($coordPerms);
 
 
 
+
         // Extensions
 $extPerms = ['extensions.view','extensions.create','extensions.update','extensions.delete'];
 foreach ($extPerms as $p) \Spatie\Permission\Models\Permission::findOrCreate($p);
@@ -75,7 +78,8 @@ $admin->givePermissionTo($extPerms);
 $super->givePermissionTo($extPerms);
 $tech->givePermissionTo(['extensions.view']);
 $com->givePermissionTo(['extensions.view']);
-
+$allPermissions = Permission::all()->pluck('name')->toArray();
+$superadmin->givePermissionTo($allPermissions);
 
 
     }

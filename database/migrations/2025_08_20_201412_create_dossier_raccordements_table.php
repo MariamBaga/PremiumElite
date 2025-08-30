@@ -28,6 +28,8 @@ return new class extends Migration {
             $table->string('zone')->nullable();
 $table->index(['statut','type_service','zone'], 'dossiers_statut_type_zone_idx');
 
+$table->unsignedBigInteger('created_by')->nullable();
+$table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
 
 
         });

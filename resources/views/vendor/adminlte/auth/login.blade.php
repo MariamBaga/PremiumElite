@@ -100,14 +100,13 @@
 @stop
 
 @section('auth_footer')
-    <!-- {{-- Password reset link --}}
-    @if($passResetUrl)
-        <p class="my-0">
-            <a href="{{ $passResetUrl }}">
-                {{ __('adminlte::adminlte.i_forgot_my_password') }}
-            </a>
-        </p>
-    @endif -->
+     {{-- Password reset link --}}
+     @if (Route::has('password.request'))
+    <a class="btn btn-link" href="{{ route('password.request') }}">
+        Mot de passe oublié ?
+    </a>
+@endif
+
 
     <!-- {{-- Register link --}}
     @if($registerUrl)

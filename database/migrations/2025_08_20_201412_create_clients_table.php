@@ -28,7 +28,10 @@ return new class extends Migration {
 
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->json('metadonnees')->nullable();        // champs libres (CRM id, etc.)
+            $table->json('metadonnees')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+           // champs libres (CRM id, etc.)
             $table->timestamps();
         });
     }
