@@ -82,14 +82,14 @@ class ClientController extends Controller
 
     public function create()
     {
-       
+
         return view('clients.create');
     }
 
     public function store(StoreClientRequest $request)
     {
         $data = $request->validated();
-        $data['created_by'] = auth()->id(); // ← ici
+         $data['created_by'] = auth()->id(); // ← ici
         $client = Client::create($request->validated());
 
         return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner créé avec succès.');

@@ -17,6 +17,7 @@ class IndexController extends Controller
     {
         $tab = $request->get('tab', 'clients');
 
+
         // ======== CLIENTS ========
         $clientsQuery = Client::query();
 
@@ -65,7 +66,11 @@ class IndexController extends Controller
             })
             ->orderBy($sort, $dir);
 
+            if (!auth()->user()->hasRole('superadmin')) {
+                $clientsQuery->where('created_by', auth()->id());
+            }
         $clients = $clientsQuery->paginate($perC)->withQueryString();
+
 
         // ======== DOSSIERS ========
         $dossiersQuery = DossierRaccordement::query()->with(['client','technicien','team']);
@@ -81,6 +86,12 @@ class IndexController extends Controller
             ->when(!empty($dataD['statut']),       fn($q) => $q->where('statut', $dataD['statut']))
             ->when(!empty($dataD['type_service']), fn($q) => $q->where('type_service', $dataD['type_service']))
             ->latest();
+
+            if (!auth()->user()->hasRole('superadmin')) {
+                $dossiersQuery->whereHas('client', function($q){
+                    $q->where('created_by', auth()->id());
+                });
+            }
 
         $dossiers = $dossiersQuery->paginate($perD)->withQueryString();
 
