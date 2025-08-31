@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 @section('title','Nouveau client')
 @section('content_header')
-  <h1>Nouveau client</h1>
+  <h1>Nouveau Dossier d'Abonner</h1>
 @stop
 
 @section('content')

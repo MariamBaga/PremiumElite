@@ -16,7 +16,7 @@ use App\Http\Controllers\Ftth\IndexController as FtthIndexController;
     use App\Http\Controllers\TicketController;
 
     use App\Http\Controllers\MapController;
-   
+
 
 
 /*
@@ -212,7 +212,7 @@ Route::delete('extensions/{extension}',  [ExtensionController::class,'destroy'])
 
 use App\Http\Controllers\Admin\CoordinatorController;
 
-Route::middleware(['auth','verified','role:admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth','verified','role:superadmin'])->prefix('superadmin')->group(function () {
     Route::get('coordinators', [CoordinatorController::class, 'index'])->name('admin.coordinators.index');
     Route::get('coordinators/create', [CoordinatorController::class, 'create'])->name('admin.coordinators.create');
     Route::post('coordinators', [CoordinatorController::class, 'store'])->name('admin.coordinators.store');
@@ -221,6 +221,12 @@ Route::middleware(['auth','verified','role:admin'])->prefix('admin')->group(func
     Route::delete('coordinators/{user}', [CoordinatorController::class, 'destroy'])->name('admin.coordinators.destroy');
 });
 
+
+use App\Http\Controllers\DossierImportController;
+
+Route::middleware(['auth','verified'])->group(function() {
+    Route::post('/dossiers/import', [DossierImportController::class, 'import'])->name('dossiers.import');
+});
 
 
 

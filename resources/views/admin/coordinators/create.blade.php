@@ -1,3 +1,4 @@
+{{-- resources/views/admin/coordinators/create.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Créer Coordinateur')
@@ -47,8 +48,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Rôle attribué :</label>
-                    <input type="text" class="form-control" value="{{ $role->name }}" readonly>
+                    <label for="role">Rôle attribué :</label>
+                    <select name="role" id="role" class="form-control" required>
+                        @foreach(\Spatie\Permission\Models\Role::all() as $r)
+                            <option value="{{ $r->name }}" {{ old('role') == $r->name ? 'selected' : '' }}>
+                                {{ ucfirst($r->name) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('role') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
 
             </div>
@@ -65,7 +73,7 @@
 @stop
 
 @section('js')
-    <script>
-        // Si besoin d'interactions JS AdminLTE
-    </script>
+<script>
+    // Scripts spécifiques si nécessaire
+</script>
 @stop

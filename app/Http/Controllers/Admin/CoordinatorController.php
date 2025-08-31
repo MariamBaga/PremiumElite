@@ -10,11 +10,23 @@ use Illuminate\Support\Facades\Hash;
 
 class CoordinatorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $coordinators = User::role('superviseur')->get();
+        $query = User::role(
+            ['admin','superviseur','technicien','commercial','superadmin'],
+            'web' // <-- ajouter le guard
+        );
+
+        if ($request->filled('role')) {
+            $query->role($request->role, 'web'); // préciser le guard ici aussi
+        }
+
+
+        $coordinators = $query->paginate(10);
+
         return view('admin.coordinators.index', compact('coordinators'));
     }
+
 
     public function create()
     {
@@ -54,6 +66,7 @@ class CoordinatorController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:6|confirmed',
+            'role' => 'required|string|exists:roles,name', // validation du rôle
         ]);
 
         $user->name = $request->name;
@@ -63,8 +76,12 @@ class CoordinatorController extends Controller
         }
         $user->save();
 
+        // Supprimer les rôles existants et assigner le nouveau
+        $user->syncRoles([$request->role]);
+
         return redirect()->route('admin.coordinators.index')->with('success', 'Coordinateur mis à jour !');
     }
+
 
     public function destroy(User $user)
     {

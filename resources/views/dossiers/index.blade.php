@@ -28,9 +28,19 @@
       @can('dossiers.create')
 
       <div class="col">
-        <a href="{{ route('dossiers.create') }}" class="btn btn-primary float-end">Nouveau dossier</a>
+        <a href="{{ route('dossiers.create') }}" class="btn btn-primary float-end">Nouveau dossier ftth</a>
+
       </div>
       @endcan
+      <div class="col-md-3">
+    <form action="{{ route('dossiers.import') }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2">
+        @csrf
+        <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control flex-grow-1" required>
+        <button type="submit" class="btn btn-success">Importer</button>
+    </form>
+</div>
+
+
     </form>
 
     <table class="table table-striped">
