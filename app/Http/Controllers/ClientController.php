@@ -18,53 +18,45 @@ class ClientController extends Controller
     {
         // Valider les filtres optionnels
         $data = $request->validate([
-            'type'                 => 'nullable|in:residentiel,professionnel',
-            'search'               => 'nullable|string|max:200',
-            'numero_ligne'         => 'nullable|string|max:50',
-            'numero_point_focal'   => 'nullable|string|max:50',
-            'localisation'         => 'nullable|string|max:100',
-            'date_paiement_from'   => 'nullable|date',
-            'date_paiement_to'     => 'nullable|date',
-            'date_affect_from'     => 'nullable|date',
-            'date_affect_to'       => 'nullable|date',
-            'sort'                 => 'nullable|in:created_at,nom,prenom,raison_sociale,numero_ligne,numero_point_focal,localisation,date_paiement,date_affectation',
-            'dir'                  => 'nullable|in:asc,desc',
-            'per_page'             => 'nullable|integer|min:5|max:100',
+            'type' => 'nullable|in:residentiel,professionnel',
+            'search' => 'nullable|string|max:200',
+            'numero_ligne' => 'nullable|string|max:50',
+            'numero_point_focal' => 'nullable|string|max:50',
+            'localisation' => 'nullable|string|max:100',
+            'date_paiement_from' => 'nullable|date',
+            'date_paiement_to' => 'nullable|date',
+            'date_affect_from' => 'nullable|date',
+            'date_affect_to' => 'nullable|date',
+            'sort' => 'nullable|in:created_at,nom,prenom,raison_sociale,numero_ligne,numero_point_focal,localisation,date_paiement,date_affectation',
+            'dir' => 'nullable|in:asc,desc',
+            'per_page' => 'nullable|integer|min:5|max:100',
         ]);
 
         $sort = $data['sort'] ?? 'created_at';
-        $dir  = $data['dir']  ?? 'desc';
-        $per  = $data['per_page'] ?? 10;
+        $dir = $data['dir'] ?? 'desc';
+        $per = $data['per_page'] ?? 10;
 
-        $q = Client::query()
-             // Si ce n’est pas un superadmin, on ne montre que ses clients
-    ->when(!auth()->user()->hasRole('superadmin'), fn($qry) => $qry->where('created_by', auth()->id()))
+        $q = Client::with('lastDossier') 
+            // Si ce n’est pas un superadmin, on ne montre que ses clients
+            ->when(!auth()->user()->hasRole('superadmin'), fn($qry) => $qry->where('created_by', auth()->id()))
 
             // Filtres simples
             ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
-            ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%'.$data['numero_ligne'].'%'))
-            ->when(!empty($data['numero_point_focal']), fn($qry) => $qry->where('numero_point_focal', 'like', '%'.$data['numero_point_focal'].'%'))
-            ->when(!empty($data['localisation']), fn($qry) => $qry->where('localisation', 'like', '%'.$data['localisation'].'%'))
+            ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%' . $data['numero_ligne'] . '%'))
+            ->when(!empty($data['numero_point_focal']), fn($qry) => $qry->where('numero_point_focal', 'like', '%' . $data['numero_point_focal'] . '%'))
+            ->when(!empty($data['localisation']), fn($qry) => $qry->where('localisation', 'like', '%' . $data['localisation'] . '%'))
 
             // Filtres par date (intervalle)
             ->when(!empty($data['date_paiement_from']), fn($qry) => $qry->whereDate('date_paiement', '>=', $data['date_paiement_from']))
-            ->when(!empty($data['date_paiement_to']),   fn($qry) => $qry->whereDate('date_paiement', '<=', $data['date_paiement_to']))
-            ->when(!empty($data['date_affect_from']),   fn($qry) => $qry->whereDate('date_affectation', '>=', $data['date_affect_from']))
-            ->when(!empty($data['date_affect_to']),     fn($qry) => $qry->whereDate('date_affectation', '<=', $data['date_affect_to']))
+            ->when(!empty($data['date_paiement_to']), fn($qry) => $qry->whereDate('date_paiement', '<=', $data['date_paiement_to']))
+            ->when(!empty($data['date_affect_from']), fn($qry) => $qry->whereDate('date_affectation', '>=', $data['date_affect_from']))
+            ->when(!empty($data['date_affect_to']), fn($qry) => $qry->whereDate('date_affectation', '<=', $data['date_affect_to']))
 
             // Recherche globale (on étend ta recherche existante)
-            ->when(!empty($data['search']), function($qry) use ($data) {
-                $s = '%'.$data['search'].'%';
-                $qry->where(function($sub) use ($s){
-                    $sub->where('nom','like',$s)
-                        ->orWhere('prenom','like',$s)
-                        ->orWhere('raison_sociale','like',$s)
-                        ->orWhere('telephone','like',$s)
-                        ->orWhere('email','like',$s)
-                        ->orWhere('adresse_ligne1','like',$s)
-                        ->orWhere('localisation','like',$s)
-                        ->orWhere('numero_ligne','like',$s)
-                        ->orWhere('numero_point_focal','like',$s);
+            ->when(!empty($data['search']), function ($qry) use ($data) {
+                $s = '%' . $data['search'] . '%';
+                $qry->where(function ($sub) use ($s) {
+                    $sub->where('nom', 'like', $s)->orWhere('prenom', 'like', $s)->orWhere('raison_sociale', 'like', $s)->orWhere('telephone', 'like', $s)->orWhere('email', 'like', $s)->orWhere('adresse_ligne1', 'like', $s)->orWhere('localisation', 'like', $s)->orWhere('numero_ligne', 'like', $s)->orWhere('numero_point_focal', 'like', $s);
                 });
             })
 
@@ -72,17 +64,15 @@ class ClientController extends Controller
             ->orderBy($sort, $dir);
 
         return view('clients.index', [
-            'clients'  => $q->paginate($per)->withQueryString(),
-            'sort'     => $sort,
-            'dir'      => $dir,
+            'clients' => $q->paginate($per)->withQueryString(),
+            'sort' => $sort,
+            'dir' => $dir,
             'per_page' => $per,
         ]);
     }
 
-
     public function create()
     {
-
         return view('clients.create');
     }
 
@@ -96,23 +86,20 @@ class ClientController extends Controller
 
         // 2. Création directe du dossier FTTH associé
         $dossier = \App\Models\DossierRaccordement::create([
-            'client_id'   => $client->id,
-            'reference'   => 'DR-' . now()->year . '-' . str_pad(\App\Models\DossierRaccordement::count() + 1, 6, '0', STR_PAD_LEFT),
-            'type_service'=> $request->input('type_service', 'residentiel'),
-            'pbo'         => $request->input('pbo'),
-            'pm'          => $request->input('pm'),
-            'statut'      => $request->input('statut', 'en_appel'), // valeur par défaut si rien n’est envoyé
-            'zone'        => $request->input('zone'),
-            'assigned_to' => $request->input('assigned_to'),        // technicien si fourni
+            'client_id' => $client->id,
+            'reference' => 'DR-' . now()->year . '-' . str_pad(\App\Models\DossierRaccordement::count() + 1, 6, '0', STR_PAD_LEFT),
+            'type_service' => $request->input('type_service', 'residentiel'),
+            'pbo' => $request->input('pbo'),
+            'pm' => $request->input('pm'),
+            'statut' => $request->input('statut', 'en_appel'), // valeur par défaut si rien n’est envoyé
+            'zone' => $request->input('zone'),
+            'assigned_to' => $request->input('assigned_to'), // technicien si fourni
             'assigned_team_id' => $request->input('assigned_team_id'),
-            'created_by'  => auth()->id(),
+            'created_by' => auth()->id(),
         ]);
 
-        return redirect()
-            ->route('clients.show', $client)
-            ->with('success', "Abonner et dossier d'abonné créés avec succès.");
+        return redirect()->route('clients.show', $client)->with('success', "Abonner et dossier d'abonné créés avec succès.");
     }
-
 
     public function show(Client $client)
     {
@@ -122,16 +109,15 @@ class ClientController extends Controller
         }
 
         // Charger le nombre de dossiers et les dossiers eux-mêmes
-    $client->loadCount('dossiers');
-    $client->load(['dossiers' => function($q) {
-        $q->orderBy('created_at', 'desc')
-          ->with(['statuts', 'tentatives', 'interventions', 'technicien', 'team', 'client']);
-    }]);
-
+        $client->loadCount('dossiers');
+        $client->load([
+            'dossiers' => function ($q) {
+                $q->orderBy('created_at', 'desc')->with(['statuts', 'tentatives', 'interventions', 'technicien', 'team', 'client']);
+            },
+        ]);
 
         return view('clients.show', compact('client'));
     }
-
 
     public function edit(Client $client)
     {
@@ -143,10 +129,10 @@ class ClientController extends Controller
         $dossier = DossierRaccordement::where('client_id', $client->id)->first();
 
         // Charger les techniciens / équipes (si tu veux proposer dans le formulaire)
-        $teams = \App\Models\Team::pluck('name','id');
-        $users = \App\Models\User::role('technicien')->pluck('name','id');
+        $teams = \App\Models\Team::pluck('name', 'id');
+        $users = \App\Models\User::role('technicien')->pluck('name', 'id');
 
-        return view('clients.edit', compact('client','dossier','teams','users'));
+        return view('clients.edit', compact('client', 'dossier', 'teams', 'users'));
     }
 
     public function update(UpdateClientRequest $request, Client $client)
@@ -160,46 +146,28 @@ class ClientController extends Controller
             $client->update($request->validated());
 
             // 2) Mise à jour ou création du dossier lié
-            $dossierData = $request->only([
-                'type_service',
-                'pbo',
-                'pm',
-                'statut',
-                'description',
-                'assigned_to',
-                'assigned_team_id',
-                'date_planifiee',
-                'date_realisation',
-                'zone'
-            ]);
+            $dossierData = $request->only(['type_service', 'pbo', 'pm', 'statut', 'description', 'assigned_to', 'assigned_team_id', 'date_planifiee', 'date_realisation', 'zone']);
 
             $dossier = DossierRaccordement::firstOrNew(['client_id' => $client->id]);
             $dossier->fill($dossierData);
 
             // Si c'est une création → générer une référence unique
             if (!$dossier->exists) {
-                $dossier->reference = 'DR-'.date('Y').'-'.str_pad(DossierRaccordement::max('id')+1, 5, '0', STR_PAD_LEFT);
+                $dossier->reference = 'DR-' . date('Y') . '-' . str_pad(DossierRaccordement::max('id') + 1, 5, '0', STR_PAD_LEFT);
                 $dossier->created_by = auth()->id();
             }
 
             $dossier->save();
         });
 
-        return redirect()->route('clients.show', $client)
-                         ->with('success', "Abonner et dossier mis à jour avec succès.");
+        return redirect()->route('clients.show', $client)->with('success', 'Abonner et dossier mis à jour avec succès.');
     }
-
 
     public function destroy(Client $client)
     {
         $client->delete();
-        return redirect()->route('clients.index')->with('success','Dossier d\'abonner supprimé.');
+        return redirect()->route('clients.index')->with('success', 'Dossier d\'abonner supprimé.');
     }
-
-
-
-
-
 
     public function deleteAll()
     {
@@ -211,8 +179,6 @@ class ClientController extends Controller
             Client::query()->delete(); // <- PAS truncate
         });
 
-        return redirect()->route('clients.index')
-            ->with('success', 'Tous les clients (et dossiers liés) ont été supprimés.');
+        return redirect()->route('clients.index')->with('success', 'Tous les clients (et dossiers liés) ont été supprimés.');
     }
-
 }

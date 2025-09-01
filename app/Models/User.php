@@ -14,7 +14,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
     use HasRoles;
-    
+
 
     protected $guard_name = 'web'; // important !
     /**
@@ -51,6 +51,20 @@ class User extends Authenticatable
         ];
     }
 
+    public function isSuperAdmin(): bool
+{
+    return $this->hasRole('superadmin');
+}
+
+public function isSupervisor(): bool
+{
+    return $this->hasRole('superviseur');
+}
+
+public function isTeamLeader(Team $team): bool
+{
+    return $team->lead_id === $this->id;
+}
     public function teams()
 {
     return $this->belongsToMany(Team::class, 'team_user')->withPivot('is_lead')->withTimestamps();
@@ -60,5 +74,10 @@ public function leadingTeams()
 {
     return $this->hasMany(Team::class, 'lead_id');
 }
+public function teamsLed()
+{
+    return $this->hasMany(Team::class, 'lead_id');
+}
+
 
 }

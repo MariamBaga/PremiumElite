@@ -18,6 +18,13 @@ class TeamController extends Controller
 
     public function index(Request $request)
     {
+
+        $user = auth()->user();
+
+        // Vérifie que l'utilisateur a la permission globale OU qu'il est lead de cette équipe
+        if (!$user->can('teams.view') && $team->lead_id !== $user->id) {
+            abort(403, "Vous n'avez pas accès à cette équipe.");
+        }
         $q = Team::query()
             ->with(['lead'])
             ->when($request->filled('only_trashed'), fn($qr) => $qr->onlyTrashed())

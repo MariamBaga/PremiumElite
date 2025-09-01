@@ -105,7 +105,7 @@
                   <td class="text-nowrap">{{ optional($d->date_planifiee)->format('d/m/Y H:i') }}</td>
                   <td class="text-end">
                     @can('dossiers.view')
-                      <a href="{{ route('dossiers.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
+                      <a href="{{ route('clients.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
                     @endcan
                   </td>
                 </tr>
@@ -137,7 +137,7 @@
       </div>
     </div>
 
- 
+
   </div>
 </div>
 @stop

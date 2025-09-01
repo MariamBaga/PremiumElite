@@ -108,17 +108,17 @@
 
 
             <!-- Bouton Supprimer tous
-                <div class="col-md-2 text-end">
-                    <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-                          onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-                          class="d-inline-block">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
-                            Supprimer tous
-                        </button>
-                    </form>
-                </div> -->
+                                <div class="col-md-2 text-end">
+                                    <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                                          onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                                          class="d-inline-block">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger w-100">
+                                            Supprimer tous
+                                        </button>
+                                    </form>
+                                </div> -->
 
 
             <!-- // Importer -->
@@ -163,11 +163,7 @@
                             <tr>
                                 <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
                                 <td class="text-truncate" style="max-width:220px;">
-                                    @if ($c->type === 'professionnel')
-                                        {{ $c->raison_sociale ?? 'Entreprise' }}
-                                    @else
-                                        {{ trim(($c->prenom ?? '') . ' ' . ($c->nom ?? 'Client')) }}
-                                    @endif
+                                    {{ $c->displayName }}
                                 </td>
                                 <td>{{ ucfirst($c->type) }}</td>
                                 <td class="text-nowrap">{{ $c->telephone }}</td>
@@ -176,55 +172,56 @@
                                     {{ $c->localisation ?? $c->adresse_ligne1 }}</td>
                                 <td class="text-nowrap">{{ $c->numero_ligne }}</td>
                                 <td class="text-nowrap">{{ $c->numero_point_focal }}</td>
-                                <td class="text-nowrap">{{ optional($c->date_paiement)->format('d/m/Y') }}</td>
-                                <td class="text-nowrap">{{ optional($c->date_affectation)->format('d/m/Y') }}</td>
-                                <td class="text-end">
+                                <td class="text-nowrap">{{ optional($c->lastDossier?->date_paiement)->format('d/m/Y') }}
+                                </td>
+                                <td class="text-nowrap">
+                                    {{ optional($c->lastDossier?->date_affectation)->format('d/m/Y') }}</td>
+                                    <td class="text-end">
+    <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
 
-{{-- Ouvrir / Éditer --}}
-<a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
-<a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
+        {{-- Ouvrir / Éditer --}}
+        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
+        <a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
 
-{{-- Actions sur le dossier uniquement si il existe --}}
-@if ($c->dossier)
-    {{-- Affectation équipe/technicien --}}
-    <form action="{{ route('dossiers.assign', $c->dossier) }}" method="POST" class="d-inline">
-        @csrf
-        <select name="technicien_id" class="form-select form-select-sm d-inline w-auto"
-            onchange="this.form.submit()">
-            <option value="">-- Affecter --</option>
-            @foreach (\App\Models\User::role('technicien')->get() as $tech)
-                <option value="{{ $tech->id }}" @selected($c->dossier->technicien_id == $tech->id)>
-                    {{ $tech->name }}
-                </option>
-            @endforeach
-        </select>
-    </form>
+        @php
+            $dossier = $c->lastDossier ?? new \App\Models\DossierRaccordement(['client_id' => $c->id]);
+        @endphp
 
-    {{-- Qualification rapide --}}
-    <form action="{{ route('dossiers.status', $c->dossier) }}" method="POST" class="d-inline">
-        @csrf
-        <select name="statut" class="form-select form-select-sm d-inline w-auto"
-            onchange="this.form.submit()">
-            @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
-                <option value="{{ $value }}" @selected($c->dossier->statut->value == $value)>
-                    {{ $label }}
-                </option>
-            @endforeach
-        </select>
-    </form>
-@endif
+        {{-- Affectation équipe --}}
+        <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}" class="d-inline-flex">
+            @csrf
+            <select name="assigned_team_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">-- Équipe --</option>
+                @foreach(\App\Models\Team::all() as $team)
+                    <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>{{ $team->name }}</option>
+                @endforeach
+            </select>
+        </form>
+
+        {{-- Statut --}}
+        @can('updateStatus', $dossier)
+            <form method="POST" action="{{ route('dossiers.status', $dossier) }}" class="d-inline-flex align-items-center gap-1">
+                @csrf
+                <select name="statut" class="form-select form-select-sm" required>
+                    @foreach(\App\Enums\StatutDossier::labels() as $value => $label)
+                        <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <button class="btn btn-sm btn-primary">OK</button>
+            </form>
+        @endcan
+
+    </div>
 </td>
-
-
-
 
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Aucun dossier ftth</td>
+                                <td colspan="11" class="text-center text-muted">Aucun dossier FTTH</td>
                             </tr>
                         @endforelse
                     </tbody>
+
                 </table>
             </div>
 

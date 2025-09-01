@@ -10,18 +10,31 @@ class TeamInboxController extends Controller
 {
     public function index(Team $team, Request $r)
     {
-        // Dossiers non finalisés côté équipe
+        $user = auth()->user();
+
+        // Vérifie si superadmin, superviseur ou chef d'équipe de cette équipe
+        if (! $user->hasRole('superadmin|superviseur') && $team->lead_id !== $user->id) {
+            abort(403, "Vous n'avez pas accès à cette corbeille.");
+        }
+
         $items = TeamDossier::with(['dossier.client'])
-            ->where('team_id',$team->id)
+            ->where('team_id', $team->id)
             ->actifs()
             ->latest()->paginate(15);
 
-        return view('teams.inbox', compact('team','items'));
+        return view('teams.inbox', compact('team', 'items'));
     }
+
+
 
     // 1) Clôturer : installation OK et client activé → on met etat=cloture + on peut aussi basculer le statut dossier si tu le souhaites
     public function close(Team $team, DossierRaccordement $dossier, Request $r)
     {
+
+        $user = auth()->user();
+        if (! $user->can('teams.inbox.view') && $team->lead_id !== $user->id) {
+            abort(403);
+        }
         $item = TeamDossier::where('team_id',$team->id)->where('dossier_id',$dossier->id)->firstOrFail();
         $item->update([
             'etat' => 'cloture',
@@ -39,6 +52,11 @@ class TeamInboxController extends Controller
     // 2) Contrainte : préciser la raison
     public function constraint(Team $team, DossierRaccordement $dossier, Request $r)
     {
+
+        $user = auth()->user();
+        if (! $user->can('teams.inbox.view') && $team->lead_id !== $user->id) {
+            abort(403);
+        }
         $data = $r->validate(['motif'=>'required|string|max:500']);
         $item = TeamDossier::where('team_id',$team->id)->where('dossier_id',$dossier->id)->firstOrFail();
 
@@ -58,6 +76,11 @@ class TeamInboxController extends Controller
     // 3) Report : nouvelle date
     public function reschedule(Team $team, DossierRaccordement $dossier, Request $r)
     {
+
+        $user = auth()->user();
+        if (! $user->can('teams.inbox.view') && $team->lead_id !== $user->id) {
+            abort(403);
+        }
         $data = $r->validate([
             'date_report' => 'required|date',
             'motif'       => 'nullable|string|max:500',

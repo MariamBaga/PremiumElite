@@ -41,7 +41,10 @@ class Client extends Model
             });
         }
 
-
+        public function lastDossier()
+        {
+            return $this->hasOne(DossierRaccordement::class, 'client_id')->latestOfMany();
+        }
            // 🔑 Relation manquante
     public function dossiers()
     {

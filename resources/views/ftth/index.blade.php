@@ -227,7 +227,7 @@
                                     <a class="btn btn-sm btn-outline-primary"
                                         href="{{ route('clients.edit', $c) }}">Éditer</a>
 
-                                 
+
 
                                     {{-- Si un dossier existe déjà pour ce client, actions rapides --}}
                                     @if ($c->dossier)
@@ -351,7 +351,7 @@
                       <td>{{ $d->technicien?->name ?? '-' }}</td>
                       <td>{{ optional($d->date_planifiee)->format('d/m/Y H:i') }}</td>
                       <td>
-                        <a href="{{ route('dossiers.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
+                        <a href="{{ route('clients.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
                       </td>
                     </tr>
                   @empty

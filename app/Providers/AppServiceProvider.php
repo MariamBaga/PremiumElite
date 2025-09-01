@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
 
 
 
-        
+
         if (class_exists(HeadingRowFormatter::class)) {
             HeadingRowFormatter::default('none');
         }

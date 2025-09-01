@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 @section('title','Corbeille / Boîte équipe — '.$team->name)
+
 @section('content_header')
   <h1>Corbeille équipe — {{ $team->name }}</h1>
 @stop
@@ -15,9 +16,13 @@
           <tr>
             <th>Réf.</th>
             <th>Client</th>
+            <th>Téléphone</th>
+            <th>Adresse</th>
+            <th>Date affectation</th>
+            <th>RDV planifié</th>
             <th>Statut dossier</th>
             <th>État équipe</th>
-            <th>Raison / Date</th>
+            <th>Raison / Report</th>
             <th class="text-end">Actions</th>
           </tr>
         </thead>
@@ -25,17 +30,29 @@
           @forelse($items as $it)
             @php $d = $it->dossier; @endphp
             <tr>
-              <td><a href="{{ route('dossiers.show',$d) }}">{{ $d->reference }}</a></td>
               <td>
-                {{ $d->client?->displayName }}
-                <div class="text-muted small">{{ $d->client?->telephone }}</div>
+                <a href="{{ route('clients.show',$d->client) }}">
+                  {{ $d->reference }}
+                </a>
               </td>
+              <td>{{ $d->client?->displayName }}</td>
+              <td class="text-nowrap">{{ $d->client?->telephone ?? '-' }}</td>
+              <td class="small">
+                {{ $d->client?->adresse_ligne1 }}
+                @if($d->client?->ville) — {{ $d->client?->ville }} @endif
+              </td>
+              <td class="text-nowrap">{{ optional($d->date_affectation)->format('d/m/Y') ?? '-' }}</td>
+              <td class="text-nowrap">{{ optional($d->date_planifiee)->format('d/m/Y H:i') ?? '-' }}</td>
               <td class="text-nowrap">{{ \Illuminate\Support\Str::headline($d->statut?->value ?? $d->statut) }}</td>
               <td>
-                @if($it->etat==='en_cours') <span class="badge bg-secondary">En cours</span>
-                @elseif($it->etat==='contrainte') <span class="badge bg-warning">Contrainte</span>
-                @elseif($it->etat==='reporte') <span class="badge bg-info">Reporté</span>
-                @elseif($it->etat==='cloture') <span class="badge bg-success">Clôturé</span>
+                @if($it->etat==='en_cours')
+                  <span class="badge bg-secondary">En cours</span>
+                @elseif($it->etat==='contrainte')
+                  <span class="badge bg-warning">Contrainte</span>
+                @elseif($it->etat==='reporte')
+                  <span class="badge bg-info">Reporté</span>
+                @elseif($it->etat==='cloture')
+                  <span class="badge bg-success">Clôturé</span>
                 @endif
               </td>
               <td class="small">
@@ -48,17 +65,16 @@
               </td>
               <td class="text-end">
                 {{-- Clôturer --}}
-                @can('teams.manage-members')
                 <form method="POST" action="{{ route('teams.inbox.close', [$team,$d]) }}" class="d-inline">
                   @csrf
                   <input type="hidden" name="motif" value="Installation OK, client activé">
                   <button class="btn btn-sm btn-success"
                           onclick="return confirm('Clôturer ce dossier ?')">Clôturer</button>
                 </form>
-                @endcan
+               
 
-                {{-- Contrainte (modal simple) --}}
-                @can('teams.manage-members')
+                {{-- Contrainte --}}
+
                 <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#contraintModal-{{ $it->id }}">
                   Contrainte
                 </button>
@@ -66,8 +82,10 @@
                   <div class="modal-dialog">
                     <form method="POST" action="{{ route('teams.inbox.constraint', [$team,$d]) }}" class="modal-content">
                       @csrf
-                      <div class="modal-header"><h5 class="modal-title">Contrainte — {{ $d->reference }}</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button></div>
+                      <div class="modal-header">
+                        <h5 class="modal-title">Contrainte — {{ $d->reference }}</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                      </div>
                       <div class="modal-body">
                         <textarea name="motif" class="form-control" rows="3" placeholder="Décrire la contrainte" required></textarea>
                       </div>
@@ -77,10 +95,10 @@
                     </form>
                   </div>
                 </div>
-                @endcan
+               
 
                 {{-- Reporter --}}
-                @can('teams.manage-members')
+
                 <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#reportModal-{{ $it->id }}">
                   Reporter
                 </button>
@@ -88,8 +106,10 @@
                   <div class="modal-dialog">
                     <form method="POST" action="{{ route('teams.inbox.reschedule', [$team,$d]) }}" class="modal-content">
                       @csrf
-                      <div class="modal-header"><h5 class="modal-title">Reporter — {{ $d->reference }}</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button></div>
+                      <div class="modal-header">
+                        <h5 class="modal-title">Reporter — {{ $d->reference }}</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                      </div>
                       <div class="modal-body">
                         <div class="mb-2">
                           <label>Nouvelle date</label>
@@ -106,11 +126,13 @@
                     </form>
                   </div>
                 </div>
-                @endcan
+               
               </td>
             </tr>
           @empty
-            <tr><td colspan="6" class="text-center text-muted p-4">Aucun dossier dans la corbeille.</td></tr>
+            <tr>
+              <td colspan="10" class="text-center text-muted p-4">Aucun dossier dans la corbeille.</td>
+            </tr>
           @endforelse
         </tbody>
       </table>

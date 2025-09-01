@@ -213,14 +213,14 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>Réf.</th><th>Équipe</th><th>Client</th><th>Statut</th>
+                <th>Réf.</th><th>Équipe</th><th>Abonner</th><th>Statut</th>
                 <th>Date planifiée</th><th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               @foreach($teamInbox as $it)
                 <tr>
-                  <td><a href="{{ route('dossiers.show',$it['id']) }}">{{ $it['ref'] }}</a></td>
+                  <td><a href="{{ route('clients.show',$it['id']) }}">{{ $it['ref'] }}</a></td>
                   <td>{{ $it['team'] }}</td>
                   <td>{{ $it['client'] }}</td>
                   <td><span class="badge bg-warning text-dark">{{ \Illuminate\Support\Str::headline($it['statut']) }}</span></td>
@@ -260,7 +260,7 @@
               <tbody>
                 @foreach($lastInterventions as $i)
                   <tr>
-                    <td><a href="{{ route('dossiers.show',$i->dossier) }}">{{ $i->dossier?->reference }}</a></td>
+                    <td><a href="{{ route('clients.show',$i->dossier) }}">{{ $i->dossier?->reference }}</a></td>
                     <td>{{ $i->technicien?->name }}</td>
                     <td class="text-nowrap">{{ optional($i->debut)->format('d/m/Y H:i') }}</td>
                     <td class="text-nowrap">{{ optional($i->fin)->format('d/m/Y H:i') }}</td>
