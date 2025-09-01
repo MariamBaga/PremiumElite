@@ -28,24 +28,18 @@
       @can('dossiers.create')
 
       <div class="col">
-        <a href="{{ route('dossiers.create') }}" class="btn btn-primary float-end">Nouveau dossier ftth</a>
+        <a href="{{ route('clients.create') }}" class="btn btn-primary float-end">Nouveau dossier ftth</a>
 
       </div>
       @endcan
-      <div class="col-md-3">
-    <form action="{{ route('dossiers.import') }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2">
-        @csrf
-        <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control flex-grow-1" required>
-        <button type="submit" class="btn btn-success">Importer</button>
-    </form>
-</div>
+
 
 
     </form>
 
     <table class="table table-striped">
       <thead><tr>
-        <th>Réf.</th><th>Client</th><th>Type</th><th>Statut</th>
+        <th>Réf.</th><th>Abonner</th><th>Type</th><th>Statut</th>
         <th>Technicien</th><th>Planifiée</th><th>Actions</th>
       </tr></thead>
       <tbody>
@@ -58,7 +52,7 @@
           <td>{{ $d->technicien?->name ?? '-' }}</td>
           <td>{{ optional($d->date_planifiee)->format('d/m/Y H:i') }}</td>
           <td>
-            <a href="{{ route('dossiers.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
+            <a href="{{ route('clients.show',$d) }}" class="btn btn-sm btn-outline-secondary">Ouvrir</a>
           </td>
         </tr>
       @endforeach

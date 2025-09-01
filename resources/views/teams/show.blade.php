@@ -10,6 +10,7 @@
 @section('content')
 <div class="row">
   <div class="col-lg-8">
+    {{-- Informations --}}
     <div class="card mb-3">
       <div class="card-header">Informations</div>
       <div class="card-body">
@@ -18,16 +19,28 @@
           <dt class="col-sm-3">Zone</dt><dd class="col-sm-9">{{ $team->zone ?? '—' }}</dd>
           <dt class="col-sm-3">Chef</dt><dd class="col-sm-9">{{ $team->lead?->name ?? '—' }}</dd>
           <dt class="col-sm-3">Description</dt><dd class="col-sm-9">{{ $team->description ?? '—' }}</dd>
+          <dt class="col-sm-3">Membres (texte)</dt>
+          <dd class="col-sm-9">
+            @if(!empty($team->members_names))
+              <ul class="mb-0">
+                @foreach(json_decode($team->members_names, true) as $name)
+                  <li>{{ $name }}</li>
+                @endforeach
+              </ul>
+            @else
+              <span class="text-muted">Aucun membre texte</span>
+            @endif
+          </dd>
         </dl>
       </div>
     </div>
 
-    {{-- Membres --}}
+    {{-- Membres utilisateurs --}}
     <div class="card mb-3">
-      <div class="card-header">Membres ({{ $team->members->count() }})</div>
+      <div class="card-header">Membres utilisateurs ({{ $team->members->count() }})</div>
       <div class="card-body p-0">
         @if($team->members->isEmpty())
-          <div class="p-3 text-muted">Aucun membre pour l’instant.</div>
+          <div class="p-3 text-muted">Aucun membre utilisateur.</div>
         @else
           <table class="table table-hover mb-0">
             <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th class="text-end">Actions</th></tr></thead>
@@ -70,41 +83,20 @@
           </table>
         @endif
       </div>
-
-      @can('teams.manage-members')
-      <div class="card-footer">
-        <form method="POST" action="{{ route('teams.members.add',$team) }}" class="row g-2">
-          @csrf
-          <div class="col-md-8">
-            <select name="user_id" class="form-control" required>
-              <option value="">— Ajouter un utilisateur —</option>
-              @foreach(\App\Models\User::orderBy('name')->get() as $u)
-                @if(!$team->members->contains('id',$u->id))
-                  <option value="{{ $u->id }}">{{ $u->name }} — {{ $u->email }}</option>
-                @endif
-              @endforeach
-            </select>
-          </div>
-          <div class="col-md-4">
-            <button class="btn btn-outline-primary w-100">Ajouter</button>
-          </div>
-        </form>
-      </div>
-      @endcan
     </div>
 
-    {{-- Dossiers assignés à l’équipe (si la colonne existe) --}}
+    {{-- Dossiers assignés --}}
     @if (Schema::hasColumn('dossiers_raccordement','assigned_team_id'))
-    <div class="card">
-      <div class="card-header">Dossiers assignés</div>
-      <div class="card-body p-0">
-        @php $dossiers = $team->dossiers()->with('client')->latest()->limit(10)->get(); @endphp
-        @if($dossiers->isEmpty())
-          <div class="p-3 text-muted">Aucun dossier assigné à cette équipe.</div>
-        @else
-          <table class="table table-hover mb-0">
-            <thead><tr><th>Référence</th><th>Client</th><th>Statut</th><th>Planifiée</th><th></th></tr></thead>
-            <tbody>
+      <div class="card">
+        <div class="card-header">Dossiers assignés</div>
+        <div class="card-body p-0">
+          @php $dossiers = $team->dossiers()->with('client')->latest()->limit(10)->get(); @endphp
+          @if($dossiers->isEmpty())
+            <div class="p-3 text-muted">Aucun dossier assigné à cette équipe.</div>
+          @else
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Référence</th><th>Client</th><th>Statut</th><th>Planifiée</th><th></th></tr></thead>
+              <tbody>
               @foreach($dossiers as $d)
                 <tr>
                   <td>{{ $d->reference }}</td>
@@ -118,48 +110,16 @@
                   </td>
                 </tr>
               @endforeach
-            </tbody>
-          </table>
-        @endif
+              </tbody>
+            </table>
+          @endif
+        </div>
       </div>
-    </div>
     @endif
+
   </div>
 
-  {{-- Créer un nouveau user + ajouter --}}
-
-  @can('teams.manage-members')
-    <div class="card">
-      <div class="card-header">Créer & ajouter un nouveau membre</div>
-      <div class="card-body">
-        <form method="POST" action="{{ route('teams.members.create-user',$team) }}" class="row g-2">
-          @csrf
-          <div class="col-12">
-            <input name="name" class="form-control" placeholder="Nom complet" required>
-          </div>
-          <div class="col-12">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
-          </div>
-          <div class="col-12">
-            <input type="password" name="password" class="form-control" placeholder="Mot de passe (optionnel)">
-            <small class="text-muted">Si vide : <code>password123</code></small>
-          </div>
-          {{-- Optionnel : Spatie role --}}
-          {{-- <div class="col-12">
-            <select name="role" class="form-control">
-              <option value="">-- Rôle (optionnel) --</option>
-              <option value="technicien">Technicien</option>
-              <option value="superviseur">Superviseur</option>
-            </select>
-          </div> --}}
-          <div class="col-12">
-            <button class="btn btn-primary w-100">Créer & ajouter</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    @endcan
-
+  {{-- Actions + création d’utilisateur --}}
   <div class="col-lg-4">
     <div class="card">
       <div class="card-header">Actions</div>
@@ -168,19 +128,16 @@
           <a href="{{ route('teams.edit',$team) }}" class="btn btn-primary">Éditer</a>
         @endcan
         @can('teams.delete')
-        <form method="POST" action="{{ route('teams.destroy',$team) }}" class="ms-2"
-              onsubmit="return confirm('Mettre cette équipe en corbeille ?')">
-          @csrf @method('DELETE')
-          <button class="btn btn-danger">Mettre en corbeille</button>
-        </form>
+          <form method="POST" action="{{ route('teams.destroy',$team) }}" class="ms-2"
+                onsubmit="return confirm('Mettre cette équipe en corbeille ?')">
+            @csrf @method('DELETE')
+            <button class="btn btn-danger">Mettre en corbeille</button>
+          </form>
         @endcan
       </div>
     </div>
+
+ 
   </div>
-
-
-
-
-
 </div>
 @stop

@@ -45,21 +45,27 @@ class TeamController extends Controller
         $this->authorize('create', Team::class);
 
         $data = $request->validate([
-            'name'        => 'required|string|max:100|unique:teams,name',
-            'zone'        => 'nullable|string|max:100',
+            'name' => 'required|string|max:100|unique:teams,name',
+            'zone' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:2000',
-            'members'     => 'array',
-            'members.*'   => 'exists:users,id',
-            'lead_id'     => 'nullable|exists:users,id',
-            'dossier_ids' => 'array',
-            'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
+            'members_names' => 'nullable|string',
+            'lead_id' => 'nullable|exists:users,id',
         ]);
 
-        $team = Team::create(collect($data)->only('name','zone','description')->toArray());
+        $team = Team::create([
+            'name' => $data['name'],
+            'zone' => $data['zone'],
+            'description' => $data['description'],
+        ]);
 
-        if (!empty($data['members'])) {
-            $team->members()->attach($data['members']);
+        // Ajouter les membres en texte
+        if (!empty($data['members_names'])) {
+            $names = preg_split("/[\r\n,]+/", $data['members_names']);
+            $team->members_names = json_encode(array_map('trim', $names)); // stocké en JSON
+            $team->save();
         }
+
+        // Affecter le chef d'équipe
         if (!empty($data['lead_id'])) {
             $team->setLeader(User::find($data['lead_id']));
         }

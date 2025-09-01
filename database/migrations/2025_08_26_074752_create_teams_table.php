@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('zone')->nullable();          // ex: zone d’intervention
             $table->text('description')->nullable();
             $table->foreignId('lead_id')->nullable()->constrained('users')->nullOnDelete(); // chef d’équipe
+            $table->json('members_names')->nullable();   // noms libres des membres
             $table->timestamps();
             $table->softDeletes(); // corbeille
         });

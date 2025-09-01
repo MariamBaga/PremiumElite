@@ -27,32 +27,35 @@ class CoordinatorController extends Controller
         return view('admin.coordinators.index', compact('coordinators'));
     }
 
-
     public function create()
     {
-        $role = Role::firstOrCreate(['name' => 'superviseur']);
-        return view('admin.coordinators.create', compact('role'));
+        $roles = Role::all();
+        return view('admin.coordinators.create', compact('roles'));
     }
+
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|string|min:6|confirmed',
+        'role' => 'required|string|exists:roles,name',
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
 
-        $role = Role::firstOrCreate(['name' => 'superviseur']);
-        $user->assignRole($role);
+    // Attribution du rôle choisi
+    $user->assignRole($request->role);
 
-        return redirect()->route('admin.coordinators.index')->with('success', 'Coordinateur créé avec succès !');
-    }
+    return redirect()->route('admin.coordinators.index')
+        ->with('success', 'Coordinateur créé avec succès !');
+}
+
 
     public function edit(User $user)
     {

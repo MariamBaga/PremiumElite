@@ -46,12 +46,7 @@
             @can('teams.view')<a class="btn btn-sm btn-outline-secondary" href="{{ route('teams.show',$t) }}">Ouvrir</a>@endcan
             @can('teams.update')<a class="btn btn-sm btn-outline-primary" href="{{ route('teams.edit',$t) }}">Éditer</a>@endcan
 
-            @can('teams.manage-members')
-  <a href="{{ route('teams.show',$t) }}#create-user" class="btn btn-sm btn-outline-success">
-    ➕ Créer membre
-  </a>
-@endcan
-
+       
 <a class="btn btn-sm btn-outline-dark" href="{{ route('teams.inbox',$t) }}">Corbeille équipe</a>
 
 

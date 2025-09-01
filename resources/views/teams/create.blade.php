@@ -28,27 +28,21 @@
         </div>
 
         <div class="col-md-6 mb-3">
-          <label>Membres</label>
-          <select name="members[]" class="form-control" multiple size="8">
-            @foreach($users as $u)
-              <option value="{{ $u->id }}" @selected(collect(old('members',[]))->contains($u->id))>
-                {{ $u->name }} — {{ $u->email }}
-              </option>
-            @endforeach
-          </select>
-          <small class="text-muted">Maintenir Ctrl/⌘ pour multi-sélectionner.</small>
-        </div>
+    <label>Membres (noms à saisir)</label>
+    <textarea name="members_names" class="form-control" rows="5">{{ old('members_names') }}</textarea>
+    <small class="text-muted">Indiquez les noms des membres, un par ligne ou séparés par des virgules.</small>
+</div>
 
-        <div class="col-md-6 mb-3">
-          <label>Chef d’équipe</label>
-          <select name="lead_id" class="form-control">
-            <option value="">— Aucun —</option>
-            @foreach($users as $u)
-              <option value="{{ $u->id }}" @selected(old('lead_id')==$u->id)>{{ $u->name }}</option>
-            @endforeach
-          </select>
-          <small class="text-muted">Sera automatiquement ajouté aux membres.</small>
-        </div>
+<div class="col-md-6 mb-3">
+    <label>Chef d’équipe</label>
+    <select name="lead_id" class="form-control">
+        <option value="">— Aucun —</option>
+        @foreach($users as $u)
+            <option value="{{ $u->id }}" @selected(old('lead_id')==$u->id)>{{ $u->name }}</option>
+        @endforeach
+    </select>
+</div>
+
       </div>
 
 

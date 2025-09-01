@@ -33,8 +33,11 @@
     @endif
 
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Liste des coordinateurs</h3>
+            <a href="{{ route('admin.coordinators.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Créer un coordinateur
+            </a>
         </div>
         <div class="card-body table-responsive">
             <table class="table table-bordered table-striped">

@@ -89,67 +89,116 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $data = $request->validated();
-         $data['created_by'] = auth()->id(); // ← ici
-        $client = Client::create($request->validated());
+        $data['created_by'] = auth()->id();
 
-        return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner créé avec succès.');
+        // 1. Création du client
+        $client = Client::create($data);
+
+        // 2. Création directe du dossier FTTH associé
+        $dossier = \App\Models\DossierRaccordement::create([
+            'client_id'   => $client->id,
+            'reference'   => 'DR-' . now()->year . '-' . str_pad(\App\Models\DossierRaccordement::count() + 1, 6, '0', STR_PAD_LEFT),
+            'type_service'=> $request->input('type_service', 'residentiel'),
+            'pbo'         => $request->input('pbo'),
+            'pm'          => $request->input('pm'),
+            'statut'      => $request->input('statut', 'en_appel'), // valeur par défaut si rien n’est envoyé
+            'zone'        => $request->input('zone'),
+            'assigned_to' => $request->input('assigned_to'),        // technicien si fourni
+            'assigned_team_id' => $request->input('assigned_team_id'),
+            'created_by'  => auth()->id(),
+        ]);
+
+        return redirect()
+            ->route('clients.show', $client)
+            ->with('success', "Abonner et dossier d'abonné créés avec succès.");
     }
+
 
     public function show(Client $client)
     {
+        // Vérification d'accès
         if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Accès refusé');
         }
-        $client->loadCount('dossiers');
+
+        // Charger le nombre de dossiers et les dossiers eux-mêmes
+    $client->loadCount('dossiers');
+    $client->load(['dossiers' => function($q) {
+        $q->orderBy('created_at', 'desc')
+          ->with(['statuts', 'tentatives', 'interventions', 'technicien', 'team', 'client']);
+    }]);
+
+
         return view('clients.show', compact('client'));
     }
+
 
     public function edit(Client $client)
     {
         if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Accès refusé');
         }
-        return view('clients.edit', compact('client'));
+
+        // Charger le dossier existant s’il y en a un
+        $dossier = DossierRaccordement::where('client_id', $client->id)->first();
+
+        // Charger les techniciens / équipes (si tu veux proposer dans le formulaire)
+        $teams = \App\Models\Team::pluck('name','id');
+        $users = \App\Models\User::role('technicien')->pluck('name','id');
+
+        return view('clients.edit', compact('client','dossier','teams','users'));
     }
 
     public function update(UpdateClientRequest $request, Client $client)
     {
-        $client->update($request->validated());
-        return redirect()->route('clients.show', $client)->with('success','Dossier d\'abonner mis à jour.');
+        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Accès refusé');
+        }
+
+        DB::transaction(function () use ($request, $client) {
+            // 1) Mise à jour des infos client
+            $client->update($request->validated());
+
+            // 2) Mise à jour ou création du dossier lié
+            $dossierData = $request->only([
+                'type_service',
+                'pbo',
+                'pm',
+                'statut',
+                'description',
+                'assigned_to',
+                'assigned_team_id',
+                'date_planifiee',
+                'date_realisation',
+                'zone'
+            ]);
+
+            $dossier = DossierRaccordement::firstOrNew(['client_id' => $client->id]);
+            $dossier->fill($dossierData);
+
+            // Si c'est une création → générer une référence unique
+            if (!$dossier->exists) {
+                $dossier->reference = 'DR-'.date('Y').'-'.str_pad(DossierRaccordement::max('id')+1, 5, '0', STR_PAD_LEFT);
+                $dossier->created_by = auth()->id();
+            }
+
+            $dossier->save();
+        });
+
+        return redirect()->route('clients.show', $client)
+                         ->with('success', "Abonner et dossier mis à jour avec succès.");
     }
+
 
     public function destroy(Client $client)
     {
         $client->delete();
-        return redirect()->route('ftth.index')->with('success','Dossier d\'abonner supprimé.');
+        return redirect()->route('clients.index')->with('success','Dossier d\'abonner supprimé.');
     }
 
 
 
-public function exportToDossiers(Request $request)
-{
-    $data = $request->validate([
-        'client_ids'       => 'required|array|min:1',
-        'client_ids.*'     => 'exists:clients,id',
-        'nature'           => 'required|in:raccordement,maintenance',
-        'assigned_team_id' => 'nullable|exists:teams,id',
-    ]);
 
-    $created = 0;
-    foreach ($data['client_ids'] as $cid) {
-        DossierRaccordement::create([
-            'client_id'        => $cid,
-            'reference'        => 'DR-'.date('Y').'-'.str_pad(DossierRaccordement::max('id')+1, 5, '0', STR_PAD_LEFT),
-            'type_service'     => 'residentiel',  // ou détecter depuis client->type
-            'nature'           => $data['nature'],
-            'statut'           => 'en_equipe',    // direct dans corbeille équipe / boîte d’équipe
-            'assigned_team_id' => $data['assigned_team_id'] ?? null,
-        ]);
-        $created++;
-    }
-
-    return back()->with('success', "$created dossiers créés.");
-}
 
 
     public function deleteAll()

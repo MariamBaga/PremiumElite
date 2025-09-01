@@ -1,8 +1,8 @@
 @extends('adminlte::page')
 
-@section('title', 'Clients')
+@section('title', 'FTTH')
 @section('content_header')
-    <h1>Clients</h1>
+    <h1>Dossier FTTH</h1>
 @stop
 
 @section('content')
@@ -100,45 +100,25 @@
                 </div>
 
                 <div class="col-md-2 text-end">
-                    <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau client</a>
+                    <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau Dossier FTTH</a>
                 </div>
 
 
             </form>
-
-
-            <!-- <form method="POST" action="{{ route('clients.export-to-dossiers') }}">
-                @csrf
-                <div class="d-flex gap-2 mb-2">
-                    <select name="nature" class="form-control" style="max-width:220px">
-                        <option value="raccordement">Créer dossiers de raccordement</option>
-                        <option value="maintenance">Créer tickets (maintenance)</option>
-                    </select>
-                    <select name="assigned_team_id" class="form-control" style="max-width:220px">
-                        <option value="">-- Assigner à une équipe (optionnel) --</option>
-                        @foreach (\App\Models\Team::orderBy('name')->get() as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <button class="btn btn-primary">Créer pour la sélection</button>
-                </div>
-
-            
-            </form> -->
 
 
             <!-- Bouton Supprimer tous
-        <div class="col-md-2 text-end">
-            <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-                  onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-                  class="d-inline-block">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger w-100">
-                    Supprimer tous
-                </button>
-            </form>
-        </div> -->
+                <div class="col-md-2 text-end">
+                    <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                          onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                          class="d-inline-block">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger w-100">
+                            Supprimer tous
+                        </button>
+                    </form>
+                </div> -->
 
 
             <!-- // Importer -->
@@ -166,7 +146,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Client</th>
+                            <th>Abonner</th>
                             <th class="text-nowrap">Type</th>
                             <th class="text-nowrap">Téléphone</th>
                             <th class="text-nowrap">Email</th>
@@ -199,15 +179,49 @@
                                 <td class="text-nowrap">{{ optional($c->date_paiement)->format('d/m/Y') }}</td>
                                 <td class="text-nowrap">{{ optional($c->date_affectation)->format('d/m/Y') }}</td>
                                 <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                        href="{{ route('clients.show', $c) }}">Ouvrir</a>
-                                    <a class="btn btn-sm btn-outline-primary"
-                                        href="{{ route('clients.edit', $c) }}">Éditer</a>
-                                </td>
+
+{{-- Ouvrir / Éditer --}}
+<a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
+<a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
+
+{{-- Actions sur le dossier uniquement si il existe --}}
+@if ($c->dossier)
+    {{-- Affectation équipe/technicien --}}
+    <form action="{{ route('dossiers.assign', $c->dossier) }}" method="POST" class="d-inline">
+        @csrf
+        <select name="technicien_id" class="form-select form-select-sm d-inline w-auto"
+            onchange="this.form.submit()">
+            <option value="">-- Affecter --</option>
+            @foreach (\App\Models\User::role('technicien')->get() as $tech)
+                <option value="{{ $tech->id }}" @selected($c->dossier->technicien_id == $tech->id)>
+                    {{ $tech->name }}
+                </option>
+            @endforeach
+        </select>
+    </form>
+
+    {{-- Qualification rapide --}}
+    <form action="{{ route('dossiers.status', $c->dossier) }}" method="POST" class="d-inline">
+        @csrf
+        <select name="statut" class="form-select form-select-sm d-inline w-auto"
+            onchange="this.form.submit()">
+            @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                <option value="{{ $value }}" @selected($c->dossier->statut->value == $value)>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
+    </form>
+@endif
+</td>
+
+
+
+
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Aucun client</td>
+                                <td colspan="11" class="text-center text-muted">Aucun dossier ftth</td>
                             </tr>
                         @endforelse
                     </tbody>

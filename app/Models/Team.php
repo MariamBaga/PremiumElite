@@ -9,7 +9,7 @@ class Team extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name','zone','description','lead_id'];
+    protected $fillable = ['name','zone','description','lead_id', 'members_names'];
 
     // Chef d’équipe (User)
     public function lead()

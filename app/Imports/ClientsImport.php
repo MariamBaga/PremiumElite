@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date as XlsDate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\DossierRaccordement;
 
 class ClientsImport implements ToCollection, WithHeadingRow
 {
@@ -88,6 +89,29 @@ class ClientsImport implements ToCollection, WithHeadingRow
                 'date_paiement'      => $datePaiement,
                 'date_affectation'   => $dateAffectation,
             ]);
+
+            /// ⚡ ajout logique dossier raccordement
+$client = Client::where($unique)->first();
+
+// chercher un dossier existant
+$dossier = DossierRaccordement::firstOrNew([
+    'client_id' => $client->id,
+]);
+
+// référence unique auto si pas définie
+if (!$dossier->exists) {
+    $dossier->reference = 'DR-'.date('Y').'-'.str_pad(rand(1,999999),6,'0',STR_PAD_LEFT);
+}
+
+// récupération des colonnes Excel pour dossier
+$dossier->statut = $this->pick($r, ['Statut','Etat']) ?? $dossier->statut ?? 'en_appel';
+$dossier->assigned_to = $this->pick($r, ['Technicien ID','technicien']);
+$dossier->assigned_team_id = $this->pick($r, ['Equipe ID','equipe']);
+$dossier->zone = $this->pick($r, ['Zone']) ?? $dossier->zone;
+$dossier->date_planifiee = $this->parseDate($this->pick($r, ['Date planifiée','date_planifiee']));
+
+// sauvegarde
+$dossier->save();
         }
     }
 

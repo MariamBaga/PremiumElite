@@ -180,9 +180,7 @@ Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function (
     Route::get('clients/data', [ClientController::class, 'data'])->name('clients.data');
 
 // routes/web.php (zone clients)
-Route::post('clients/export-to-dossiers', [ClientController::class,'exportToDossiers'])
-  ->middleware(['auth','verified','permission:dossiers.create'])
-  ->name('clients.export-to-dossiers');
+
 
 
   Route::post('dossiers/{dossier}/rapport', [DossierRaccordementController::class,'saveRapport'])

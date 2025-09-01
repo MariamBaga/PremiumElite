@@ -351,7 +351,7 @@ return [
 
         [
             'text' => 'Dossiers FTTH',
-            'route'=> 'ftth.index',
+            'route'=> 'clients.index',
             'icon' => 'fas fa-network-wired',
             'can'  => 'dossiers.view',
           ],
