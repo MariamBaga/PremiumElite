@@ -15,7 +15,7 @@ class DossierRaccordementController extends Controller
 
 
     public function index(Request $request)
-    {
+    {$user = auth()->user();
 
         if ($user->hasRole('chef_equipe')) {
             $query->where('assigned_team_id', $user->team_id);
