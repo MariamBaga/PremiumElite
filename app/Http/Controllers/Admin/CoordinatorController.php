@@ -13,8 +13,8 @@ class CoordinatorController extends Controller
     public function index(Request $request)
     {
         $query = User::role(
-            ['admin','superviseur','technicien','commercial','superadmin'],
-            'web' // <-- ajouter le guard
+            ['admin','superviseur','technicien','commercial','superadmin','chef_equipe','coordinateur'],
+    'web'// <-- ajouter le guard
         );
 
         if ($request->filled('role')) {
@@ -29,6 +29,7 @@ class CoordinatorController extends Controller
 
     public function create()
     {
+
         $roles = Role::all();
         return view('admin.coordinators.create', compact('roles'));
     }
@@ -37,11 +38,22 @@ class CoordinatorController extends Controller
     public function store(Request $request)
 {
     $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|string|min:6|confirmed',
-        'role' => 'required|string|exists:roles,name',
-    ]);
+    'name' => 'required|string|max:255',
+    'email' => 'required|email|unique:users,email',
+    'password' => 'nullable|string|min:6|confirmed',
+    'role' => 'required|string|exists:roles,name',
+], [
+    'name.required' => 'Le nom est obligatoire.',
+    'name.max' => 'Le nom ne peut pas dépasser 255 caractères.',
+    'email.required' => 'L’email est obligatoire.',
+    'email.email' => 'L’email doit être valide.',
+    'email.unique' => 'Cet email est déjà utilisé.',
+    'password.min' => 'Le mot de passe doit contenir au moins 6 caractères.',
+    'password.confirmed' => 'Le mot de passe et sa confirmation ne correspondent pas.',
+    'role.required' => 'Le rôle est obligatoire.',
+    'role.exists' => 'Le rôle choisi est invalide.',
+]);
+
 
     $user = User::create([
         'name' => $request->name,
@@ -53,12 +65,14 @@ class CoordinatorController extends Controller
     $user->assignRole($request->role);
 
     return redirect()->route('admin.coordinators.index')
-        ->with('success', 'Coordinateur créé avec succès !');
+        ->with('success', 'Utilisateur créé avec succès !');
 }
 
 
     public function edit(User $user)
     {
+
+
         $role = Role::firstOrCreate(['name' => 'superviseur']);
         return view('admin.coordinators.edit', compact('user', 'role'));
     }
@@ -82,13 +96,13 @@ class CoordinatorController extends Controller
         // Supprimer les rôles existants et assigner le nouveau
         $user->syncRoles([$request->role]);
 
-        return redirect()->route('admin.coordinators.index')->with('success', 'Coordinateur mis à jour !');
+        return redirect()->route('admin.coordinators.index')->with('success', 'Utilisateur mis à jour !');
     }
 
 
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('admin.coordinators.index')->with('success', 'Coordinateur supprimé !');
+        return redirect()->route('admin.coordinators.index')->with('success', 'Utilisateur supprimé !');
     }
 }

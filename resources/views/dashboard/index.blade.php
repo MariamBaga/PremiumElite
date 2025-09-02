@@ -75,18 +75,7 @@
        LIGNE 2 : Clients + KPI équipes (7 jours)
        ======================= --}}
   <div class="row">
-    <div class="col-lg-3 col-6">
-      <div class="small-box bg-warning">
-        <div class="inner">
-          <h3>{{ $totalClients }}</h3>
-          <p>Clients total</p>
-        </div>
-        <div class="icon"><i class="fas fa-users"></i></div>
-        <a href="{{ route('clients.index') }}" class="small-box-footer">
-          Voir les clients <i class="fas fa-arrow-circle-right"></i>
-        </a>
-      </div>
-    </div>
+    
 
     @php $teamsKpi = $teamsKpi ?? collect(); @endphp
     @foreach($teamsKpi as $tk)
@@ -280,7 +269,7 @@
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover mb-0">
-              <thead><tr><th>Réf.</th><th>Client</th><th>Statut</th><th>Type</th><th>Planifiée</th></tr></thead>
+              <thead><tr><th>Réf.</th><th>Abonner</th><th>Statut</th><th>Type</th><th>Planifiée</th></tr></thead>
               <tbody>
                 @foreach($lastDossiers as $d)
                   <tr>

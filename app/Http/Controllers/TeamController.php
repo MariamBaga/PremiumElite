@@ -21,10 +21,7 @@ class TeamController extends Controller
 
         $user = auth()->user();
 
-        // Vérifie que l'utilisateur a la permission globale OU qu'il est lead de cette équipe
-        if (!$user->can('teams.view') && $team->lead_id !== $user->id) {
-            abort(403, "Vous n'avez pas accès à cette équipe.");
-        }
+
         $q = Team::query()
             ->with(['lead'])
             ->when($request->filled('only_trashed'), fn($qr) => $qr->onlyTrashed())
@@ -40,7 +37,8 @@ class TeamController extends Controller
     public function create()
     {
         $this->authorize('create', Team::class);
-        $users = User::orderBy('name')->get();
+        $users = User::role('chef_equipe')->orderBy('name')->get();
+
         $dossiers = DossierRaccordement::with('client')
             ->whereNull('assigned_team_id')
             ->latest()->limit(200)->get(); // limite pour éviter des listes énormes
@@ -98,7 +96,8 @@ class TeamController extends Controller
     public function edit(Team $team)
     {
         $this->authorize('update', $team);
-        $users = User::orderBy('name')->get();
+        $users = User::role('chef_equipe')->orderBy('name')->get();
+
 
         $dossiers = DossierRaccordement::with('client')
             ->where(function($q) use ($team){

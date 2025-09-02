@@ -21,11 +21,7 @@ class DashboardController extends Controller
         // Filtre superadmin
         $clientQuery = Client::query();
         $dossierQuery = DossierRaccordement::query();
-        if (!auth()->user()->hasRole('superadmin')) {
-            $clientQuery->where('created_by', auth()->id());
-            $dossierQuery->whereHas('client', fn($q) => $q->where('created_by', auth()->id()));
-        }
-
+       
         $totalClients = $clientQuery->count();
 
         // ========= Expressions portables selon le SGBD =========
@@ -58,7 +54,7 @@ class DashboardController extends Controller
             StatutDossier::INJOIGNABLE->value,
             StatutDossier::PBO_SATURE->value,
             StatutDossier::ZONE_DEPOURVUE->value,
-            StatutDossier::ON->value,
+            StatutDossier::ACTIVE->value,
         ];
         $STATUT_REA = StatutDossier::REALISE->value;
         $annules = 0;

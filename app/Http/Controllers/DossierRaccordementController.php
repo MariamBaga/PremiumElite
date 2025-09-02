@@ -16,6 +16,11 @@ class DossierRaccordementController extends Controller
 
     public function index(Request $request)
     {
+
+        if ($user->hasRole('chef_equipe')) {
+            $query->where('assigned_team_id', $user->team_id);
+        }
+
         $this->authorize('viewAny', DossierRaccordement::class);
 
         $query = DossierRaccordement::with(['client','technicien'])
@@ -42,7 +47,7 @@ class DossierRaccordementController extends Controller
     public function store(StoreDossierRequest $request)
     {
         $data = $request->validated();
-$data['created_by'] = auth()->id(); // ← ajoute le créateur
+ // ← ajoute le créateur
         $this->authorize('create', DossierRaccordement::class);
         $dossier = DossierRaccordement::create($request->validated());
         return redirect()->route('dossiers.show', $dossier)->with('success','Dossier créé');
@@ -50,9 +55,7 @@ $data['created_by'] = auth()->id(); // ← ajoute le créateur
 
     public function show(DossierRaccordement $dossier)
     {
-        if ($dossier->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Accès refusé');
-        }
+
 
         $this->authorize('view', $dossier);
         $dossier->load(['client','technicien','tentatives.user','interventions.technicien','statuts.user']);
@@ -61,9 +64,7 @@ $data['created_by'] = auth()->id(); // ← ajoute le créateur
 
     public function edit(DossierRaccordement $dossier)
     {
-        if ($dossier->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Accès refusé');
-        }
+
 
         $this->authorize('update', $dossier);
         return view('dossiers.edit', [
@@ -93,7 +94,6 @@ $data['created_by'] = auth()->id(); // ← ajoute le créateur
     {
         $this->authorize('assign', DossierRaccordement::class);
 
-        // 1) Valider les champs (tech + équipe sont optionnels mais au moins un requis)
         $data = $request->validate([
             'assigned_to'      => 'nullable|exists:users,id',
             'assigned_team_id' => 'nullable|exists:teams,id',
@@ -104,36 +104,11 @@ $data['created_by'] = auth()->id(); // ← ajoute le créateur
             return back()->withErrors(['assigned_to' => 'Affecter un technicien ou une équipe est requis.'])->withInput();
         }
 
-        // 2) Garder l'ancienne équipe pour détecter un changement
-        $oldTeamId = $dossier->assigned_team_id ?? null;
-
-        // 3) Mettre à jour le dossier
         $dossier->update([
             'assigned_to'      => $data['assigned_to']      ?? $dossier->assigned_to,
             'assigned_team_id' => $data['assigned_team_id'] ?? $dossier->assigned_team_id,
             'date_planifiee'   => $data['date_planifiee']   ?? $dossier->date_planifiee,
         ]);
-
-        // 4) Synchroniser la “corbeille d’équipe” (team_dossiers)
-        if (!empty($data['assigned_team_id'])) {
-            // Si l’équipe a changé, on clôt l’ancienne entrée (pour l’hygiène)
-            if ($oldTeamId && $oldTeamId != $data['assigned_team_id']) {
-                TeamDossier::where('team_id', $oldTeamId)
-                    ->where('dossier_id', $dossier->id)
-                    ->whereIn('etat', ['en_cours','contrainte','reporte'])
-                    ->update([
-                        'etat'       => 'cloture',
-                        'motif'      => 'Réaffecté vers une autre équipe',
-                        'updated_by' => auth()->id(),
-                    ]);
-            }
-
-            // Créer si absent (le dossier apparaît dans la corbeille de la nouvelle équipe)
-            TeamDossier::firstOrCreate(
-                ['team_id' => $dossier->assigned_team_id, 'dossier_id' => $dossier->id],
-                ['etat' => 'en_cours']
-            );
-        }
 
         return back()->with('success', 'Affectation mise à jour');
     }
@@ -143,12 +118,30 @@ $data['created_by'] = auth()->id(); // ← ajoute le créateur
 
 
 
+
     public function updateStatus(UpdateStatutRequest $request, DossierRaccordement $dossier)
     {
         $this->authorize('updateStatus', $dossier);
+
+        $oldStatut = $dossier->statut;
+
         $dossier->update($request->validated());
+
+        // Synchronisation corbeille uniquement si statut = active ou injoignable
+
+    // 👉 Toujours garder le dossier dans la corbeille tant qu'il a une équipe
+    if ($dossier->assigned_team_id) {
+        TeamDossier::firstOrCreate(
+            ['team_id' => $dossier->assigned_team_id, 'dossier_id' => $dossier->id],
+            ['etat' => 'en_cours']
+        );
+    }
+
+
+
         return back()->with('success','Statut mis à jour');
     }
+
 
     public function storeTentative(StoreTentativeRequest $request, DossierRaccordement $dossier)
     {

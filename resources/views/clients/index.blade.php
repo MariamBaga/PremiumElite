@@ -98,39 +98,40 @@
                 <div class="col-md-2 text-end">
                     <button class="btn btn-outline-primary w-100">Filtrer</button>
                 </div>
-
-                <div class="col-md-2 text-end">
-                    <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau Dossier FTTH</a>
-                </div>
-
+                @can('clients.create')
+                    <div class="col-md-2 text-end">
+                        <a href="{{ route('clients.create') }}" class="btn btn-primary w-100">Nouveau Dossier FTTH</a>
+                    </div>
+                @endcan
 
             </form>
 
 
             <!-- Bouton Supprimer tous
-                                <div class="col-md-2 text-end">
-                                    <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-                                          onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-                                          class="d-inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger w-100">
-                                            Supprimer tous
-                                        </button>
-                                    </form>
-                                </div> -->
+                                    <div class="col-md-2 text-end">
+                                        <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                                              onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                                              class="d-inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger w-100">
+                                                Supprimer tous
+                                            </button>
+                                        </form>
+                                    </div> -->
 
 
             <!-- // Importer -->
-            <div class="col-md-3">
-                <form action="{{ route('clients.import') }}" method="POST" enctype="multipart/form-data"
-                    class="d-flex gap-2">
-                    @csrf
-                    <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control" required>
-                    <button class="btn btn-primary w-100">Importer</button>
-                </form>
-            </div>
-
+            @can('clients.create')
+                <div class="col-md-3">
+                    <form action="{{ route('clients.import') }}" method="POST" enctype="multipart/form-data"
+                        class="d-flex gap-2">
+                        @csrf
+                        <input type="file" name="file" accept=".xlsx,.xls,.csv" class="form-control" required>
+                        <button class="btn btn-primary w-100">Importer</button>
+                    </form>
+                </div>
+            @endcan
             @if (session('success'))
                 <div class="alert alert-success mt-3">{{ session('success') }}</div>
             @endif
@@ -144,6 +145,8 @@
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
                     <thead>
+                    
+
                         <tr>
                             <th>#</th>
                             <th>Abonner</th>
@@ -159,8 +162,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($clients as $c)
-                            <tr>
+                    @php
+use Carbon\Carbon;
+
+$today = Carbon::today();
+@endphp
+
+@forelse($clients as $c)
+    @php
+        $dossier = $c->lastDossier ?? null;
+
+        $class = '';
+        if ($dossier && $dossier->date_paiement) {
+            $days = $today->diffInDays(Carbon::parse($dossier->date_paiement));
+            if ($days > 3) {
+                $class = 'table-danger'; // rouge
+            } elseif ($days > 1) {
+                $class = 'table-warning'; // jaune
+            }
+        }
+    @endphp
+
+    <tr class="{{ $class }}">
                                 <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
                                 <td class="text-truncate" style="max-width:220px;">
                                     {{ $c->displayName }}
@@ -176,43 +199,55 @@
                                 </td>
                                 <td class="text-nowrap">
                                     {{ optional($c->lastDossier?->date_affectation)->format('d/m/Y') }}</td>
-                                    <td class="text-end">
-    <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
+                                <td class="text-end">
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
 
-        {{-- Ouvrir / Éditer --}}
-        <a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
-        <a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
+                                        {{-- Ouvrir / Éditer --}}
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                            href="{{ route('clients.show', $c) }}">Ouvrir</a>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                            href="{{ route('clients.edit', $c) }}">Éditer</a>
 
-        @php
-            $dossier = $c->lastDossier ?? new \App\Models\DossierRaccordement(['client_id' => $c->id]);
-        @endphp
+                                        @php
+                                            $dossier =
+                                                $c->lastDossier ??
+                                                new \App\Models\DossierRaccordement(['client_id' => $c->id]);
+                                        @endphp
 
-        {{-- Affectation équipe --}}
-        <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}" class="d-inline-flex">
-            @csrf
-            <select name="assigned_team_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                <option value="">-- Équipe --</option>
-                @foreach(\App\Models\Team::all() as $team)
-                    <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>{{ $team->name }}</option>
-                @endforeach
-            </select>
-        </form>
 
-        {{-- Statut --}}
-        @can('updateStatus', $dossier)
-            <form method="POST" action="{{ route('dossiers.status', $dossier) }}" class="d-inline-flex align-items-center gap-1">
-                @csrf
-                <select name="statut" class="form-select form-select-sm" required>
-                    @foreach(\App\Enums\StatutDossier::labels() as $value => $label)
-                        <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-                <button class="btn btn-sm btn-primary">OK</button>
-            </form>
-        @endcan
+                                        @can('dossiers.assign')
+                                            {{-- Créer un dossier si aucun n'existe --}}
+                                            {{-- Affectation équipe --}}
+                                            <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}"
+                                                class="d-inline-flex">
+                                                @csrf
+                                                <select name="assigned_team_id" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()">
+                                                    <option value="">-- Équipe --</option>
+                                                    @foreach (\App\Models\Team::all() as $team)
+                                                        <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>
+                                                            {{ $team->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </form>
+                                        @endcan
+                                        {{-- Statut --}}
+                                        @can('updateStatus', $dossier)
+                                            <form method="POST" action="{{ route('dossiers.status', $dossier) }}"
+                                                class="d-inline-flex align-items-center gap-1">
+                                                @csrf
+                                                <select name="statut" class="form-select form-select-sm" required>
+                                                    @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                                                        <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
+                                                            {{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <button class="btn btn-sm btn-primary">OK</button>
+                                            </form>
+                                        @endcan
 
-    </div>
-</td>
+                                    </div>
+                                </td>
 
                             </tr>
                         @empty

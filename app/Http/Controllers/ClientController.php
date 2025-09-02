@@ -16,7 +16,21 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
-        // Valider les filtres optionnels
+        // Valider les filtres optionne
+        //
+        // ls
+        $user = auth()->user();
+
+        // Récupération équipe si chef d'équipe
+        $teamId = null;
+        if ($user->hasRole('chef_equipe')) {
+            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+        }
+
+        $query = Client::query();
+
+
+
         $data = $request->validate([
             'type' => 'nullable|in:residentiel,professionnel',
             'search' => 'nullable|string|max:200',
@@ -36,9 +50,22 @@ class ClientController extends Controller
         $dir = $data['dir'] ?? 'desc';
         $per = $data['per_page'] ?? 10;
 
-        $q = Client::with('lastDossier') 
+        $query = Client::with(['lastDossier', 'lastDossier.team']);
+
+        // Filtre pour chef d'équipe
+        if ($user->hasRole('chef_equipe')) {
+            if ($teamId) {
+                $query->whereHas('lastDossier', function($q) use ($teamId) {
+                    $q->where('assigned_team_id', $teamId);
+                });
+            } else {
+                // Pas d'équipe assignée → ne rien afficher
+                $query->whereRaw('0 = 1');
+            }
+        }
+
+        $q = Client::with('lastDossier')
             // Si ce n’est pas un superadmin, on ne montre que ses clients
-            ->when(!auth()->user()->hasRole('superadmin'), fn($qry) => $qry->where('created_by', auth()->id()))
 
             // Filtres simples
             ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
@@ -79,7 +106,7 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $data = $request->validated();
-        $data['created_by'] = auth()->id();
+
 
         // 1. Création du client
         $client = Client::create($data);
@@ -104,9 +131,7 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         // Vérification d'accès
-        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Accès refusé');
-        }
+
 
         // Charger le nombre de dossiers et les dossiers eux-mêmes
         $client->loadCount('dossiers');
@@ -121,9 +146,7 @@ class ClientController extends Controller
 
     public function edit(Client $client)
     {
-        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Accès refusé');
-        }
+
 
         // Charger le dossier existant s’il y en a un
         $dossier = DossierRaccordement::where('client_id', $client->id)->first();
@@ -137,9 +160,7 @@ class ClientController extends Controller
 
     public function update(UpdateClientRequest $request, Client $client)
     {
-        if ($client->created_by !== auth()->id() && !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Accès refusé');
-        }
+
 
         DB::transaction(function () use ($request, $client) {
             // 1) Mise à jour des infos client

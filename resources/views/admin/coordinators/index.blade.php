@@ -4,7 +4,7 @@
 @section('title', 'Liste des Coordinateurs')
 
 @section('content_header')
-    <h1>Coordinateurs</h1>
+    <h1>Utilisateurs</h1>
 @stop
 
 @section('content')
@@ -34,9 +34,9 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title">Liste des coordinateurs</h3>
+            <h3 class="card-title">Liste des utilisateurs</h3>
             <a href="{{ route('admin.coordinators.create') }}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Créer un coordinateur
+                <i class="fas fa-plus"></i> Créer un utilisateur
             </a>
         </div>
         <div class="card-body table-responsive">
@@ -72,7 +72,7 @@
 
                     @if($coordinators->isEmpty())
                         <tr>
-                            <td colspan="4" class="text-center">Aucun coordinateur trouvé.</td>
+                            <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
                         </tr>
                     @endif
                 </tbody>

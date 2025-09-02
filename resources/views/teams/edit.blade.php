@@ -43,18 +43,7 @@
           <small class="text-muted">Liste des noms des membres non-utilisateurs.</small>
         </div>
 
-        {{-- Membres utilisateurs --}}
-        <div class="col-md-6 mb-3">
-          <label>Membres (utilisateurs)</label>
-          <select name="members[]" class="form-control" multiple size="8">
-            @php $current = $team->members->pluck('id')->all(); @endphp
-            @foreach($users as $u)
-              <option value="{{ $u->id }}" @selected(in_array($u->id, old('members',$current)))>
-                {{ $u->name }} — {{ $u->email }}
-              </option>
-            @endforeach
-          </select>
-        </div>
+        
 
         {{-- Chef --}}
         <div class="col-md-6 mb-3">

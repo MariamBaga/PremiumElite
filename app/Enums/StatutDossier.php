@@ -10,7 +10,7 @@ enum StatutDossier: string
     case REALISE        = 'realise';
     case EN_APPEL       = 'en_appel';
     case EN_EQUIPE      = 'en_equipe';
-    case ON             = 'on';
+    case ACTIVE = 'active';
 
     public static function labels(): array
     {
@@ -21,9 +21,10 @@ enum StatutDossier: string
             self::REALISE->value        => 'Réalisé',
             self::EN_APPEL->value       => 'En appel',
             self::EN_EQUIPE->value      => 'En équipe',
-            self::ON->value             => 'On',
+           
+            self::ACTIVE->value         => 'Active',
         ];
     }
 
-  
+
 }

@@ -8,7 +8,6 @@ use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use App\Models\Team;
 
-
 class PermissionSeeder extends Seeder
 {
     public function run(): void
@@ -77,16 +76,18 @@ class PermissionSeeder extends Seeder
         // -------------------------------------------------
         // 7) Création des rôles
         // -------------------------------------------------
-        $roles = ['admin', 'superviseur', 'technicien', 'commercial', 'superadmin'];
+        $roles = ['admin', 'superviseur', 'technicien', 'commercial', 'superadmin', 'chef_equipe', 'coordinateur'];
         foreach ($roles as $roleName) {
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         }
 
-        $admin = Role::where('name','admin')->first();
-        $super = Role::where('name','superviseur')->first();
-        $tech  = Role::where('name','technicien')->first();
-        $com   = Role::where('name','commercial')->first();
-        $superadmin = Role::where('name','superadmin')->first();
+        $admin       = Role::where('name','admin')->first();
+        $super       = Role::where('name','superviseur')->first();
+        $tech        = Role::where('name','technicien')->first();
+        $com         = Role::where('name','commercial')->first();
+        $superadmin  = Role::where('name','superadmin')->first();
+        $chefEquipe  = Role::where('name','chef_equipe')->first();
+        $coord       = Role::where('name','coordinateur')->first();
 
         // -------------------------------------------------
         // 8) Attribution des permissions
@@ -112,20 +113,20 @@ class PermissionSeeder extends Seeder
             'extensions.view'
         ]);
 
+        // Chef d'équipe
+        $chefEquipe->givePermissionTo([
+            'dossiers.view','dossiers.update','dossiers.update-status',
+            'teams.view','teams.manage-members',
+            'clients.view',
+            'extensions.view'
+        ]);
+
+        // Coordinateur
+        $coord->givePermissionTo(array_merge($dossierPerms, ['clients.view','clients.create','clients.update'], $teamPerms, $extPerms, $inboxPerms));
+
+
+        
         // Superadmin → toutes les permissions
         $superadmin->givePermissionTo(Permission::all());
-
-
-
-// Pour chaque équipe avec un lead_id défini
-foreach (Team::whereNotNull('lead_id')->get() as $team) {
-    $user = User::find($team->lead_id);
-    if ($user && !$user->hasPermissionTo('teams.view')) {
-        $user->givePermissionTo('teams.view');
-    }
-}
-
-
-
     }
 }
