@@ -378,12 +378,12 @@ return [
             'icon' => 'fas fa-people-group',
             'can'  => 'teams.view',
           ],
-          [
-            'text' => 'Corbeille',
-            'route'=> 'teams.trash',
-            'icon' => 'fas fa-trash',
-            'can'  => 'teams.view',
-          ],
+        //   [
+        //     'text' => 'Corbeille',
+        //     'route'=> 'teams.trash',
+        //     'icon' => 'fas fa-trash',
+        //     'can'  => 'teams.view',
+        //   ],
 
 
 
