@@ -16,7 +16,7 @@ use App\Http\Controllers\Ftth\CreateController as FtthCreateController;
 use App\Http\Controllers\Ftth\IndexController as FtthIndexController;
     // routes/web.php (dans le group auth)
     use App\Http\Controllers\TicketController;
-
+    use App\Http\Controllers\DashboardChefEquipeController;
     use App\Http\Controllers\MapController;
 
 
@@ -37,6 +37,9 @@ Route::middleware(['auth','verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class,'index'])->name('dashboard');
+    Route::get('/dashboard/chef', [DashboardChefEquipeController::class, 'index'])
+    ->name('dashboard.chef');
+
 
     /*
     |----------------------------------------------------------------------
@@ -122,7 +125,6 @@ Route::post('teams/{team}/members', [TeamController::class,'addMember'])
 Route::delete('teams/{team}/members/{user}', [TeamController::class,'removeMember'])
 ->middleware('permission:teams.manage-members')->name('teams.members.remove');
 
-
 // 🆕 Créer un nouvel utilisateur et l’ajouter à l’équipe
 Route::post('teams/{team}/members/create-user', [TeamController::class,'createAndAddMember'])
     ->middleware('permission:teams.manage-members')->name('teams.members.create-user');
@@ -148,6 +150,10 @@ Route::post('dossiers/{dossier}/assign-team',
     Route::delete('/profile',[ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+Route::post('dossiers/{dossier}/cloturer', [DossierRaccordementController::class, 'cloturer'])
+    ->name('dossiers.cloturer')
+    ->middleware('auth','verified','permission:dossiers.update'); // ou la permission qui convient
 
 
 use App\Http\Controllers\TeamInboxController;
@@ -195,6 +201,11 @@ Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function (
     ->middleware('auth');
 
 
+    Route::post('dossiers/{dossier}/contrainte', [DossierRaccordementController::class, 'notifierContrainte'])
+    ->name('dossiers.contrainte')
+    ->middleware(['auth','verified','permission:dossiers.update']);
+
+
     Route::post('/dossiers/nouveau_rdv', [DossierRaccordementController::class, 'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
 
 
@@ -202,6 +213,8 @@ Route::middleware(['auth','verified'])->group(function(){
     Route::get('map', [MapController::class,'index'])->name('map.index');
     Route::get('map/data', [MapController::class,'data'])->name('map.data'); // GeoJSON
 });
+
+
 
 
 

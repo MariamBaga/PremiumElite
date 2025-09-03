@@ -35,6 +35,8 @@ class ClientController extends Controller
         'date_paiement_to' => 'nullable|date',
         'date_affect_from' => 'nullable|date',
         'date_affect_to' => 'nullable|date',
+        'statut' => 'nullable|string|in:' . implode(',', array_keys(\App\Enums\StatutDossier::labels())),
+
         'sort' => 'nullable|in:created_at,nom,prenom,raison_sociale,numero_ligne,numero_point_focal,localisation,date_paiement,date_affectation',
         'dir' => 'nullable|in:asc,desc',
         'per_page' => 'nullable|integer|min:5|max:100',
@@ -67,7 +69,11 @@ class ClientController extends Controller
         ->when(!empty($data['date_paiement_to']), fn($qry) => $qry->whereDate('date_paiement', '<=', $data['date_paiement_to']))
         ->when(!empty($data['date_affect_from']), fn($qry) => $qry->whereDate('date_affectation', '>=', $data['date_affect_from']))
         ->when(!empty($data['date_affect_to']), fn($qry) => $qry->whereDate('date_affectation', '<=', $data['date_affect_to']))
-
+->when(!empty($data['statut']), function ($qry) use ($data) {
+            $qry->whereHas('lastDossier', function ($sub) use ($data) {
+                $sub->where('statut', $data['statut']);
+            });
+        })
         // Recherche globale
         ->when(!empty($data['search']), function ($qry) use ($data) {
             $s = '%' . $data['search'] . '%';
@@ -82,6 +88,7 @@ class ClientController extends Controller
                     ->orWhere('numero_ligne', 'like', $s)
                     ->orWhere('numero_point_focal', 'like', $s);
             });
+
         })
 
         ->orderBy($sort, $dir);

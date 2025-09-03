@@ -2,6 +2,9 @@
 
 namespace App\Enums;
 
+
+
+
 enum StatutDossier: string
 {
     case INJOIGNABLE    = 'injoignable';

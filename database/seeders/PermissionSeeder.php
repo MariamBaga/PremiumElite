@@ -32,7 +32,8 @@ class PermissionSeeder extends Seeder
         foreach ($dossierPerms as $p) {
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
-
+        Permission::firstOrCreate(['name' => 'dashequipe', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'dashsu', 'guard_name' => 'web']);
         // -------------------------------------------------
         // 3) Permissions clients
         // -------------------------------------------------
@@ -120,13 +121,28 @@ class PermissionSeeder extends Seeder
             'clients.view',
             'extensions.view'
         ]);
+// Chef d’équipe → accès à dashboard chef
+// Chef d’équipe → accès au dashboard chef
+$chefEquipe->givePermissionTo(['dashequipe']);
+
+// Tous les autres rôles → accès au dashboard normal
+$admin->givePermissionTo('dashsu');
+$super->givePermissionTo('dashsu');
+$tech->givePermissionTo('dashsu');
+$com->givePermissionTo('dashsu');
+$coord->givePermissionTo('dashsu');
+
+// Superadmin → accès uniquement au dashboard normal (pas dashequipe)
+$superadmin->givePermissionTo('dashsu');
+
 
         // Coordinateur
         $coord->givePermissionTo(array_merge($dossierPerms, ['clients.view','clients.create','clients.update'], $teamPerms, $extPerms, $inboxPerms));
 
 
-        
-        // Superadmin → toutes les permissions
-        $superadmin->givePermissionTo(Permission::all());
+// Superadmin → toutes les permissions sauf "chef_equipe"
+$allPermissions = Permission::where('name', '!=', 'dashequipe')->get();
+$superadmin->givePermissionTo($allPermissions);
+
     }
 }

@@ -94,6 +94,16 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-2">
+    <select name="statut" class="form-control" onchange="this.form.submit()">
+        <option value="">-- Statut --</option>
+        @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+            <option value="{{ $value }}" @selected(request('statut') === $value)>
+                {{ $label }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
                 <div class="col-md-2 text-end">
                     <button class="btn btn-outline-primary w-100">Filtrer</button>

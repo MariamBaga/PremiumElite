@@ -335,11 +335,21 @@ return [
               'can' => 'coordinators.view'
           ],
 
+
+
+          [
+            'text' => 'Tableau de bord',
+            'route' => 'dashboard',
+            'icon' => 'fas fa-tachometer-alt',
+            'can' => 'dashsu', // permission custom
+        ],
         [
             'text' => 'Tableau de bord',
-            'route'=> 'dashboard',
+            'route' => 'dashboard.chef',
             'icon' => 'fas fa-tachometer-alt',
-          ],
+            'can' => 'dashequipe',
+        ],
+
 
 
         // [

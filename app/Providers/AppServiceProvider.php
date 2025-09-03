@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
 
 
+        
 
 
         if (class_exists(HeadingRowFormatter::class)) {

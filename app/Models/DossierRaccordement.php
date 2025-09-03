@@ -39,6 +39,10 @@ class DossierRaccordement extends Model
     return $this->belongsTo(Team::class, 'assigned_team_id');
 }
 
+public function assignedTeam()
+{
+    return $this->belongsTo(Team::class, 'assigned_team_id');
+}
 
 
 

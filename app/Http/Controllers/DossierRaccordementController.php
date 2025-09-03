@@ -13,19 +13,23 @@ use App\Models\TeamDossier;
 class DossierRaccordementController extends Controller
 {
 
-
     public function index(Request $request)
-    {$user = auth()->user();
-
-        if ($user->hasRole('chef_equipe')) {
-            $query->where('assigned_team_id', $user->team_id);
-        }
+    {
+        $user = auth()->user();
 
         $this->authorize('viewAny', DossierRaccordement::class);
 
+        // On démarre la requête
         $query = DossierRaccordement::with(['client','technicien'])
-            ->when($request->filled('statut'), fn($q) => $q->where('statut', $request->statut))
-            ->when($request->filled('type_service'), fn($q)=>$q->where('type_service',$request->type_service))
+            ->when($user->hasRole('chef_equipe'), fn($q) =>
+                $q->where('assigned_team_id', $user->team_id) // filtre chef d’équipe
+            )
+            ->when($request->filled('statut'), fn($q) =>
+                $q->where('statut', $request->statut)
+            )
+            ->when($request->filled('type_service'), fn($q) =>
+                $q->where('type_service', $request->type_service)
+            )
             ->latest();
 
         return view('dossiers.index', [
@@ -33,6 +37,7 @@ class DossierRaccordementController extends Controller
             'statuts'  => StatutDossier::labels(),
         ]);
     }
+
 
     public function create()
     {
@@ -56,7 +61,9 @@ class DossierRaccordementController extends Controller
     public function show(DossierRaccordement $dossier)
     {
 
-
+        if ($user->hasRole('chef_equipe') && $dossier->assigned_team_id !== $user->team_id) {
+            abort(403, "Vous n'êtes pas autorisé à voir ce dossier.");
+        }
         $this->authorize('view', $dossier);
         $dossier->load(['client','technicien','tentatives.user','interventions.technicien','statuts.user']);
         return view('dossiers.show', compact('dossier'));
@@ -116,6 +123,28 @@ class DossierRaccordementController extends Controller
 
 
 
+    public function cloturer(DossierRaccordement $dossier)
+    {
+        $dossier->statut = 'cloture'; // ou StatutDossier::Cloture si tu utilises enum
+        $dossier->save();
+
+        return redirect()->back()->with('success', 'Dossier clôturé avec succès.');
+    }
+
+
+
+    public function notifierContrainte(DossierRaccordement $dossier, Request $request)
+{
+    // Exemple : ajouter une contrainte au dossier
+    $request->validate([
+        'contrainte' => 'required|string|max:255',
+    ]);
+
+    $dossier->contrainte = $request->contrainte;
+    $dossier->save();
+
+    return redirect()->back()->with('success', 'Contrainte notifiée avec succès.');
+}
 
 
 
@@ -210,7 +239,7 @@ public function storeNouveauRdv(Request $request)
         'description' => $request->commentaire_rdv,
     ]);
 
-   
+
 
     return back()->with('success', 'Nouveau rendez-vous enregistré.');
 }
