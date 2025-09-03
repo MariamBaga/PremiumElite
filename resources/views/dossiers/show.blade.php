@@ -1,202 +1,287 @@
-
 <div class="row">
 
-  <!-- COLONNE GAUCHE : Informations, Historique, Tentatives, Interventions -->
-  <div class="col-lg-8">
+    <!-- COLONNE GAUCHE : Informations, Historique, Tentatives, Interventions -->
+    <div class="col-lg-8">
 
-    <!-- Informations -->
-    <div class="card mb-3">
-      <div class="card-header">Informations</div>
-      <div class="card-body">
-        <dl class="row">
-          <dt class="col-sm-3">Abonné</dt>
-          <dd class="col-sm-9">{{ $dossier->client->displayName }} ({{ $dossier->client->telephone }})</dd>
+        <!-- Informations -->
+        <div class="card mb-3">
+            <div class="card-header">Informations</div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Abonné</dt>
+                    <dd class="col-sm-9">{{ $dossier->client->displayName }} ({{ $dossier->client->telephone }})</dd>
 
-          <dt class="col-sm-3">Statut</dt>
-          <dd class="col-sm-9"><span class="badge bg-info">{{ \App\Enums\StatutDossier::labels()[$dossier->statut->value] }}</span></dd>
+                    <dt class="col-sm-3">Statut</dt>
+                    <dd class="col-sm-9"><span
+                            class="badge bg-info">{{ \App\Enums\StatutDossier::labels()[$dossier->statut->value] }}</span>
+                    </dd>
 
-          <dt class="col-sm-3">Technicien</dt>
-          <dd class="col-sm-9">{{ $dossier->technicien?->name ?? '-' }}</dd>
+                    <dt class="col-sm-3">Technicien</dt>
+                    <dd class="col-sm-9">{{ $dossier->technicien?->name ?? '-' }}</dd>
 
-          <dt class="col-sm-3">Planifiée</dt>
-          <dd class="col-sm-9">{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') ?? '-' }}</dd>
+                    <dt class="col-sm-3">Planifiée</dt>
+                    <dd class="col-sm-9">{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') ?? '-' }}</dd>
 
-          <dt class="col-sm-3">Réalisée</dt>
-          <dd class="col-sm-9">{{ optional($dossier->date_realisation)->format('d/m/Y H:i') ?? '-' }}</dd>
+                    <dt class="col-sm-3">Réalisée</dt>
+                    <dd class="col-sm-9">{{ optional($dossier->date_realisation)->format('d/m/Y H:i') ?? '-' }}</dd>
 
-          <dt class="col-sm-3">Notes</dt>
-          <dd class="col-sm-9">{{ $dossier->description ?? '-' }}</dd>
-        </dl>
-      </div>
+                    <dt class="col-sm-3">Notes</dt>
+                    <dd class="col-sm-9">{{ $dossier->description ?? '-' }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Historique des statuts -->
+        <div class="card mb-3">
+            <div class="card-header">Historique des statuts</div>
+            <div class="card-body table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>De</th>
+                            <th>À</th>
+                            <th>Par</th>
+                            <th>Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($dossier->statuts as $h)
+                            <tr>
+                                <td>{{ $h->created_at->format('d/m/Y H:i') }}</td>
+                                <td>{{ \App\Enums\StatutDossier::labels()[$h->ancien_statut] ?? '-' }}</td>
+                                <td>{{ \App\Enums\StatutDossier::labels()[$h->nouveau_statut] ?? $h->nouveau_statut }}
+                                </td>
+                                <td>{{ $h->user?->name ?? '-' }}</td>
+                                <td>{{ $h->commentaire ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tentatives de contact -->
+        <div class="card mb-3">
+            <div class="card-header">Tentatives de contact</div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('dossiers.tentatives.store', $dossier) }}" class="row g-2 mb-3">
+                    @csrf
+                    <div class="col-md-3"><input name="methode" class="form-control" placeholder="appel/sms/email"
+                            required></div>
+                    <div class="col-md-3"><input name="resultat" class="form-control" placeholder="joignable..."
+                            required></div>
+                    <div class="col-md-4"><input name="notes" class="form-control" placeholder="notes"></div>
+                    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Ajouter</button></div>
+                </form>
+
+                <ul class="list-group">
+                    @foreach ($dossier->tentatives->sortByDesc('effectuee_le') as $t)
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>{{ $t->methode }}</strong> — {{ $t->resultat }}
+                                ({{ $t->effectuee_le->format('d/m/Y H:i') }})
+                            </span>
+                            <span class="text-muted">{{ $t->user?->name }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        <!-- Interventions -->
+        <div class="card mb-3">
+            <div class="card-header">Interventions</div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('dossiers.interventions.store', $dossier) }}"
+                    class="row g-2 mb-3">
+                    @csrf
+                    <div class="col-md-3"><input type="datetime-local" name="debut" class="form-control"></div>
+                    <div class="col-md-3"><input type="datetime-local" name="fin" class="form-control"></div>
+                    <div class="col-md-3">
+                        <select name="etat" class="form-control">
+                            <option value="en_cours">En cours</option>
+                            <option value="realisee">Réalisée</option>
+                            <option value="suspendue">Suspendue</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><button class="btn btn-outline-primary w-100">Ajouter</button></div>
+                    <div class="col-12 mt-2">
+                        <textarea name="observations" class="form-control" placeholder="Observations" rows="2"></textarea>
+                    </div>
+                </form>
+
+                <ul class="list-group">
+                    @foreach ($dossier->interventions()->latest()->get() as $i)
+                        <li class="list-group-item">
+                            <strong>{{ ucfirst($i->etat) }}</strong> — {{ $i->debut?->format('d/m/Y H:i') }} →
+                            {{ $i->fin?->format('d/m/Y H:i') }}
+                            <span class="float-end">{{ $i->technicien?->name }}</span>
+                            <div class="text-muted">{{ $i->observations }}</div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Historique des statuts -->
-    <div class="card mb-3">
-      <div class="card-header">Historique des statuts</div>
-      <div class="card-body table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>De</th>
-              <th>À</th>
-              <th>Par</th>
-              <th>Commentaire</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach($dossier->statuts as $h)
-              <tr>
-                <td>{{ $h->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ \App\Enums\StatutDossier::labels()[$h->ancien_statut] ?? '-' }}</td>
-                <td>{{ \App\Enums\StatutDossier::labels()[$h->nouveau_statut] ?? $h->nouveau_statut }}</td>
-                <td>{{ $h->user?->name ?? '-' }}</td>
-                <td>{{ $h->commentaire ?? '-' }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- COLONNE DROITE : Affectation & Statut -->
+    <div class="col-lg-4">
 
-    <!-- Tentatives de contact -->
-    <div class="card mb-3">
-      <div class="card-header">Tentatives de contact</div>
-      <div class="card-body">
-        <form method="POST" action="{{ route('dossiers.tentatives.store',$dossier) }}" class="row g-2 mb-3">
-          @csrf
-          <div class="col-md-3"><input name="methode" class="form-control" placeholder="appel/sms/email" required></div>
-          <div class="col-md-3"><input name="resultat" class="form-control" placeholder="joignable..." required></div>
-          <div class="col-md-4"><input name="notes" class="form-control" placeholder="notes"></div>
-          <div class="col-md-2"><button class="btn btn-outline-primary w-100">Ajouter</button></div>
-        </form>
-
-        <ul class="list-group">
-          @foreach($dossier->tentatives->sortByDesc('effectuee_le') as $t)
-            <li class="list-group-item d-flex justify-content-between">
-              <span><strong>{{ $t->methode }}</strong> — {{ $t->resultat }} ({{ $t->effectuee_le->format('d/m/Y H:i') }})</span>
-              <span class="text-muted">{{ $t->user?->name }}</span>
-            </li>
-          @endforeach
-        </ul>
-      </div>
-    </div>
-
-    <!-- Interventions -->
-    <div class="card mb-3">
-      <div class="card-header">Interventions</div>
-      <div class="card-body">
-        <form method="POST" action="{{ route('dossiers.interventions.store',$dossier) }}" class="row g-2 mb-3">
-          @csrf
-          <div class="col-md-3"><input type="datetime-local" name="debut" class="form-control"></div>
-          <div class="col-md-3"><input type="datetime-local" name="fin" class="form-control"></div>
-          <div class="col-md-3">
-            <select name="etat" class="form-control">
-              <option value="en_cours">En cours</option>
-              <option value="realisee">Réalisée</option>
-              <option value="suspendue">Suspendue</option>
-            </select>
-          </div>
-          <div class="col-md-3"><button class="btn btn-outline-primary w-100">Ajouter</button></div>
-          <div class="col-12 mt-2">
-            <textarea name="observations" class="form-control" placeholder="Observations" rows="2"></textarea>
-          </div>
-        </form>
-
-        <ul class="list-group">
-          @foreach($dossier->interventions()->latest()->get() as $i)
-            <li class="list-group-item">
-              <strong>{{ ucfirst($i->etat) }}</strong> — {{ $i->debut?->format('d/m/Y H:i') }} → {{ $i->fin?->format('d/m/Y H:i') }}
-              <span class="float-end">{{ $i->technicien?->name }}</span>
-              <div class="text-muted">{{ $i->observations }}</div>
-            </li>
-          @endforeach
-        </ul>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- COLONNE DROITE : Affectation & Statut -->
-  <div class="col-lg-4">
-
-    <!-- Affectation à une équipe -->
-    @can('dossiers.assign')
-    <div class="card mb-3">
-      <div class="card-header">Affectation à une équipe</div>
-      <div class="card-body">
-        <form method="POST" action="{{ route('dossiers.assign', $dossier) }}">
-          @csrf
-          <div class="mb-3">
-            <label>Équipe assignée</label>
-            <select name="assigned_team_id" class="form-control">
-              <option value="">-- Aucune équipe --</option>
-              @foreach(\App\Models\Team::all() as $team)
-                <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>{{ $team->name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="mb-3">
-            <label>Date planifiée</label>
-            <input type="datetime-local" name="date_planifiee" class="form-control" value="{{ optional($dossier->date_planifiee)->format('Y-m-d\TH:i') }}">
-          </div>
-          <button class="btn btn-primary w-100">Assigner</button>
-        </form>
-        @if($dossier->team)
-          <div class="mt-2 text-muted">Équipe actuelle : <strong>{{ $dossier->team->name }}</strong></div>
-        @endif
-      </div>
-    </div>
-    @endcan
-
-    <!-- Affectation à un technicien / mise à jour statut -->
-    <div class="card mb-3">
-      <div class="card-header">Affectation & Statut</div>
-      <div class="card-body">
-
-        @can('assign', \App\Models\DossierRaccordement::class)
-        <form method="POST" action="{{ route('dossiers.assign',$dossier) }}" class="mb-3">
-          @csrf
-          <div class="mb-2">
-            <label>Technicien</label>
-            <select name="assigned_to" class="form-control">
-              <option value="">--</option>
-              @foreach(\App\Models\User::role('technicien')->get() as $u)
-                <option value="{{ $u->id }}" @selected($dossier->assigned_to === $u->id)>{{ $u->name }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="mb-2">
-            <label>Date planifiée</label>
-            <input type="datetime-local" name="date_planifiee" class="form-control" value="{{ optional($dossier->date_planifiee)->format('Y-m-d\TH:i') }}">
-          </div>
-          <button class="btn btn-outline-secondary w-100">Enregistrer</button>
-        </form>
+        <!-- Affectation à une équipe -->
+        @can('dossiers.assign')
+            <div class="card mb-3">
+                <div class="card-header">Affectation à une équipe</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('dossiers.assign', $dossier) }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label>Équipe assignée</label>
+                            <select name="assigned_team_id" class="form-control">
+                                <option value="">-- Aucune équipe --</option>
+                                @foreach (\App\Models\Team::all() as $team)
+                                    <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>{{ $team->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Date planifiée</label>
+                            <input type="datetime-local" name="date_planifiee" class="form-control"
+                                value="{{ optional($dossier->date_planifiee)->format('Y-m-d\TH:i') }}">
+                        </div>
+                        <button class="btn btn-primary w-100">Assigner</button>
+                    </form>
+                    @if ($dossier->team)
+                        <div class="mt-2 text-muted">Équipe actuelle : <strong>{{ $dossier->team->name }}</strong></div>
+                    @endif
+                </div>
+            </div>
         @endcan
 
-        @can('updateStatus', $dossier)
-        <form method="POST" action="{{ route('dossiers.status',$dossier) }}">
-          @csrf
-          <div class="mb-2">
-            <label>Nouveau statut</label>
-            <select name="statut" class="form-control" required>
-              @foreach(\App\Enums\StatutDossier::labels() as $value=>$label)
-                <option value="{{ $value }}" @selected($dossier->statut->value === $value)>{{ $label }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="mb-2">
-            <label>Commentaire</label>
-            <textarea name="commentaire_statut" class="form-control" rows="2" placeholder="Optionnel"></textarea>
-          </div>
-          <button class="btn btn-primary w-100">Mettre à jour le statut</button>
-        </form>
-        @endcan
+        <!-- Affectation à un technicien / mise à jour statut -->
+        <div class="card mb-3">
+            <div class="card-header">Affectation & Statut</div>
+            <div class="card-body">
 
-      </div>
-    </div>
+                @can('assign', \App\Models\DossierRaccordement::class)
+                    <form method="POST" action="{{ route('dossiers.assign', $dossier) }}" class="mb-3">
+                        @csrf
+                        <div class="mb-2">
+                            <label>Technicien</label>
+                            <select name="assigned_to" class="form-control">
+                                <option value="">--</option>
+                                @foreach (\App\Models\User::role('technicien')->get() as $u)
+                                    <option value="{{ $u->id }}" @selected($dossier->assigned_to === $u->id)>{{ $u->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label>Date planifiée</label>
+                            <input type="datetime-local" name="date_planifiee" class="form-control"
+                                value="{{ optional($dossier->date_planifiee)->format('Y-m-d\TH:i') }}">
+                        </div>
+                        <button class="btn btn-outline-secondary w-100">Enregistrer</button>
+                    </form>
+                @endcan
 
+                @can('updateStatus', $dossier)
+                    <form method="POST" action="{{ route('dossiers.status', $dossier) }}">
+                        @csrf
+                        <div class="mb-2">
+                            <label>Nouveau statut</label>
+                            <select name="statut" class="form-select form-select-sm statut-select"
+                                data-dossier-id="{{ $dossier->id }}" required>
+                                @php $user = auth()->user(); @endphp
+                                @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                                    @if (
+                                        $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
+                                            $user->hasRole('chef_equipe') &&
+                                            !$user->hasAnyRole(['superadmin', 'coordinateur']))
+                                        @continue
+                                    @endif
+                                    <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
+                                        {{ $label }}</option>
+                                @endforeach
+                            </select>
+
+                        </div>
+                        <div class="mb-2">
+                            <label>Commentaire</label>
+                            <textarea name="commentaire_statut" class="form-control" rows="2" placeholder="Optionnel"></textarea>
+                        </div>
+                        <button class="btn btn-primary w-100">Mettre à jour le statut</button>
+                    </form>
+                @endcan
+
+            </div>
+        </div>
+
+        <!-- Modal Rapport -->
+<!-- Modal Rapport -->
+<div class="modal fade" id="rapportModal" tabindex="-1" aria-labelledby="rapportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="rapportForm" method="POST" action="{{ route('dossiers.rapport') }}" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="dossier_id" id="rapportDossierId">
+
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rapport de satisfaction et intervention</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="rapport_file" class="form-label">Fichier rapport signé (PDF)</label>
+                    <input type="file" name="rapport_file" id="rapport_file" class="form-control" accept=".pdf" required>
+                </div>
+                <div class="mb-3">
+                    <label for="rapport_intervention" class="form-label">Rapport d'intervention</label>
+                    <textarea name="rapport_intervention" id="rapport_intervention" class="form-control" rows="4" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Valider</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            </div>
+        </div>
+    </form>
   </div>
-
 </div>
 
+
+
+<div class="modal fade" id="nouveauRdvModal" tabindex="-1" aria-labelledby="nouveauRdvModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="nouveauRdvForm" method="POST" action="{{ route('dossiers.nouveau_rdv') }}">
+      @csrf
+      <input type="hidden" name="dossier_id" id="nouveauRdvDossierId">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nouveau rendez-vous</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="date_rdv" class="form-label">Date et heure du rendez-vous</label>
+            <input type="datetime-local" name="date_rdv" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="commentaire_rdv" class="form-label">Commentaire</label>
+            <textarea name="commentaire_rdv" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+    </div>
+
+</div>

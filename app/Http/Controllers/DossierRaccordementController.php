@@ -158,46 +158,63 @@ class DossierRaccordementController extends Controller
     }
 
 
+    public function storeRapport(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'rapport_file' => 'required|file|mimes:pdf',
+            'rapport_intervention' => 'required|string',
+        ]);
 
-    public function saveRapport(Request $request, DossierRaccordement $dossier)
-{
-    $this->authorize('update', $dossier);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-    $data = $request->validate([
-      'etat'             => 'required|in:pon,contraintes,reporte,realise',
-      'msan'             => 'nullable|string|max:50',
-      'fat'              => 'nullable|string|max:50',
-      'port'             => 'nullable|string|max:10',
-      'port_disponible'  => 'nullable|string|max:10',
-      'type_cable'       => 'nullable|string|max:30',
-      'lineaire_m'       => 'nullable|integer|min:0',
-      'puissance_fat_dbm'=> 'nullable|numeric',
-      'puissance_pto_dbm'=> 'nullable|numeric',
-      'rapport_installation' => 'nullable|array', // éléments divers (poteaux, accessoires, MAC, SN, etc.)
-      'date_report'      => 'nullable|date',
-      'contrainte'       => 'nullable|string|max:120',
-    ]);
+        // Upload fichier PDF
+        if ($request->hasFile('rapport_file')) {
+            $file = $request->file('rapport_file');
+            $filename = 'rapport_'.$dossier->id.'_'.time().'.pdf';
+            $path = $file->storeAs('rapports', $filename, 'public');
+            $dossier->rapport_satisfaction = $path;
+        }
 
-    // Mise à jour des champs clés
-    $dossier->fill($data);
+        // Sauvegarde du texte
+        $dossier->rapport_intervention = $request->rapport_intervention;
 
-    // logique statut
-    if ($data['etat']==='realise') {
-      $dossier->statut = 'realise';
-      $dossier->date_realisation = now();
-    } elseif ($data['etat']==='reporte') {
-      $dossier->statut = 'replanifie';
-      $dossier->date_planifiee = $data['date_report'] ?? $dossier->date_planifiee;
-    } elseif ($data['etat']==='contraintes') {
-      $dossier->statut = 'pbo_sature'; // ou autre selon liste
-    } else { // pon = en cours
-      $dossier->statut = 'en_equipe';
+        // Mettre le statut à "active"
+        $dossier->statut = 'active';
+
+        $dossier->save();
+
+
+        return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
     }
 
-    $dossier->save();
 
-    return back()->with('success','Rapport enregistré.');
+
+
+// DossierRaccordementController.php
+public function storeNouveauRdv(Request $request)
+{
+    $request->validate([
+        'dossier_id' => 'required|exists:dossiers_raccordement,id',
+        'date_rdv' => 'required|date',
+        'commentaire_rdv' => 'nullable|string',
+    ]);
+
+    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+    $this->authorize('updateStatus', $dossier);
+
+    // Mettre à jour le statut et la nouvelle date
+    $dossier->update([
+        'statut' => 'nouveau_rendez_vous',
+        'date_planifiee' => $request->date_rdv,
+        'description' => $request->commentaire_rdv,
+    ]);
+
+   
+
+    return back()->with('success', 'Nouveau rendez-vous enregistré.');
 }
+
 
 
 public function assignTeam(Request $request, DossierRaccordement $dossier)

@@ -8,6 +8,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DossierRaccordementController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientImportController;
+use App\Http\Controllers\DossierController;
+
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\Ftth\FicheController as FtthFicheController;
 use App\Http\Controllers\Ftth\CreateController as FtthCreateController;
@@ -186,10 +188,14 @@ Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function (
 
 
 
-  Route::post('dossiers/{dossier}/rapport', [DossierRaccordementController::class,'saveRapport'])
-  ->middleware(['auth','verified','permission:dossiers.update'])
-  ->name('dossiers.rapport.save');
 
+
+  Route::post('/dossiers/rapport', [DossierRaccordementController::class, 'storeRapport'])
+    ->name('dossiers.rapport')
+    ->middleware('auth');
+
+
+    Route::post('/dossiers/nouveau_rdv', [DossierRaccordementController::class, 'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
 
 
 Route::middleware(['auth','verified'])->group(function(){

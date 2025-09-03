@@ -108,17 +108,17 @@
 
 
             <!-- Bouton Supprimer tous
-                                    <div class="col-md-2 text-end">
-                                        <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-                                              onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-                                              class="d-inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger w-100">
-                                                Supprimer tous
-                                            </button>
-                                        </form>
-                                    </div> -->
+                                        <div class="col-md-2 text-end">
+                                            <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                                                  onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                                                  class="d-inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger w-100">
+                                                    Supprimer tous
+                                                </button>
+                                            </form>
+                                        </div> -->
 
 
             <!-- // Importer -->
@@ -145,7 +145,7 @@
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
                     <thead>
-                    
+
 
                         <tr>
                             <th>#</th>
@@ -162,28 +162,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @php
-use Carbon\Carbon;
+                        @php
+                            use Carbon\Carbon;
 
-$today = Carbon::today();
-@endphp
+                            $today = Carbon::today();
+                        @endphp
 
-@forelse($clients as $c)
-    @php
-        $dossier = $c->lastDossier ?? null;
+                        @forelse($clients as $c)
+                            @php
+                                $dossier = $c->lastDossier ?? null;
 
-        $class = '';
-        if ($dossier && $dossier->date_paiement) {
-            $days = $today->diffInDays(Carbon::parse($dossier->date_paiement));
-            if ($days > 3) {
-                $class = 'table-danger'; // rouge
-            } elseif ($days > 1) {
-                $class = 'table-warning'; // jaune
-            }
-        }
-    @endphp
+                                $class = '';
+                                if ($dossier && $dossier->date_paiement) {
+                                    $days = $today->diffInDays(Carbon::parse($dossier->date_paiement));
+                                    if ($days > 3) {
+                                        $class = 'table-danger'; // rouge
+                                    } elseif ($days > 1) {
+                                        $class = 'table-warning'; // jaune
+                                    }
+                                }
+                            @endphp
 
-    <tr class="{{ $class }}">
+                            <tr class="{{ $class }}">
                                 <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
                                 <td class="text-truncate" style="max-width:220px;">
                                     {{ $c->displayName }}
@@ -236,12 +236,22 @@ $today = Carbon::today();
                                             <form method="POST" action="{{ route('dossiers.status', $dossier) }}"
                                                 class="d-inline-flex align-items-center gap-1">
                                                 @csrf
-                                                <select name="statut" class="form-select form-select-sm" required>
-                                                    @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
-                                                        <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
-                                                            {{ $label }}</option>
-                                                    @endforeach
-                                                </select>
+                                                 <select name="statut" class="form-select form-select-sm statut-select"
+                                data-dossier-id="{{ $dossier->id }}" required>
+                                @php $user = auth()->user(); @endphp
+                                @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                                    @if (
+                                        $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
+                                            $user->hasRole('chef_equipe') &&
+                                            !$user->hasAnyRole(['superadmin', 'coordinateur']))
+                                        @continue
+                                    @endif
+                                    <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
+
+                                    {{ $label }}</option>
+                                @endforeach
+                            </select>
+
                                                 <button class="btn btn-sm btn-primary">OK</button>
                                             </form>
                                         @endcan

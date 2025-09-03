@@ -88,7 +88,7 @@
                                     <th>Statut</th>
                                     <th>Type</th>
                                     <th class="text-nowrap">Planifiée</th>
-                                   
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -151,4 +151,42 @@
         </div>
     </div>
 </div>
+
+
+<script>
+document.querySelectorAll('.statut-select').forEach(select => {
+    select.dataset.oldValue = select.value;
+
+    select.addEventListener('change', function() {
+        const dossierId = this.dataset.dossierId;
+        let modal;
+
+        if (this.value === 'nouveau_rendez_vous') {
+            document.getElementById('nouveauRdvDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('nouveauRdvModal'));
+            modal.show();
+            this.value = this.dataset.oldValue; // on garde pour RDV
+
+        } else if (this.value === 'active') {
+            document.getElementById('rapportDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('rapportModal'));
+            modal.show();
+            // <-- ne pas remettre l'ancienne valeur pour active
+        } else {
+            this.dataset.oldValue = this.value;
+        }
+    });
+});
+
+document.getElementById('rapportForm').addEventListener('submit', function() {
+    const dossierId = document.getElementById('rapportDossierId').value;
+    const select = document.querySelector(`.statut-select[data-dossier-id="${dossierId}"]`);
+    if (select) {
+        select.value = 'active';  // Mettre à jour visuellement le select
+        select.dataset.oldValue = 'active';
+    }
+});
+</script>
+
+
 @stop

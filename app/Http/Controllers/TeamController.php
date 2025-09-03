@@ -18,21 +18,34 @@ class TeamController extends Controller
 
     public function index(Request $request)
     {
-
         $user = auth()->user();
-
 
         $q = Team::query()
             ->with(['lead'])
             ->when($request->filled('only_trashed'), fn($qr) => $qr->onlyTrashed())
             ->when($request->filled('search'), function($qr) use ($request){
                 $s = '%'.$request->search.'%';
-                $qr->where('name','like',$s)->orWhere('zone','like',$s);
-            })
-            ->orderBy('name');
+                $qr->where(function($sub) use ($s) {
+                    $sub->where('name','like',$s)
+                        ->orWhere('zone','like',$s);
+                });
+            });
 
-        return view('teams.index', ['teams'=>$q->paginate(15)->withQueryString()]);
+        // 🔒 Restriction : si ce n’est pas un superadmin ou coordinateur
+        if (!$user->hasAnyRole(['superadmin','coordinateur'])) {
+            $q->where(function($qr) use ($user) {
+                $qr->where('lead_id', $user->id) // chef d'équipe
+                   ->orWhereHas('members', fn($m) => $m->where('users.id', $user->id)); // membre
+            });
+        }
+
+        $q->orderBy('name');
+
+        return view('teams.index', [
+            'teams' => $q->paginate(15)->withQueryString()
+        ]);
     }
+
 
     public function create()
     {
@@ -89,6 +102,15 @@ class TeamController extends Controller
 
     public function show(Team $team)
     {
+
+    $user = auth()->user();
+
+    // 🔒 Vérification des droits
+    if (!$user->hasAnyRole(['superadmin', 'coordinateur'])) {
+        if ($team->lead_id !== $user->id && !$team->members->contains($user->id)) {
+            abort(403, "Accès refusé");
+        }
+    }
         $team->load(['lead','members' => fn($q)=>$q->orderBy('name')]);
         return view('teams.show', compact('team'));
     }

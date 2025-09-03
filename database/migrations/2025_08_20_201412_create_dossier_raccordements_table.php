@@ -22,7 +22,8 @@ return new class extends Migration {
             $table->foreignId('assigned_team_id')->nullable()->index();
             $table->timestamp('date_planifiee')->nullable();
             $table->timestamp('date_realisation')->nullable();
-            $table->json('pieces_jointes')->nullable();           // liens de fichiers si besoin
+            $table->json('pieces_jointes')->nullable();
+                    // liens de fichiers si besoin
             $table->timestamps();
 
             $table->string('zone')->nullable();
