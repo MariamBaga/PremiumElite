@@ -43,6 +43,12 @@ public function assignedTeam()
 {
     return $this->belongsTo(Team::class, 'assigned_team_id');
 }
+public function isModifiable(): bool
+{
+    return $this->statut !== StatutDossier::ACTIVE
+        && $this->statut !== StatutDossier::REALISE;
+}
+
 
 
 

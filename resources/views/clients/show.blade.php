@@ -115,6 +115,15 @@
             </div>
         </div>
         @endcan
+        @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
         {{-- Boucle sur tous les dossiers pour inclure le show partiel --}}
         @foreach($client->dossiers as $dossier)
@@ -125,6 +134,7 @@
     {{-- =================== Colonne actions =================== --}}
     <div class="col-lg-4">
         {{-- Actions sur le client --}}
+        @can('clients.edit')
         <div class="card mb-3">
             <div class="card-header">Actions</div>
             <div class="card-body d-flex flex-column gap-2">
@@ -135,6 +145,7 @@
                 </form>
             </div>
         </div>
+        @endcan
 
         {{-- Raccourcis --}}
         <div class="card">
@@ -166,18 +177,18 @@ document.querySelectorAll('.statut-select').forEach(select => {
             modal = new bootstrap.Modal(document.getElementById('nouveauRdvModal'));
             modal.show();
             this.value = this.dataset.oldValue; // on garde pour RDV
-
         } else if (this.value === 'active') {
             document.getElementById('rapportDossierId').value = dossierId;
             modal = new bootstrap.Modal(document.getElementById('rapportModal'));
             modal.show();
-            // <-- ne pas remettre l'ancienne valeur pour active
+            // ne pas remettre l'ancienne valeur
         } else {
             this.dataset.oldValue = this.value;
         }
     });
 });
 
+// ===== AJOUT =====
 document.getElementById('rapportForm').addEventListener('submit', function() {
     const dossierId = document.getElementById('rapportDossierId').value;
     const select = document.querySelector(`.statut-select[data-dossier-id="${dossierId}"]`);
@@ -187,6 +198,7 @@ document.getElementById('rapportForm').addEventListener('submit', function() {
     }
 });
 </script>
+
 
 
 @stop

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Enums\StatutDossier;
 use Illuminate\Support\Facades\Auth;
+use App\Models\TeamDossier;
 
 
 class DashboardChefEquipeController extends Controller
@@ -78,8 +79,27 @@ $dossierQuery = DossierRaccordement::where('assigned_team_id', $teamId);
             ->limit(8)
             ->get();
 
+
+
+            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+
+            $corbeilleCount = DossierRaccordement::where('assigned_team_id', $teamId)
+                ->whereNotIn('statut', [$STATUT_REA])
+                ->count();
+
+// Dossiers actifs
+$activeCount = (clone $dossierQuery)
+->where('statut', 'ACTIVE')
+->count();
+
+// Dossiers avec RDV
+$rdvCount = (clone $dossierQuery)
+->where('statut', 'nouveau_rendez_vous')
+->count();
+
+
         return view('dashboard.chef', compact(
-            'from', 'to', 'totalDossiers', 'ouverts', 'realises', 'teamInbox', 'lastDossiers'
+            'from', 'to', 'totalDossiers', 'ouverts', 'realises', 'teamInbox', 'lastDossiers','corbeilleCount', 'activeCount', 'rdvCount'
         ));
     }
 }

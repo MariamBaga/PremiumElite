@@ -3,27 +3,33 @@
 use Illuminate\Support\Facades\Route;
 
 // Controllers
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DossierRaccordementController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ClientImportController;
-use App\Http\Controllers\DossierController;
+use App\Http\Controllers\{
+    DashboardController,
+    ProfileController,
+    DossierRaccordementController,
+    ClientController,
+    ClientImportController,
+    DossierController,
+    TeamController,
+    TicketController,
+    DashboardChefEquipeController,
+    MapController,
+    ExtensionController,
+    DossierImportController,
+    TeamInboxController
+};
 
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\Ftth\FicheController as FtthFicheController;
-use App\Http\Controllers\Ftth\CreateController as FtthCreateController;
-use App\Http\Controllers\Ftth\IndexController as FtthIndexController;
-    // routes/web.php (dans le group auth)
-    use App\Http\Controllers\TicketController;
-    use App\Http\Controllers\DashboardChefEquipeController;
-    use App\Http\Controllers\MapController;
+use App\Http\Controllers\Ftth\{
+    FicheController as FtthFicheController,
+    CreateController as FtthCreateController,
+    IndexController as FtthIndexController
+};
 
-
+use App\Http\Controllers\Admin\CoordinatorController;
 
 /*
 |--------------------------------------------------------------------------
-| Public / Welcome
+| Public
 |--------------------------------------------------------------------------
 */
 Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -35,220 +41,176 @@ Route::get('/', fn() => view('welcome'))->name('welcome');
 */
 Route::middleware(['auth','verified'])->group(function () {
 
-    // Dashboard
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
     Route::get('/dashboard', [DashboardController::class,'index'])->name('dashboard');
-    Route::get('/dashboard/chef', [DashboardChefEquipeController::class, 'index'])
-    ->name('dashboard.chef');
-
+    Route::get('/dashboard/chef', [DashboardChefEquipeController::class,'index'])->name('dashboard.chef');
 
     /*
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | Dossiers
-    |----------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
-    Route::get('dossiers',                  [DossierRaccordementController::class,'index'])->name('dossiers.index');
-    Route::get('dossiers/create',           [DossierRaccordementController::class,'create'])->name('dossiers.create');
-    Route::post('dossiers',                 [DossierRaccordementController::class,'store'])->name('dossiers.store');
-    Route::get('dossiers/{dossier}',        [DossierRaccordementController::class,'show'])->name('dossiers.show');
-    Route::get('dossiers/{dossier}/edit',   [DossierRaccordementController::class,'edit'])->name('dossiers.edit');
-    Route::put('dossiers/{dossier}',        [DossierRaccordementController::class,'update'])->name('dossiers.update');
-    Route::delete('dossiers/{dossier}',     [DossierRaccordementController::class,'destroy'])->name('dossiers.destroy');
+    Route::prefix('dossiers')->group(function () {
+        Route::get('/',                  [DossierRaccordementController::class,'index'])->name('dossiers.index');
+        Route::get('/create',            [DossierRaccordementController::class,'create'])->name('dossiers.create');
+        Route::post('/',                 [DossierRaccordementController::class,'store'])->name('dossiers.store');
+        Route::get('/{dossier}',         [DossierRaccordementController::class,'show'])->name('dossiers.show');
+        Route::get('/{dossier}/edit',    [DossierRaccordementController::class,'edit'])->name('dossiers.edit');
+        Route::put('/{dossier}',         [DossierRaccordementController::class,'update'])->name('dossiers.update');
+        Route::delete('/{dossier}',      [DossierRaccordementController::class,'destroy'])->name('dossiers.destroy');
 
-    Route::post('dossiers/{dossier}/assign',   [DossierRaccordementController::class,'assign'])->name('dossiers.assign');
-    Route::post('dossiers/{dossier}/status',   [DossierRaccordementController::class,'updateStatus'])->name('dossiers.status');
-    Route::post('dossiers/{dossier}/tentatives',    [DossierRaccordementController::class,'storeTentative'])->name('dossiers.tentatives.store');
-    Route::post('dossiers/{dossier}/interventions', [DossierRaccordementController::class,'storeIntervention'])->name('dossiers.interventions.store');
+        // Actions spécifiques
+        Route::post('/{dossier}/assign',        [DossierRaccordementController::class,'assign'])->name('dossiers.assign');
+        Route::post('/{dossier}/status',        [DossierRaccordementController::class,'updateStatus'])->name('dossiers.status');
+        Route::post('/{dossier}/tentatives',    [DossierRaccordementController::class,'storeTentative'])->name('dossiers.tentatives.store');
+        Route::post('/{dossier}/interventions', [DossierRaccordementController::class,'storeIntervention'])->name('dossiers.interventions.store');
+        Route::post('/{dossier}/assign-team',   [DossierRaccordementController::class,'assignTeam'])->middleware('permission:dossiers.assign')->name('dossiers.assign-team');
+        Route::post('/{dossier}/cloturer',      [DossierRaccordementController::class,'cloturer'])->middleware('permission:dossiers.update')->name('dossiers.cloturer');
+        Route::post('/{dossier}/contrainte',    [DossierRaccordementController::class,'notifierContrainte'])->middleware('permission:dossiers.update')->name('dossiers.contrainte');
 
-    /*
-    |----------------------------------------------------------------------
-    | Clients
-    |----------------------------------------------------------------------
-    */
-    Route::get('clients',                 [ClientController::class,'index'])->name('clients.index');
-    Route::get('clients/create',          [ClientController::class,'create'])->name('clients.create');
-    Route::post('clients',                [ClientController::class,'store'])->name('clients.store');
-    Route::get('clients/{client}',        [ClientController::class,'show'])->name('clients.show');
-    Route::get('clients/{client}/edit',   [ClientController::class,'edit'])->name('clients.edit');
-    Route::put('clients/{client}',        [ClientController::class,'update'])->name('clients.update');
-    Route::delete('clients/{client}',     [ClientController::class,'destroy'])->name('clients.destroy');
+        // Génération de rapport & nouveau RDV
+        Route::post('/rapport',      [DossierRaccordementController::class,'storeRapport'])->name('dossiers.rapport');
+        Route::post('/nouveau_rdv',  [DossierRaccordementController::class,'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
+// web.php
+Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'listRapportsRdv'])
+    ->name('dossiers.rapports_rdv');
 
-    // Actions additionnelles clients
-    Route::delete('/clients/delete-all',  [ClientController::class, 'deleteAll'])->name('clients.deleteAll');
-    Route::post('/clients/import',        [ClientImportController::class, 'store'])->name('clients.import');
+        // Import
+        Route::post('/import', [DossierImportController::class,'import'])->name('dossiers.import');
 
 
-      /** Pages uniques (si tu utilises les vues fusionnées proposées) */
-      Route::get('/ftth',          FtthIndexController::class)->name('ftth.index');     // index unique (listes)
-      Route::get('/ftth/create',   FtthCreateController::class)->name('ftth.create');   // création client+dossier
-      Route::get('/ftth/fiche',    FtthFicheController::class)->name('ftth.fiche');     // fiche client/dossier
-
-    /*
-    |----------------------------------------------------------------------
-    | Teams (équipes) — explicites avec permissions Spatie
-    |----------------------------------------------------------------------
-    */
-   // Teams (équipes) — routes spécifiques AVANT {team}
-Route::get('teams/trash', [TeamController::class,'trash'])
-->middleware('permission:teams.view')->name('teams.trash');
-
-Route::get('teams/create', [TeamController::class,'create'])
-->middleware('permission:teams.create')->name('teams.create');
-
-Route::post('teams', [TeamController::class,'store'])
-->middleware('permission:teams.create')->name('teams.store');
-
-Route::get('teams', [TeamController::class,'index'])
-->middleware('permission:teams.view')->name('teams.index');
-
-Route::get('teams/{team}/edit', [TeamController::class,'edit'])
-->middleware('permission:teams.update')->name('teams.edit');
-
-Route::put('teams/{team}', [TeamController::class,'update'])
-->middleware('permission:teams.update')->name('teams.update');
-
-Route::delete('teams/{team}', [TeamController::class,'destroy'])
-->middleware('permission:teams.delete')->name('teams.destroy');
-
-Route::post('teams/{id}/restore', [TeamController::class,'restore'])
-->middleware('permission:teams.restore')->name('teams.restore');
-
-Route::delete('teams/{id}/force-delete', [TeamController::class,'forceDelete'])
-->middleware('permission:teams.force-delete')->name('teams.force-delete');
-
-// Chef & membres
-Route::post('teams/{team}/lead/{user}', [TeamController::class,'setLead'])
-->middleware('permission:teams.assign-lead')->name('teams.set-lead');
-
-Route::post('teams/{team}/members', [TeamController::class,'addMember'])
-->middleware('permission:teams.manage-members')->name('teams.members.add');
-
-Route::delete('teams/{team}/members/{user}', [TeamController::class,'removeMember'])
-->middleware('permission:teams.manage-members')->name('teams.members.remove');
-
-// 🆕 Créer un nouvel utilisateur et l’ajouter à l’équipe
-Route::post('teams/{team}/members/create-user', [TeamController::class,'createAndAddMember'])
-    ->middleware('permission:teams.manage-members')->name('teams.members.create-user');
-
-// En dernier : la show (paramétrée)
-Route::get('teams/{team}', [TeamController::class,'show'])
-->middleware('permission:teams.view')->name('teams.show');
-
-
-
-Route::post('dossiers/{dossier}/assign-team',
-    [DossierRaccordementController::class,'assignTeam']
-)->middleware('permission:dossiers.assign')->name('dossiers.assign-team');
-// (ou ->middleware('can:dossiers.assign') si tu n’utilises pas l’alias Spatie)
-
-    /*
-    |----------------------------------------------------------------------
-    | Profile (Breeze/Fortify)
-    |----------------------------------------------------------------------
-    */
-    Route::get('/profile',  [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile',[ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile',[ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-
-Route::post('dossiers/{dossier}/cloturer', [DossierRaccordementController::class, 'cloturer'])
-    ->name('dossiers.cloturer')
-    ->middleware('auth','verified','permission:dossiers.update'); // ou la permission qui convient
-
-
-use App\Http\Controllers\TeamInboxController;
-
-Route::prefix('teams/{team}')->middleware(['auth','verified'])->group(function () {
-
-    // Affichage de la corbeille
-    Route::get('inbox', [TeamInboxController::class,'index'])
-        ->name('teams.inbox');
-
-    // Actions sur les dossiers
-    Route::post('inbox/{dossier}/close', [TeamInboxController::class,'close'])
-        ->name('teams.inbox.close');
-
-    Route::post('inbox/{dossier}/constraint', [TeamInboxController::class,'constraint'])
-        ->name('teams.inbox.constraint');
-
-    Route::post('inbox/{dossier}/reschedule', [TeamInboxController::class,'reschedule'])
-        ->name('teams.inbox.reschedule');
-});
-
-
-
-
-    Route::middleware(['auth','verified'])->group(function(){
-        Route::get('tickets', [TicketController::class,'index'])->name('tickets.index');
-        Route::get('tickets/create', [TicketController::class,'create'])->name('tickets.create');
-        Route::post('tickets', [TicketController::class,'store'])->name('tickets.store');
-        Route::get('tickets/{ticket}', [TicketController::class,'show'])->name('tickets.show');
-        Route::put('tickets/{ticket}', [TicketController::class,'update'])->name('tickets.update');
     });
 
 
+    Route::get('/dashboard/export', [DashboardController::class, 'exportExcel'])
+    ->name('dashboard.export')
+    ->middleware('role:coordinateur'); // 
+    /*
+    |--------------------------------------------------------------------------
+    | Clients
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('clients')->group(function () {
+        Route::get('/',          [ClientController::class,'index'])->name('clients.index');
+        Route::get('/create',    [ClientController::class,'create'])->name('clients.create');
+        Route::post('/',         [ClientController::class,'store'])->name('clients.store');
+        Route::get('/{client}',  [ClientController::class,'show'])->name('clients.show');
+        Route::get('/{client}/edit', [ClientController::class,'edit'])->name('clients.edit');
+        Route::put('/{client}',  [ClientController::class,'update'])->name('clients.update');
+        Route::delete('/{client}', [ClientController::class,'destroy'])->name('clients.destroy');
 
-    Route::get('clients/data', [ClientController::class, 'data'])->name('clients.data');
+        // Extra actions
+        Route::delete('/delete-all', [ClientController::class,'deleteAll'])->name('clients.deleteAll');
+        Route::post('/import',       [ClientImportController::class,'store'])->name('clients.import');
+        Route::get('/data',          [ClientController::class,'data'])->name('clients.data');
+    });
 
-// routes/web.php (zone clients)
+    /*
+    |--------------------------------------------------------------------------
+    | FTTH
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('ftth')->group(function () {
+        Route::get('/',       FtthIndexController::class)->name('ftth.index');
+        Route::get('/create', FtthCreateController::class)->name('ftth.create');
+        Route::get('/fiche',  FtthFicheController::class)->name('ftth.fiche');
+    });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Teams
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('teams')->group(function () {
+        Route::get('/',          [TeamController::class,'index'])->middleware('permission:teams.view')->name('teams.index');
+        Route::get('/trash',     [TeamController::class,'trash'])->middleware('permission:teams.view')->name('teams.trash');
+        Route::get('/create',    [TeamController::class,'create'])->middleware('permission:teams.create')->name('teams.create');
+        Route::post('/',         [TeamController::class,'store'])->middleware('permission:teams.create')->name('teams.store');
 
+        Route::get('/{team}/edit', [TeamController::class,'edit'])->middleware('permission:teams.update')->name('teams.edit');
+        Route::put('/{team}',      [TeamController::class,'update'])->middleware('permission:teams.update')->name('teams.update');
+        Route::delete('/{team}',   [TeamController::class,'destroy'])->middleware('permission:teams.delete')->name('teams.destroy');
 
+        // Restore & force delete
+        Route::post('/{id}/restore',        [TeamController::class,'restore'])->middleware('permission:teams.restore')->name('teams.restore');
+        Route::delete('/{id}/force-delete', [TeamController::class,'forceDelete'])->middleware('permission:teams.force-delete')->name('teams.force-delete');
 
+        // Gestion des membres
+        Route::post('/{team}/lead/{user}', [TeamController::class,'setLead'])->middleware('permission:teams.assign-lead')->name('teams.set-lead');
+        Route::post('/{team}/members', [TeamController::class,'addMember'])->middleware('permission:teams.manage-members')->name('teams.members.add');
+        Route::delete('/{team}/members/{user}', [TeamController::class,'removeMember'])->middleware('permission:teams.manage-members')->name('teams.members.remove');
+        Route::post('/{team}/members/create-user', [TeamController::class,'createAndAddMember'])->middleware('permission:teams.manage-members')->name('teams.members.create-user');
 
-  Route::post('/dossiers/rapport', [DossierRaccordementController::class, 'storeRapport'])
-    ->name('dossiers.rapport')
-    ->middleware('auth');
+        // Show
+        Route::get('/{team}', [TeamController::class,'show'])->middleware('permission:teams.view')->name('teams.show');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Inbox équipe
+        |--------------------------------------------------------------------------
+        */
+        Route::prefix('{team}/inbox')->group(function () {
+            Route::get('/', [TeamInboxController::class,'index'])->name('teams.inbox');
+            Route::post('/{dossier}/close', [TeamInboxController::class,'close'])->name('teams.inbox.close');
+            Route::post('/{dossier}/constraint', [TeamInboxController::class,'constraint'])->name('teams.inbox.constraint');
+            Route::post('/{dossier}/reschedule', [TeamInboxController::class,'reschedule'])->name('teams.inbox.reschedule');
+        });
+    });
 
-    Route::post('dossiers/{dossier}/contrainte', [DossierRaccordementController::class, 'notifierContrainte'])
-    ->name('dossiers.contrainte')
-    ->middleware(['auth','verified','permission:dossiers.update']);
+    /*
+    |--------------------------------------------------------------------------
+    | Tickets
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('tickets')->group(function () {
+        Route::get('/',       [TicketController::class,'index'])->name('tickets.index');
+        Route::get('/create', [TicketController::class,'create'])->name('tickets.create');
+        Route::post('/',      [TicketController::class,'store'])->name('tickets.store');
+        Route::get('/{ticket}', [TicketController::class,'show'])->name('tickets.show');
+        Route::put('/{ticket}', [TicketController::class,'update'])->name('tickets.update');
+    });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Carte (Map)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('map')->group(function () {
+        Route::get('/', [MapController::class,'index'])->name('map.index');
+        Route::get('/data', [MapController::class,'data'])->name('map.data'); // GeoJSON
+    });
 
-    Route::post('/dossiers/nouveau_rdv', [DossierRaccordementController::class, 'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
+    /*
+    |--------------------------------------------------------------------------
+    | Extensions
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('extensions', ExtensionController::class);
 
-
-Route::middleware(['auth','verified'])->group(function(){
-    Route::get('map', [MapController::class,'index'])->name('map.index');
-    Route::get('map/data', [MapController::class,'data'])->name('map.data'); // GeoJSON
+    /*
+    |--------------------------------------------------------------------------
+    | Profil
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class,'edit'])->name('profile.edit');
+        Route::patch('/', [ProfileController::class,'update'])->name('profile.update');
+        Route::delete('/', [ProfileController::class,'destroy'])->name('profile.destroy');
+    });
 });
 
-
-
-
-
-use App\Http\Controllers\ExtensionController;
-
-Route::get('extensions',                 [ExtensionController::class,'index'])->name('extensions.index');
-Route::get('extensions/create',          [ExtensionController::class,'create'])->name('extensions.create');
-Route::post('extensions',                [ExtensionController::class,'store'])->name('extensions.store');
-Route::get('extensions/{extension}',     [ExtensionController::class,'show'])->name('extensions.show');
-Route::get('extensions/{extension}/edit',[ExtensionController::class,'edit'])->name('extensions.edit');
-Route::put('extensions/{extension}',     [ExtensionController::class,'update'])->name('extensions.update');
-Route::delete('extensions/{extension}',  [ExtensionController::class,'destroy'])->name('extensions.destroy');
-
-
-
-use App\Http\Controllers\Admin\CoordinatorController;
-
+/*
+|--------------------------------------------------------------------------
+| Superadmin
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth','verified','role:superadmin'])->prefix('superadmin')->group(function () {
-    Route::get('coordinators', [CoordinatorController::class, 'index'])->name('admin.coordinators.index');
-    Route::get('coordinators/create', [CoordinatorController::class, 'create'])->name('admin.coordinators.create');
-    Route::post('coordinators', [CoordinatorController::class, 'store'])->name('admin.coordinators.store');
-    Route::get('coordinators/{user}/edit', [CoordinatorController::class, 'edit'])->name('admin.coordinators.edit');
-    Route::put('coordinators/{user}', [CoordinatorController::class, 'update'])->name('admin.coordinators.update');
-    Route::delete('coordinators/{user}', [CoordinatorController::class, 'destroy'])->name('admin.coordinators.destroy');
+    Route::resource('coordinators', CoordinatorController::class)->except('show')->names('admin.coordinators');
 });
-
-
-use App\Http\Controllers\DossierImportController;
-
-Route::middleware(['auth','verified'])->group(function() {
-    Route::post('/dossiers/import', [DossierImportController::class, 'import'])->name('dossiers.import');
-});
-
-
 
 /*
 |--------------------------------------------------------------------------

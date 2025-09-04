@@ -13,7 +13,7 @@ class CoordinatorController extends Controller
     public function index(Request $request)
     {
         $query = User::role(
-            ['admin','superviseur','technicien','commercial','superadmin','chef_equipe','coordinateur'],
+            ['admin','superviseur','technicien','commercial','superadmin','chef_equipe','coordinateur','client'],
     'web'// <-- ajouter le guard
         );
 

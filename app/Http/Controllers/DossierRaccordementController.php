@@ -61,6 +61,7 @@ class DossierRaccordementController extends Controller
     public function show(DossierRaccordement $dossier)
     {
 
+        $user = auth()->user(); // ← ajouter ceci
         if ($user->hasRole('chef_equipe') && $dossier->assigned_team_id !== $user->team_id) {
             abort(403, "Vous n'êtes pas autorisé à voir ce dossier.");
         }
@@ -71,9 +72,12 @@ class DossierRaccordementController extends Controller
 
     public function edit(DossierRaccordement $dossier)
     {
+$this->authorize('update', $dossier);
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Ce dossier est activé et ne peut plus être modifié.');
+        }
 
 
-        $this->authorize('update', $dossier);
         return view('dossiers.edit', [
             'dossier'=>$dossier->load('client'),
             'clients'=>Client::orderBy('id','desc')->limit(100)->get()
@@ -82,7 +86,11 @@ class DossierRaccordementController extends Controller
 
     public function update(UpdateDossierRequest $request, DossierRaccordement $dossier)
     {
-        $this->authorize('update', $dossier);
+$this->authorize('update', $dossier);
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Ce dossier est activé et ne peut plus être modifié.');
+        }
+
         $dossier->update($request->validated());
         return back()->with('success','Dossier mis à jour');
     }
@@ -90,6 +98,9 @@ class DossierRaccordementController extends Controller
     public function destroy(DossierRaccordement $dossier)
     {
         $this->authorize('delete', $dossier);
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Ce dossier est activé et ne peut pas être supprimé.');
+        }
         $dossier->delete();
         return redirect()->route('dossiers.index')->with('success','Dossier supprimé');
     }
@@ -100,6 +111,10 @@ class DossierRaccordementController extends Controller
     public function assign(Request $request, DossierRaccordement $dossier)
     {
         $this->authorize('assign', DossierRaccordement::class);
+
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Impossible de modifier l’affectation : dossier activé.');
+        }
 
         $data = $request->validate([
             'assigned_to'      => 'nullable|exists:users,id',
@@ -152,6 +167,10 @@ class DossierRaccordementController extends Controller
     {
         $this->authorize('updateStatus', $dossier);
 
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Impossible de changer le statut : dossier activé.');
+        }
+
         $oldStatut = $dossier->statut;
 
         $dossier->update($request->validated());
@@ -191,8 +210,12 @@ class DossierRaccordementController extends Controller
     {
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport_file' => 'required|file|mimes:pdf',
+            'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
             'rapport_intervention' => 'required|string',
+        ], [
+            'rapport_file.mimes' => 'Le fichier doit être un PDF, Word ou Texte.',
+            'rapport_file.max'   => 'Le fichier ne doit pas dépasser 5 Mo.',
+
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
@@ -244,12 +267,46 @@ public function storeNouveauRdv(Request $request)
     return back()->with('success', 'Nouveau rendez-vous enregistré.');
 }
 
+// DossierRaccordementController.php
+// DossierRaccordementController.php
+public function listRapportsRdv()
+{
+    $user = auth()->user();
+
+    $query = DossierRaccordement::query();
+
+    // Regrouper rapport ou RDV
+    $query->where(function($q) {
+        $q->whereNotNull('rapport_intervention')
+          ->orWhere('statut', 'nouveau_rendez_vous');
+    });
+
+    // Filtrer selon le rôle
+    if ($user->hasRole('chef_equipe')) {
+        // seulement les dossiers de son équipe
+        $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+        $query->where('assigned_team_id', $teamId);
+    } elseif ($user->hasRole('client')) {
+        // seulement les dossiers du client
+        $query->where('client_id', $user->client_id);
+    }
+    // Les autres rôles (admin, superviseur, coordinateur, superadmin) voient tout
+
+    $dossiers = $query->orderBy('updated_at','desc')->get();
+
+    return view('dossiers.showrapport', compact('dossiers'));
+}
+
+
 
 
 public function assignTeam(Request $request, DossierRaccordement $dossier)
 {
     $this->authorize('assign', DossierRaccordement::class); // ou middleware can:dossiers.assign
 
+    if (!$dossier->isModifiable()) {
+        return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
+    }
     $data = $request->validate([
         'assigned_team_id' => ['nullable', Rule::exists('teams','id')],
     ]);

@@ -89,7 +89,7 @@
         </div>
 
         <!-- Interventions -->
-        <div class="card mb-3">
+        <!-- <div class="card mb-3">
             <div class="card-header">Interventions</div>
             <div class="card-body">
                 <form method="POST" action="{{ route('dossiers.interventions.store', $dossier) }}"
@@ -112,16 +112,16 @@
 
                 <ul class="list-group">
                     @foreach ($dossier->interventions()->latest()->get() as $i)
-                        <li class="list-group-item">
+<li class="list-group-item">
                             <strong>{{ ucfirst($i->etat) }}</strong> — {{ $i->debut?->format('d/m/Y H:i') }} →
                             {{ $i->fin?->format('d/m/Y H:i') }}
                             <span class="float-end">{{ $i->technicien?->name }}</span>
                             <div class="text-muted">{{ $i->observations }}</div>
                         </li>
-                    @endforeach
+@endforeach
                 </ul>
             </div>
-        </div>
+        </div> -->
 
     </div>
 
@@ -160,7 +160,9 @@
         @endcan
 
         <!-- Affectation à un technicien / mise à jour statut -->
+
         <div class="card mb-3">
+
             <div class="card-header">Affectation & Statut</div>
             <div class="card-body">
 
@@ -219,67 +221,9 @@
         </div>
 
         <!-- Modal Rapport -->
-<!-- Modal Rapport -->
-<div class="modal fade" id="rapportModal" tabindex="-1" aria-labelledby="rapportModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="rapportForm" method="POST" action="{{ route('dossiers.rapport') }}" enctype="multipart/form-data">
-        @csrf
-        <input type="hidden" name="dossier_id" id="rapportDossierId">
-
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Rapport de satisfaction et intervention</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="rapport_file" class="form-label">Fichier rapport signé (PDF)</label>
-                    <input type="file" name="rapport_file" id="rapport_file" class="form-control" accept=".pdf" required>
-                </div>
-                <div class="mb-3">
-                    <label for="rapport_intervention" class="form-label">Rapport d'intervention</label>
-                    <textarea name="rapport_intervention" id="rapport_intervention" class="form-control" rows="4" required></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Valider</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            </div>
-        </div>
-    </form>
-  </div>
-</div>
-
-
-
-<div class="modal fade" id="nouveauRdvModal" tabindex="-1" aria-labelledby="nouveauRdvModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="nouveauRdvForm" method="POST" action="{{ route('dossiers.nouveau_rdv') }}">
-      @csrf
-      <input type="hidden" name="dossier_id" id="nouveauRdvDossierId">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Nouveau rendez-vous</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="date_rdv" class="form-label">Date et heure du rendez-vous</label>
-            <input type="datetime-local" name="date_rdv" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="commentaire_rdv" class="form-label">Commentaire</label>
-            <textarea name="commentaire_rdv" class="form-control" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
+        <!-- Modal Rapport -->
+        @include('dossiers.partials.rapport_modal')
+        @include('dossiers.partials.nouveau_rdv_modal')
 
 
     </div>

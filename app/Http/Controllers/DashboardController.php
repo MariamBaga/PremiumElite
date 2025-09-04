@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Enums\StatutDossier;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Models\TeamDossier;
 
 class DashboardController extends Controller
 {
@@ -167,6 +171,38 @@ class DashboardController extends Controller
             $realisedCum[]  = $sumR;
         }
 
+
+        // Dossiers corbeille : statut en attente / reporté / contrainte / etc.
+
+        // Comptage par équipe uniquement si assigned_team_id n'est pas null
+$corbeilleCount = DossierRaccordement::select('assigned_team_id', \DB::raw('count(*) as total'))
+->whereNotNull('assigned_team_id') // uniquement dossiers avec équipe
+->whereNotIn('statut', [$STATUT_REA])
+->groupBy('assigned_team_id')
+->pluck('total', 'assigned_team_id');
+
+// Remplacer ID → nom d'équipe
+$teams = \App\Models\Team::whereIn('id', $corbeilleCount->keys())->pluck('name','id');
+
+$corbeilleCount = $corbeilleCount->mapWithKeys(function($count, $teamId) use ($teams) {
+return [$teams[$teamId] ?? "Équipe inconnue" => $count];
+});
+
+// Somme totale
+$totalCorbeille = $corbeilleCount->sum();
+
+
+// Dossiers actifs
+$activeCount = (clone $dossierQuery)
+->where('statut', 'ACTIVE')
+->count();
+
+// Dossiers avec RDV
+$rdvCount = (clone $dossierQuery)
+->where('statut', 'nouveau_rendez_vous')
+->count();
+
+
         // ========= Retour =========
         return view('dashboard.index', compact(
             'from', 'to',
@@ -177,7 +213,51 @@ class DashboardController extends Controller
             'topTechs',
             'intervCount', 'intervAvgDuration',
             'lastDossiers', 'lastInterventions',
-            'labels', 'created', 'realised', 'createdCum', 'realisedCum'
+            'labels', 'created', 'realised', 'createdCum', 'realisedCum','corbeilleCount', 'activeCount', 'rdvCount','totalCorbeille'
         ));
     }
+
+public function exportExcel(Request $request): BinaryFileResponse
+{
+    // On reprend les mêmes données que dans index()
+    $data = $this->index($request)->getData();
+
+    // Organiser les données à exporter
+    $rows = [
+        ['Période', $data['from'].' → '.$data['to']],
+        ['Total clients', $data['totalClients']],
+        ['Total dossiers', $data['totalDossiers']],
+        ['Dossiers ouverts', $data['ouverts']],
+        ['Dossiers réalisés', $data['realises']],
+        ['Taux de réussite', $data['tauxReussite'].' %'],
+        ['PBO saturés', $data['pboSature']],
+        ['Délai moyen (jours)', $data['avgDelayDays']],
+        [],
+        ['Répartition par statut'],
+    ];
+
+    foreach ($data['byStatut'] as $statut => $count) {
+        $rows[] = [$statut, $count];
+    }
+
+    $rows[] = [];
+    $rows[] = ['Répartition par type de service'];
+    foreach ($data['byTypeService'] as $type => $count) {
+        $rows[] = [$type, $count];
+    }
+
+    $rows[] = [];
+    $rows[] = ['Top techniciens'];
+    foreach ($data['topTechs'] as $tech) {
+        $rows[] = [$tech->name, $tech->done];
+    }
+
+    // Créer un export rapide à partir d’un array
+    return Excel::download(new class($rows) implements \Maatwebsite\Excel\Concerns\FromCollection {
+        private $rows;
+        public function __construct($rows) { $this->rows = $rows; }
+        public function collection() { return collect($this->rows); }
+    }, 'dashboard_recap.xlsx');
+}
+
 }

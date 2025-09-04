@@ -95,15 +95,15 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-    <select name="statut" class="form-control" onchange="this.form.submit()">
-        <option value="">-- Statut --</option>
-        @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
-            <option value="{{ $value }}" @selected(request('statut') === $value)>
-                {{ $label }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                    <select name="statut" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Statut --</option>
+                        @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                            <option value="{{ $value }}" @selected(request('statut') === $value)>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div class="col-md-2 text-end">
                     <button class="btn btn-outline-primary w-100">Filtrer</button>
@@ -118,17 +118,17 @@
 
 
             <!-- Bouton Supprimer tous
-                                        <div class="col-md-2 text-end">
-                                            <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
-                                                  onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
-                                                  class="d-inline-block">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger w-100">
-                                                    Supprimer tous
-                                                </button>
-                                            </form>
-                                        </div> -->
+                                            <div class="col-md-2 text-end">
+                                                <form id="deleteAllForm" action="{{ route('clients.deleteAll') }}" method="POST"
+                                                      onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS les clients ? Cette action est irréversible.')"
+                                                      class="d-inline-block">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger w-100">
+                                                        Supprimer tous
+                                                    </button>
+                                                </form>
+                                            </div> -->
 
 
             <!-- // Importer -->
@@ -215,9 +215,11 @@
                                         {{-- Ouvrir / Éditer --}}
                                         <a class="btn btn-sm btn-outline-secondary"
                                             href="{{ route('clients.show', $c) }}">Ouvrir</a>
+                                            @can('clients.edit')
                                         <a class="btn btn-sm btn-outline-primary"
                                             href="{{ route('clients.edit', $c) }}">Éditer</a>
 
+                                            @endcan
                                         @php
                                             $dossier =
                                                 $c->lastDossier ??
@@ -246,21 +248,21 @@
                                             <form method="POST" action="{{ route('dossiers.status', $dossier) }}"
                                                 class="d-inline-flex align-items-center gap-1">
                                                 @csrf
-                                                 <select name="statut" class="form-select form-select-sm statut-select"
-                                data-dossier-id="{{ $dossier->id }}" required>
-                                @php $user = auth()->user(); @endphp
-                                @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
-                                    @if (
-                                        $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
-                                            $user->hasRole('chef_equipe') &&
-                                            !$user->hasAnyRole(['superadmin', 'coordinateur']))
-                                        @continue
-                                    @endif
-                                    <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
+                                                <select name="statut" class="form-select form-select-sm statut-select"
+                                                    data-dossier-id="{{ $dossier->id }}" required>
+                                                    @php $user = auth()->user(); @endphp
+                                                    @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                                                        @if (
+                                                            $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
+                                                                $user->hasRole('chef_equipe') &&
+                                                                !$user->hasAnyRole(['superadmin', 'coordinateur']))
+                                                            @continue
+                                                        @endif
+                                                        <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>
 
-                                    {{ $label }}</option>
-                                @endforeach
-                            </select>
+                                                            {{ $label }}</option>
+                                                    @endforeach
+                                                </select>
 
                                                 <button class="btn btn-sm btn-primary">OK</button>
                                             </form>
@@ -283,6 +285,51 @@
             <div class="mt-2">
                 {{ $clients->links() }}
             </div>
+
+
+            @include('dossiers.partials.rapport_modal')
+@include('dossiers.partials.nouveau_rdv_modal')
         </div>
     </div>
+
+
+
+
+
+<script>
+document.querySelectorAll('.statut-select').forEach(select => {
+    select.dataset.oldValue = select.value;
+
+    select.addEventListener('change', function() {
+        const dossierId = this.dataset.dossierId;
+        let modal;
+
+        if (this.value === 'nouveau_rendez_vous') {
+            document.getElementById('nouveauRdvDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('nouveauRdvModal'));
+            modal.show();
+            this.value = this.dataset.oldValue; // on garde pour RDV
+        } else if (this.value === 'active') {
+            document.getElementById('rapportDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('rapportModal'));
+            modal.show();
+            // ne pas remettre l'ancienne valeur
+        } else {
+            this.dataset.oldValue = this.value;
+        }
+    });
+});
+
+// ===== AJOUT =====
+document.getElementById('rapportForm').addEventListener('submit', function() {
+    const dossierId = document.getElementById('rapportDossierId').value;
+    const select = document.querySelector(`.statut-select[data-dossier-id="${dossierId}"]`);
+    if (select) {
+        select.value = 'active';  // Mettre à jour visuellement le select
+        select.dataset.oldValue = 'active';
+    }
+});
+</script>
+
+
 @stop

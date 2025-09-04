@@ -11,6 +11,14 @@
       <input type="date" name="date_to" class="form-control" value="{{ $to }}">
       <button class="btn btn-outline-primary">Appliquer</button>
     </form>
+    @role('coordinateur')
+    <div class="mb-3">
+        <a href="{{ route('dashboard.export', request()->query()) }}" class="btn btn-success">
+            📊 Télécharger le récapitulatif Excel
+        </a>
+    </div>
+@endrole
+
   </div>
 @stop
 
@@ -19,8 +27,14 @@
   {{-- =======================
        LIGNE 1 : KPI globaux
        ======================= --}}
+
+
+
   <div class="row">
     <div class="col-lg-3 col-6">
+
+
+
       <div class="small-box bg-primary">
         <div class="inner">
           <h3>{{ $totalDossiers }}</h3>
@@ -70,12 +84,41 @@
       </div>
     </div>
   </div>
+  <div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Dossiers dans la corbeille</h5>
+                <p class="card-text fs-3">{{$totalCorbeille }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Dossiers actifs</h5>
+                <p class="card-text fs-3">{{ $activeCount }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <h5 class="card-title">Dossiers avec RDV</h5>
+                <p class="card-text fs-3">{{ $rdvCount }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
   {{-- =======================
        LIGNE 2 : Clients + KPI équipes (7 jours)
        ======================= --}}
   <div class="row">
-    
+
 
     @php $teamsKpi = $teamsKpi ?? collect(); @endphp
     @foreach($teamsKpi as $tk)
