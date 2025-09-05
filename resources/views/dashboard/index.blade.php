@@ -88,7 +88,7 @@
     <div class="col-md-4">
         <div class="card bg-secondary text-white">
             <div class="card-body">
-                <h5 class="card-title">Dossiers dans la corbeille</h5>
+                <h5 class="card-title">Dossiers Assigner</h5>
                 <p class="card-text fs-3">{{$totalCorbeille }}</p>
             </div>
         </div>

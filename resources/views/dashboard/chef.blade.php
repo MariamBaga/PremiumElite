@@ -43,7 +43,7 @@
         <div class="small-box bg-secondary text-white">
             <div class="inner">
                 <h3>{{ $corbeilleCount }}</h3>
-                <p>Dossiers dans la corbeille</p>
+                <p>Dossiers Assigner</p>
             </div>
         </div>
     </div>
