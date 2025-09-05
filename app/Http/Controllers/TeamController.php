@@ -68,6 +68,9 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:2000',
             'members_names' => 'nullable|string',
             'lead_id' => 'nullable|exists:users,id',
+            'dossier_ids' => 'array',
+'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
+
         ]);
 
         $team = Team::create([
