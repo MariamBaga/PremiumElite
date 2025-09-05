@@ -11,7 +11,7 @@ class ClientImportController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:2248', // max 2MB
         ]);
 
         try {
