@@ -25,7 +25,7 @@ use App\Http\Controllers\Ftth\{
     IndexController as FtthIndexController
 };
 
-use App\Http\Controllers\Admin\CoordinatorController;
+use App\Http\Controllers\Admin\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,7 +88,7 @@ Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'lis
 
     Route::get('/dashboard/export', [DashboardController::class, 'exportExcel'])
     ->name('dashboard.export')
-    ->middleware('role:coordinateur'); // 
+    ->middleware('role:coordinateur'); //
     /*
     |--------------------------------------------------------------------------
     | Clients
@@ -208,9 +208,14 @@ Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'lis
 | Superadmin
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth','verified','role:superadmin'])->prefix('superadmin')->group(function () {
-    Route::resource('coordinators', CoordinatorController::class)->except('show')->names('admin.coordinators');
-});
+Route::middleware(['auth','verified','role:superadmin'])
+    ->prefix('superadmin')
+    ->group(function () {
+        Route::resource('users', UserController::class)
+            ->except('show')
+            ->names('admin.users');
+    });
+
 
 /*
 |--------------------------------------------------------------------------

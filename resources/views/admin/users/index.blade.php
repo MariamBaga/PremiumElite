@@ -1,7 +1,7 @@
-{{-- resources/views/admin/coordinators/index.blade.php --}}
+{{-- resources/views/admin/users/index.blade.php --}}
 @extends('adminlte::page')
 
-@section('title', 'Liste des Coordinateurs')
+@section('title', 'Liste des Utilisateurs')
 
 @section('content_header')
     <h1>Utilisateurs</h1>
@@ -11,7 +11,7 @@
 <div class="container-fluid">
 
     {{-- Filtre par rôle --}}
-    <form method="GET" action="{{ route('admin.coordinators.index') }}" class="mb-3 d-flex gap-2 align-items-center">
+    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-3 d-flex gap-2 align-items-center">
         <label for="role" class="mb-0">Filtrer par rôle :</label>
         <select name="role" id="role" class="form-control" style="width:auto">
             <option value="">Tous</option>
@@ -22,7 +22,7 @@
             @endforeach
         </select>
         <button type="submit" class="btn btn-primary">Filtrer</button>
-        <a href="{{ route('admin.coordinators.index') }}" class="btn btn-secondary">Réinitialiser</a>
+        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Réinitialiser</a>
     </form>
 
     @if(session('success'))
@@ -35,7 +35,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Liste des utilisateurs</h3>
-            <a href="{{ route('admin.coordinators.create') }}" class="btn btn-success">
+            <a href="{{ route('admin.users.create') }}" class="btn btn-success">
                 <i class="fas fa-plus"></i> Créer un utilisateur
             </a>
         </div>
@@ -50,36 +50,34 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($coordinators as $coord)
+                    @forelse($users as $user)
                         <tr>
-                            <td>{{ $coord->name }}</td>
-                            <td>{{ $coord->email }}</td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
                             <td>
-                                @foreach($coord->roles as $role)
+                                @foreach($user->roles as $role)
                                     <span class="badge bg-info">{{ $role->name }}</span>
                                 @endforeach
                             </td>
                             <td>
-                                <a href="{{ route('admin.coordinators.edit', $coord->id) }}" class="btn btn-sm btn-warning">Éditer</a>
-                                <form action="{{ route('admin.coordinators.destroy', $coord->id) }}" method="POST" style="display:inline-block">
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-warning">Éditer</a>
+                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display:inline-block">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ce coordinateur ?')">Supprimer</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cet utilisateur ?')">Supprimer</button>
                                 </form>
                             </td>
                         </tr>
-                    @endforeach
-
-                    @if($coordinators->isEmpty())
+                    @empty
                         <tr>
                             <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
                         </tr>
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
         </div>
         <div class="card-footer">
-            {{ $coordinators->withQueryString()->links() }} {{-- pagination --}}
+            {{ $users->withQueryString()->links() }} {{-- pagination --}}
         </div>
     </div>
 </div>

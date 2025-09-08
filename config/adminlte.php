@@ -114,7 +114,7 @@ return [
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/logopremiumCompagny.png',
-            'alt' => 'AdminLTE Preloader Image',
+            'alt' => 'OptimuX Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,
             'height' => 60,
@@ -330,7 +330,7 @@ return [
 
          [
             'text' => 'Utilisateurs',
-            'route'=> 'admin.coordinators.index',
+            'route'=> 'admin.users.index',
             'icon' => 'fas fa-user-friends',
               'can' => 'coordinators.view'
           ],
