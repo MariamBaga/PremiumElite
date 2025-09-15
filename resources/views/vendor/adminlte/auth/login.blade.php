@@ -6,7 +6,7 @@
 @section('adminlte_css')
 <style>
     body.login-page, body.auth-page {
-        background: url('{{ asset('images/fibreoptique.png') }}') no-repeat center center fixed !important;
+        background: url('{{ asset('images/fibreoptique.jpg') }}') no-repeat center center fixed !important;
         background-size: cover !important;
     }
 
@@ -98,14 +98,14 @@
         </div>
     </form>
 @stop
-
+<!--
 @section('auth_footer')
      {{-- Password reset link --}}
      @if (Route::has('password.request'))
     <a class="btn btn-link" href="{{ route('password.request') }}">
         Mot de passe oublié ?
     </a>
-@endif
+@endif -->
 
 
     <!-- {{-- Register link --}}
@@ -115,6 +115,6 @@
                 {{ __('adminlte::adminlte.register_a_new_membership') }}
             </a>
         </p>
-    @endif -->
-@stop
+    @endif-->
+
 

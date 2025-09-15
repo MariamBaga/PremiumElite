@@ -21,7 +21,7 @@
 
     {{-- Custom stylesheets (pre AdminLTE) --}}
     @yield('adminlte_css_pre')
-
+    <link rel="stylesheet" href="{{ asset('css/optimux-adminlte.css') }}">
     {{-- Base Stylesheets (depends on Laravel asset bundling tool) --}}
     @if(config('adminlte.enabled_laravel_mix', false))
         <link rel="stylesheet" href="{{ mix(config('adminlte.laravel_mix_css_path', 'css/app.css')) }}">

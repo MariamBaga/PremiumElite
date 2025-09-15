@@ -375,7 +375,7 @@ return [
           [
             'text' => 'Équipes',
             'route'=> 'teams.index',
-            'icon' => 'fas fa-people-group',
+            'icon' => 'fas fa-users', // <- bien reconnu et très lisible
             'can'  => 'teams.view',
           ],
         //   [

@@ -10,7 +10,6 @@ use App\Enums\StatutDossier;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TeamDossier;
 
-
 class DashboardChefEquipeController extends Controller
 {
     public function index(Request $request)
@@ -23,33 +22,26 @@ class DashboardChefEquipeController extends Controller
 
         // Fenêtre temporelle
         $from = $request->date_from ? date('Y-m-d', strtotime($request->date_from)) : now()->subDays(30)->toDateString();
-        $to   = $request->date_to ? date('Y-m-d', strtotime($request->date_to)) : now()->toDateString();
+        $to = $request->date_to ? date('Y-m-d', strtotime($request->date_to)) : now()->toDateString();
 
-     // On récupère l'équipe dontteams.inbox.close le user est le chef
-$teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+        // On récupère l'équipe dontteams.inbox.close le user est le chef
+        $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
 
-if (!$teamId) {
-    abort(403, 'Aucune équipe assignée à ce chef');
-}
+        if (!$teamId) {
+            abort(403, 'Aucune équipe assignée à ce chef');
+        }
 
-// Base query : dossiers affectés à l’équipe du chef
-$dossierQuery = DossierRaccordement::where('assigned_team_id', $teamId);
+        // Base query : dossiers affectés à l’équipe du chef
+        $dossierQuery = DossierRaccordement::where('assigned_team_id', $teamId);
 
         // Statuts
-        $STATUTS_OUVERTS = [
-            StatutDossier::EN_APPEL->value,
-            StatutDossier::EN_EQUIPE->value,
-            StatutDossier::INJOIGNABLE->value,
-            StatutDossier::PBO_SATURE->value,
-            StatutDossier::ZONE_DEPOURVUE->value,
-            StatutDossier::ACTIVE->value,
-        ];
+        $STATUTS_OUVERTS = [StatutDossier::EN_APPEL->value, StatutDossier::EN_EQUIPE->value, StatutDossier::INJOIGNABLE->value, StatutDossier::PBO_SATURE->value, StatutDossier::ZONE_DEPOURVUE->value, StatutDossier::ACTIVE->value];
         $STATUT_REA = StatutDossier::REALISE->value;
 
         // KPIs simples
         $totalDossiers = $dossierQuery->count();
-        $ouverts       = (clone $dossierQuery)->whereIn('statut', $STATUTS_OUVERTS)->count();
-        $realises      = (clone $dossierQuery)->where('statut', $STATUT_REA)->count();
+        $ouverts = (clone $dossierQuery)->whereIn('statut', $STATUTS_OUVERTS)->count();
+        $realises = (clone $dossierQuery)->where('statut', $STATUT_REA)->count();
 
         // Corbeille : dossiers non finalisés
         $teamInbox = (clone $dossierQuery)
@@ -57,17 +49,17 @@ $dossierQuery = DossierRaccordement::where('assigned_team_id', $teamId);
             ->with(['client', 'technicien'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($d){
+            ->map(function ($d) {
                 return [
-                    'id'        => $d->id,
-                    'ref'       => $d->reference,
-                    'client'    => $d->client?->displayName,
-                    'team'      => $d->assignedTeam?->name,
-                    'statut'    => $d->statut,
-                    'team_id'   => $d->assigned_team_id, // <-- ici
-                    'date'      => $d->date_planifiee,
-                    'contrainte'=> $d->contrainte_installation, // si dossier a une contrainte
-                    'report'    => $d->date_report, // si client a reporté
+                    'id' => $d->id,
+                    'ref' => $d->reference,
+                    'client' => $d->client?->displayName,
+                    'team' => $d->assignedTeam?->name,
+                    'statut' => $d->statut,
+                    'team_id' => $d->assigned_team_id, // <-- ici
+                    'date' => $d->date_planifiee,
+                    'contrainte' => $d->contrainte_installation, // si dossier a une contrainte
+                    'report' => $d->date_report, // si client a reporté
                 ];
             });
 
@@ -79,27 +71,18 @@ $dossierQuery = DossierRaccordement::where('assigned_team_id', $teamId);
             ->limit(8)
             ->get();
 
+        $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
 
+        $corbeilleCount = DossierRaccordement::where('assigned_team_id', $teamId)
+            ->whereNotIn('statut', [$STATUT_REA])
+            ->count();
 
-            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+        // Dossiers actifs
+        $activeCount = (clone $dossierQuery)->where('statut', 'ACTIVE')->count();
 
-            $corbeilleCount = DossierRaccordement::where('assigned_team_id', $teamId)
-                ->whereNotIn('statut', [$STATUT_REA])
-                ->count();
+        // Dossiers avec RDV
+        $rdvCount = (clone $dossierQuery)->where('statut', 'nouveau_rendez_vous')->count();
 
-// Dossiers actifs
-$activeCount = (clone $dossierQuery)
-->where('statut', 'ACTIVE')
-->count();
-
-// Dossiers avec RDV
-$rdvCount = (clone $dossierQuery)
-->where('statut', 'nouveau_rendez_vous')
-->count();
-
-
-        return view('dashboard.chef', compact(
-            'from', 'to', 'totalDossiers', 'ouverts', 'realises', 'teamInbox', 'lastDossiers','corbeilleCount', 'activeCount', 'rdvCount'
-        ));
+        return view('dashboard.chef', compact('from', 'to', 'totalDossiers', 'ouverts', 'realises', 'teamInbox', 'lastDossiers', 'corbeilleCount', 'activeCount', 'rdvCount'));
     }
 }
