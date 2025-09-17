@@ -41,7 +41,7 @@
           <p>Dossiers total</p>
         </div>
         <div class="icon"><i class="fas fa-layer-group"></i></div>
-        <a href="{{ route('dossiers.index') }}" class="small-box-footer">
+        <a href="{{ route('clients.index') }}" class="small-box-footer">
           Voir les dossiers <i class="fas fa-arrow-circle-right"></i>
         </a>
       </div>
@@ -54,7 +54,7 @@
           <p>Dossiers ouverts</p>
         </div>
         <div class="icon"><i class="fas fa-folder-open"></i></div>
-        <a href="{{ route('dossiers.index', ['statut'=>'en_appel']) }}" class="small-box-footer">
+        <a href="{{ route('clients.index', ['statut'=>'en_appel']) }}" class="small-box-footer">
           Filtrer <i class="fas fa-arrow-circle-right"></i>
         </a>
       </div>
@@ -78,7 +78,7 @@
           <p>Cas PBO saturé</p>
         </div>
         <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
-        <a href="{{ route('dossiers.index', ['statut'=>'pbo_sature']) }}" class="small-box-footer">
+        <a href="{{ route('clients.index', ['statut'=>'pbo_sature']) }}" class="small-box-footer">
           Voir <i class="fas fa-arrow-circle-right"></i>
         </a>
       </div>
@@ -316,7 +316,7 @@
               <tbody>
                 @foreach($lastDossiers as $d)
                   <tr>
-                    <td><a href="{{ route('dossiers.show',$d) }}">{{ $d->reference }}</a></td>
+                    <td><a href="{{ route('clients.show',$d) }}">{{ $d->reference }}</a></td>
                     <td>{{ $d->client?->displayName }}</td>
                     <td><span class="badge bg-secondary">{{ \Illuminate\Support\Str::headline($d->statut?->value ?? $d->statut) }}</span></td>
                     <td class="text-nowrap">{{ ucfirst($d->type_service) }}</td>
@@ -328,7 +328,7 @@
           </div>
         </div>
         <div class="card-footer text-end">
-          <a href="{{ route('dossiers.index') }}" class="btn btn-outline-primary btn-sm">Voir tout</a>
+          <a href="{{ route('clients.index') }}" class="btn btn-outline-primary btn-sm">Voir tout</a>
         </div>
       </div>
     </div>

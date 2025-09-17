@@ -62,7 +62,7 @@
         </div>
 
         <!-- Tentatives de contact -->
-        <div class="card mb-3">
+        <!-- <div class="card mb-3">
             <div class="card-header">Tentatives de contact</div>
             <div class="card-body">
                 <form method="POST" action="{{ route('dossiers.tentatives.store', $dossier) }}" class="row g-2 mb-3">
@@ -86,7 +86,7 @@
                     @endforeach
                 </ul>
             </div>
-        </div>
+        </div> -->
 
         <!-- Interventions -->
         <!-- <div class="card mb-3">
@@ -225,6 +225,11 @@
         @include('dossiers.partials.rapport_modal')
         @include('dossiers.partials.nouveau_rdv_modal')
 
+        @include('dossiers.partials.zone_depourvue_modal')
+        @include('dossiers.partials.injoignables')
+        @include('dossiers.partials.pob_sature_modal')
+
+        @include('dossiers.partials.realise_modal')
 
     </div>
 

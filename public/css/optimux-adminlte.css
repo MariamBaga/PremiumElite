@@ -2,14 +2,14 @@
 /* On garde les classes AdminLTE existantes mais on remplace leurs couleurs */
 
 :root{
-    --ox-primary:#7B23D6;   /* violet logo */
-    --ox-accent:#1FB879;    /* vert logo */
-    --ox-side-bg:#0f1019;   /* fond sidebar */
-    --ox-side-hover:#171a2a;/* hover item */
-    --ox-side-active:#1a1430;/* fond actif */
-    --ox-side-border:#23263a;/* lignes fines */
-    --ox-side-text:#cfd2e6; /* texte normal */
-    --ox-side-text-dim:#9aa1b8; /* texte secondaire */
+    --ox-primary:#7B23D6;     /* violet logo & sidebar */
+    --ox-accent:#1FB879;      /* vert logo */
+    --ox-side-bg:#7B23D6;     /* fond sidebar violet */
+    --ox-side-hover:#6a1fc1;  /* hover un peu plus sombre */
+    --ox-side-active:#5a1aa8; /* actif encore plus sombre */
+    --ox-side-border:#8e3be0; /* lignes fines ton sur ton */
+    --ox-side-text:#ffffff;   /* texte principal blanc */
+    --ox-side-text-dim:#e0d4f4; /* texte secondaire pâle */
   }
 /* === Forcer le fond blanc derrière le logo AdminLTE === */
 .main-sidebar .brand-link {
@@ -76,6 +76,8 @@
     border-color: #6a1fc1 !important;
     box-shadow: 0 4px 10px rgba(123,35,214,.3);
   }
+
+  
 
   /* ----- Bouton succès (vert) ----- */
   .btn-success {

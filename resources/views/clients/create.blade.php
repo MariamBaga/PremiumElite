@@ -153,10 +153,108 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label>Description / Observations</label>
-                    <textarea name="description" class="form-control">{{ old('description') }}</textarea>
+                {{-- Ligne, Contact, Service Acces --}}
+                <div class="col-md-3 mb-3">
+                    <label>Ligne</label>
+                    <input type="text" name="ligne" class="form-control" value="{{ old('ligne') }}">
                 </div>
+                <div class="col-md-3 mb-3">
+                    <label>Contact</label>
+                    <input type="text" name="contact" class="form-control" value="{{ old('contact') }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Service accès</label>
+                    <select name="service_acces" class="form-control">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="FTTH" @selected(old('service_acces')==='FTTH')>FTTH</option>
+                        <option value="Cuivre" @selected(old('service_acces')==='Cuivre')>Cuivre</option>
+                    </select>
+                </div>
+
+                {{-- Localité, Catégorie --}}
+                <div class="col-md-3 mb-3">
+                    <label>Localité</label>
+                    <input type="text" name="localite" class="form-control" value="{{ old('localite') }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Catégorie</label>
+                    <select name="categorie" class="form-control">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="B2C" @selected(old('categorie')==='B2C')>B2C</option>
+                        <option value="B2B" @selected(old('categorie')==='B2B')>B2B</option>
+                    </select>
+                </div>
+
+                {{-- Dates réception et fin travaux --}}
+                <div class="col-md-3 mb-3">
+                    <label>Date réception</label>
+                    <input type="date" name="date_reception_raccordement" class="form-control" value="{{ old('date_reception_raccordement') }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Date fin travaux</label>
+                    <input type="date" name="date_fin_travaux" class="form-control" value="{{ old('date_fin_travaux') }}">
+                </div>
+
+                {{-- PBO, PM, Port --}}
+
+                <div class="col-md-3 mb-3">
+                    <label>Port</label>
+                    <input name="port" class="form-control" value="{{ old('port') }}">
+                </div>
+
+                {{-- PBO linéaire, poteaux, armements --}}
+                <div class="col-md-3 mb-3">
+                    <label>PBO/Linéaire</label>
+                    <input name="pbo_lineaire_utilise" class="form-control" value="{{ old('pbo_lineaire_utilise') }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Poteaux</label>
+                    <input name="nb_poteaux_implantes" type="number" class="form-control" value="{{ old('nb_poteaux_implantes') }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Armements</label>
+                    <input name="nb_armements_poteaux" type="number" class="form-control" value="{{ old('nb_armements_poteaux') }}">
+                </div>
+
+                {{-- Taux reporting J+1 --}}
+                <div class="col-md-3 mb-3">
+                    <label>Taux reporting J+1</label>
+                    <select name="taux_reporting_j1" class="form-control">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="OK" @selected(old('taux_reporting_j1')==='OK')>OK</option>
+                        <option value="NOK" @selected(old('taux_reporting_j1')==='NOK')>NOK</option>
+                    </select>
+                </div>
+
+                {{-- Active --}}
+                <div class="col-md-3 mb-3">
+                    <label>Active</label>
+                    <select name="is_active" class="form-control">
+                        <option value="1" @selected(old('is_active')==1)>Oui</option>
+                        <option value="0" @selected(old('is_active')==0)>Non</option>
+                    </select>
+                </div>
+
+                {{-- Observation --}}
+                <div class="col-12 mb-3">
+                    <label>Observation</label>
+                    <textarea name="observation" class="form-control" rows="3">{{ old('observation') }}</textarea>
+                </div>
+
+                {{-- Pilote --}}
+                <div class="col-md-3 mb-3">
+                    <label>Pilote</label>
+                    <input name="pilote_raccordement" class="form-control" value="{{ old('pilote_raccordement') }}">
+                </div>
+
+                {{-- Description --}}
+                <div class="col-12 mb-3">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
+                </div>
+
+                
+            </div>
 
             </div>
 

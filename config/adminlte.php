@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Title
@@ -328,16 +327,14 @@ return [
         //     'label_color' => 'success',
         // ],
 
-         [
+        [
             'text' => 'Utilisateurs',
-            'route'=> 'admin.users.index',
+            'route' => 'admin.users.index',
             'icon' => 'fas fa-user-friends',
-              'can' => 'coordinators.view'
-          ],
+            'can' => 'coordinators.view',
+        ],
 
-
-
-          [
+        [
             'text' => 'Tableau de bord',
             'route' => 'dashboard',
             'icon' => 'fas fa-tachometer-alt',
@@ -350,34 +347,61 @@ return [
             'can' => 'dashequipe',
         ],
 
-
-
         // [
         //     'text' => 'Clients',
         //     'route'=> 'clients.index',
         //     'icon' => 'fas fa-user-friends',
         //   ],
 
-
+        [
+            'header' => 'Dossiers',
+        ],
         [
             'text' => 'Dossiers FTTH',
-            'route'=> 'clients.index',
             'icon' => 'fas fa-network-wired',
-            'can'  => 'dossiers.view',
-          ],
+            'can' => 'dossiers.view',
+            'submenu' => [
+                [
+                    'text' => 'Tous les dossiers',
+                    'route' => 'clients.index',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Activés',
+                    'route' => 'clients.dossiers.active',
+                    'icon' => 'fas fa-check-circle',
+                ],
+                [
+                    'text' => 'Réalisés',
+                    'route' => 'clients.dossiers.realise',
+                    'icon' => 'fas fa-check-double',
+                ],
+                [
+                    'text' => 'Nouveaux rendez-vous',
+                    'route' => 'clients.dossiers.nouveau_rdv',
+                    'icon' => 'fas fa-calendar-plus',
+                ],
+                [
+                    'text' => 'En appel',
+                    'route' => 'clients.en_appel', // si tu n’as pas de route dédiée
+                    'icon' => 'fas fa-phone',
+                ],
+                [
+                    'text' => 'Injoignables',
+                    'route' => 'clients.injoignables', // idem
+                    'icon' => 'fas fa-user-slash',
+                ],
+            ],
+        ],
 
+        ['header' => 'EQUIPES'],
 
-
-
-
-          ['header' => 'EQUIPES'],
-
-          [
+        [
             'text' => 'Équipes',
-            'route'=> 'teams.index',
+            'route' => 'teams.index',
             'icon' => 'fas fa-users', // <- bien reconnu et très lisible
-            'can'  => 'teams.view',
-          ],
+            'can' => 'teams.view',
+        ],
         //   [
         //     'text' => 'Corbeille',
         //     'route'=> 'teams.trash',
@@ -386,35 +410,40 @@ return [
         //   ],
 
         [
+            'header' => 'Rapports',
+        ],
+        [
+            'text' => 'Rapport d’activité',
+            'route'  => 'rapports.index',
+            'icon'   => 'fas fa-file-alt',
+           // optionnel, si tu gères les permissions
+        ],
+        [
             'text' => 'Rapports & RDV',
-            'route'=> 'dossiers.rapports_rdv',
+            'route' => 'dossiers.rapports_rdv',
             'icon' => 'fas fa-file-medical', // tu peux changer l'icône
             // optionnel si tu utilises Spatie Permissions
         ],
 
+        // [
+        //     'text' => 'Extensions FTTH',
+        //     'route' => 'extensions.index',
+        //     'icon' => 'fas fa-project-diagram',
+        //     'can' => 'extensions.view', // si tu veux protéger par permission
+        // ],
 
+        // [
+        //     'text' => 'Map',
+        //     'route' => 'map.index',
+        //     'icon' => 'fas fa-project-diagram',
+        //     'can' => 'extensions.view', // si tu veux protéger par permission
+        // ],
 
-          [
-            'text' => 'Extensions FTTH',
-            'route'=> 'extensions.index',
-            'icon' => 'fas fa-project-diagram',
-            'can' => 'extensions.view', // si tu veux protéger par permission
-        ],
-
-
-        [
-            'text' => 'Map',
-            'route'=> 'map.index',
-            'icon' => 'fas fa-project-diagram',
-            'can' => 'extensions.view', // si tu veux protéger par permission
-        ],
-
-
-        [
-            'text' => 'Tickets',
-            'route'=> 'tickets.index',
-            'icon' => 'T',
-          ],
+        // [
+        //     'text' => 'Tickets',
+        //     'route' => 'tickets.index',
+        //     'icon' => 'T',
+        // ],
         // ['header' => 'Mon compte'],
         // [
         //     'text' => 'profile',
@@ -495,15 +524,7 @@ return [
     |
     */
 
-    'filters' => [
-        JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\ActiveFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\ClassesFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
-        JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class,
-    ],
+    'filters' => [JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\ActiveFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\ClassesFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class, JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class],
 
     /*
     |--------------------------------------------------------------------------

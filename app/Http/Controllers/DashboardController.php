@@ -37,6 +37,24 @@ class DashboardController extends Controller
             $dossierQuery->where('assigned_team_id', $user->team_id);
         }
 
+        // Récupérer les performances par équipe (7 derniers jours par exemple)
+$teamsKpi = DossierRaccordement::select(
+    'assigned_team_id',
+    DB::raw('COUNT(*) as done_last7')
+)
+->where('statut', StatutDossier::REALISE->value)
+->whereBetween('date_fin_travaux', [$from, $to])
+->groupBy('assigned_team_id')
+->with('assignedTeam')
+->get()
+->map(function($item) {
+    return [
+        'team_id' => $item->assigned_team_id,
+        'team_name' => $item->assignedTeam?->name ?? 'Équipe inconnue',
+        'done_last7' => $item->done_last7
+    ];
+});
+
         // Clients distincts
         $totalClients = $clientQuery->distinct()->count('clients.id');
 
@@ -213,7 +231,7 @@ $rdvCount = (clone $dossierQuery)
             'topTechs',
             'intervCount', 'intervAvgDuration',
             'lastDossiers', 'lastInterventions',
-            'labels', 'created', 'realised', 'createdCum', 'realisedCum','corbeilleCount', 'activeCount', 'rdvCount','totalCorbeille'
+            'labels', 'created', 'realised', 'createdCum', 'realisedCum','corbeilleCount', 'activeCount', 'rdvCount','totalCorbeille','teamsKpi'
         ));
     }
 

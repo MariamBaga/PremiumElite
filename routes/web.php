@@ -18,7 +18,7 @@ use App\Http\Controllers\{
     DossierImportController,
     TeamInboxController
 };
-
+use App\Http\Controllers\RapportController;
 use App\Http\Controllers\Ftth\{
     FicheController as FtthFicheController,
     CreateController as FtthCreateController,
@@ -75,16 +75,38 @@ Route::middleware(['auth','verified'])->group(function () {
         // Génération de rapport & nouveau RDV
         Route::post('/rapport',      [DossierRaccordementController::class,'storeRapport'])->name('dossiers.rapport');
         Route::post('/nouveau_rdv',  [DossierRaccordementController::class,'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
+
+        // Injoignable
+Route::post('/injoignable', [DossierRaccordementController::class,'storeInjoignable'])->name('dossiers.injoignable');
+
+// PBO saturé
+Route::post('/pbo_sature', [DossierRaccordementController::class,'storePboSature'])->name('dossiers.pbo_sature');
+
+// Zone dépourvue
+Route::post('/zone_depourvue', [DossierRaccordementController::class,'storeZoneDepourvue'])->name('dossiers.zone_depourvue');
+
+Route::post('/realise', [DossierRaccordementController::class,'storeRealise'])->name('dossiers.realise');
+
+
+
 // web.php
 Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'listRapportsRdv'])
     ->name('dossiers.rapports_rdv');
 
         // Import
         Route::post('/import', [DossierImportController::class,'import'])->name('dossiers.import');
+        Route::get('dossiers/alertes-rdv', [DossierRaccordementController::class, 'rdvAlerte'])
+        ->name('dossiers.rdv_alerte')
+       ;
 
 
     });
 
+
+
+
+    Route::get('/rapports/activite', [RapportController::class, 'index'])->name('rapports.index');
+    Route::post('/rapports/activite/export', [RapportController::class, 'export'])->name('rapports.export');
 
     Route::get('/dashboard/export', [DashboardController::class, 'exportExcel'])
     ->name('dashboard.export')
@@ -98,10 +120,20 @@ Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'lis
         Route::get('/',          [ClientController::class,'index'])->name('clients.index');
         Route::get('/create',    [ClientController::class,'create'])->name('clients.create');
         Route::post('/',         [ClientController::class,'store'])->name('clients.store');
+
+
+        Route::get('/dossiers/active',        [ClientController::class,'active'])->name('clients.dossiers.active');
+    Route::get('/dossiers/realise',       [ClientController::class,'realise'])->name('clients.dossiers.realise');
+    Route::get('/dossiers/nouveau_rdv',   [ClientController::class,'nouveauRdv'])->name('clients.dossiers.nouveau_rdv');
+    Route::get('/en-appel', [ClientController::class, 'enAppel'])->name('clients.en_appel');
+    Route::get('/injoignables', [ClientController::class, 'injoignables'])->name('clients.injoignables');
         Route::get('/{client}',  [ClientController::class,'show'])->name('clients.show');
         Route::get('/{client}/edit', [ClientController::class,'edit'])->name('clients.edit');
         Route::put('/{client}',  [ClientController::class,'update'])->name('clients.update');
         Route::delete('/{client}', [ClientController::class,'destroy'])->name('clients.destroy');
+         // Routes par statut
+
+
 
         // Extra actions
         Route::delete('/delete-all', [ClientController::class,'deleteAll'])->name('clients.deleteAll');

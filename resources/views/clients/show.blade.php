@@ -69,6 +69,8 @@
             </div>
         </div>
 
+
+
         {{-- Dossiers associés --}}
         @can('dossiers.view')
         <div class="card mb-3">
@@ -108,7 +110,7 @@
             </div>
             <div class="card-footer text-end">
                 @can('dossiers.view')
-                    <a href="{{ route('dossiers.index', ['search' => $client->id]) }}" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ route('clients.index', ['search' => $client->id]) }}" class="btn btn-outline-primary btn-sm">
                         Voir tous les dossiers
                     </a>
                 @endcan
@@ -134,7 +136,7 @@
     {{-- =================== Colonne actions =================== --}}
     <div class="col-lg-4">
         {{-- Actions sur le client --}}
-        @can('clients.edit')
+        @can('clients.update')
         <div class="card mb-3">
             <div class="card-header">Actions</div>
             <div class="card-body d-flex flex-column gap-2">
@@ -177,18 +179,44 @@ document.querySelectorAll('.statut-select').forEach(select => {
             modal = new bootstrap.Modal(document.getElementById('nouveauRdvModal'));
             modal.show();
             this.value = this.dataset.oldValue; // on garde pour RDV
+
         } else if (this.value === 'active') {
             document.getElementById('rapportDossierId').value = dossierId;
             modal = new bootstrap.Modal(document.getElementById('rapportModal'));
             modal.show();
             // ne pas remettre l'ancienne valeur
+
+        // ==== AJOUTS ====
+        } else if (this.value === 'injoignable') {
+            document.getElementById('injoignableDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('injoignableModal'));
+            modal.show();
+            this.value = this.dataset.oldValue;
+
+        } else if (this.value === 'pbo_sature') {
+            document.getElementById('pboSatureDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('pboSatureModal'));
+            modal.show();
+            this.value = this.dataset.oldValue;
+
+        }else if (this.value === 'realise') {
+    document.getElementById('realiseDossierId').value = dossierId;
+    modal = new bootstrap.Modal(document.getElementById('realiseModal'));
+    modal.show();
+    this.value = this.dataset.oldValue;
+}
+ else if (this.value === 'zone_depourvue') {
+            document.getElementById('zoneDepourvueDossierId').value = dossierId;
+            modal = new bootstrap.Modal(document.getElementById('zoneDepourvueModal'));
+            modal.show();
+            this.value = this.dataset.oldValue;
         } else {
             this.dataset.oldValue = this.value;
         }
     });
 });
 
-// ===== AJOUT =====
+// ===== Déjà existant =====
 document.getElementById('rapportForm').addEventListener('submit', function() {
     const dossierId = document.getElementById('rapportDossierId').value;
     const select = document.querySelector(`.statut-select[data-dossier-id="${dossierId}"]`);
@@ -198,6 +226,7 @@ document.getElementById('rapportForm').addEventListener('submit', function() {
     }
 });
 </script>
+
 
 
 

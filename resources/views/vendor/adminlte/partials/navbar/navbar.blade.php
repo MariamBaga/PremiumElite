@@ -24,6 +24,19 @@
         {{-- Configured right links --}}
         @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-right'), 'item')
 
+        <ul class="navbar-nav ml-auto">
+    {{-- Lien personnalisé Alertes RDV --}}
+    <li class="nav-item">
+    <a href="{{ route('dossiers.rdv_alerte') }}" class="nav-link">
+        <i class="fas fa-bell"></i>
+        <p>Alertes RDV
+            @if($rdvAlertCount > 0)
+                <span class="badge badge-danger">{{ $rdvAlertCount }}</span>
+            @endif
+        </p>
+    </a>
+</li>
+
         {{-- User menu link --}}
         @if(Auth::user())
             @if(config('adminlte.usermenu_enabled'))

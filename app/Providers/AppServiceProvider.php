@@ -8,6 +8,7 @@ use App\Models\DossierRaccordement;
 use App\Policies\DossierRaccordementPolicy;
 use Maatwebsite\Excel\HeadingRowImport;
 use Maatwebsite\Excel\HeadingRowFormatter;
+use Illuminate\Support\Facades\View;
 
 use App\Models\Team;
 use App\Policies\TeamPolicy;
@@ -24,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     {
 
 
-        
+
 
 
         if (class_exists(HeadingRowFormatter::class)) {
@@ -50,5 +51,21 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return method_exists($user, 'hasRole') && $user->hasRole('admin') ? true : null;
         });
+
+ // Injecter le compteur RDV dans toutes les vues
+ View::composer('adminlte::partials.navbar.navbar', function ($view) {
+    $user = auth()->user();
+
+    $rdvAlertCount = DossierRaccordement::whereNotNull('date_planifiee')
+        ->whereDate('date_planifiee', '>=', now()->format('Y-m-d'))
+        ->whereDate('date_planifiee', '<=', now()->addDay()->format('Y-m-d'))
+        ->when($user->hasRole('chef_equipe'), function($q) use ($user) {
+            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+            $q->where('assigned_team_id', $teamId);
+        })
+        ->count();
+
+    $view->with('rdvAlertCount', $rdvAlertCount);
+});
     }
 }
