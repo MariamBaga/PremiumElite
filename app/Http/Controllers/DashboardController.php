@@ -30,30 +30,57 @@ class DashboardController extends Controller
 
         // 🔒 Filtre chef d’équipe
         if ($user->hasRole('chef_equipe')) {
-            $clientQuery->whereHas('dossiers', fn($q) =>
-                $q->where('assigned_team_id', $user->team_id)
-            );
+            $clientQuery->whereHas('dossiers', fn($q) => $q->where('assigned_team_id', $user->team_id));
 
             $dossierQuery->where('assigned_team_id', $user->team_id);
         }
 
         // Récupérer les performances par équipe (7 derniers jours par exemple)
-$teamsKpi = DossierRaccordement::select(
+        $teamsKpi = DossierRaccordement::select(
+            'assigned_team_id',
+            DB::raw("SUM(CASE WHEN statut = '".StatutDossier::REALISE->value."' THEN 1 ELSE 0 END) as realises"),
+            DB::raw("SUM(CASE WHEN statut = '".StatutDossier::ACTIVE->value."' THEN 1 ELSE 0 END) as actives"),
+            DB::raw("SUM(CASE WHEN statut = '".StatutDossier::PBO_SATURE->value."' THEN 1 ELSE 0 END) as pbo_satures")
+        )
+        ->whereBetween('date_fin_travaux', [$from, $to])
+        ->groupBy('assigned_team_id')
+        ->with('assignedTeam')
+        ->get()
+        ->map(function($item) {
+            return [
+                'team_id'     => $item->assigned_team_id,
+                'team_name'   => $item->assignedTeam?->name ?? 'Équipe inconnue',
+                'realises'    => (int) $item->realises,
+                'actives'     => (int) $item->actives,
+                'pbo_satures' => (int) $item->pbo_satures,
+            ];
+        });
+
+
+        // KPI équipes pour aujourd'hui (exemple : même structure que $teamsKpi mais filtré sur la date du jour)
+$today = now()->toDateString();
+
+$teamsKpiToday = DossierRaccordement::select(
     'assigned_team_id',
-    DB::raw('COUNT(*) as done_last7')
+    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::REALISE->value."' THEN 1 ELSE 0 END) as realises"),
+    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::ACTIVE->value."' THEN 1 ELSE 0 END) as actives"),
+    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::PBO_SATURE->value."' THEN 1 ELSE 0 END) as pbo_satures")
 )
-->where('statut', StatutDossier::REALISE->value)
-->whereBetween('date_fin_travaux', [$from, $to])
+->whereDate('date_fin_travaux', $today)
 ->groupBy('assigned_team_id')
 ->with('assignedTeam')
 ->get()
 ->map(function($item) {
     return [
-        'team_id' => $item->assigned_team_id,
-        'team_name' => $item->assignedTeam?->name ?? 'Équipe inconnue',
-        'done_last7' => $item->done_last7
+        'team_id'     => $item->assigned_team_id,
+        'team_name'   => $item->assignedTeam?->name ?? 'Équipe inconnue',
+        'realises'    => (int) $item->realises,
+        'actives'     => (int) $item->actives,
+        'pbo_satures' => (int) $item->pbo_satures,
     ];
 });
+
+
 
         // Clients distincts
         $totalClients = $clientQuery->distinct()->count('clients.id');
@@ -80,23 +107,16 @@ $teamsKpi = DossierRaccordement::select(
         };
 
         // ========= Statuts =========
-        $STATUTS_OUVERTS = [
-            StatutDossier::EN_APPEL->value,
-            StatutDossier::EN_EQUIPE->value,
-            StatutDossier::INJOIGNABLE->value,
-            StatutDossier::PBO_SATURE->value,
-            StatutDossier::ZONE_DEPOURVUE->value,
-            StatutDossier::ACTIVE->value,
-        ];
+        $STATUTS_OUVERTS = [StatutDossier::EN_APPEL->value, StatutDossier::EN_EQUIPE->value, StatutDossier::INJOIGNABLE->value, StatutDossier::PBO_SATURE->value, StatutDossier::ZONE_DEPOURVUE->value, StatutDossier::ACTIVE->value];
         $STATUT_REA = StatutDossier::REALISE->value;
         $annules = 0;
 
         // ========= KPIs =========
         $totalDossiers = (clone $dossierQuery)->count();
-        $ouverts       = (clone $dossierQuery)->whereIn('statut', $STATUTS_OUVERTS)->count();
-        $realises      = (clone $dossierQuery)->where('statut', $STATUT_REA)->count();
-        $pboSature     = (clone $dossierQuery)->where('statut', StatutDossier::PBO_SATURE->value)->count();
-        $tauxReussite  = $totalDossiers > 0 ? round((100 * $realises) / $totalDossiers, 1) : 0.0;
+        $ouverts = (clone $dossierQuery)->whereIn('statut', $STATUTS_OUVERTS)->count();
+        $realises = (clone $dossierQuery)->where('statut', $STATUT_REA)->count();
+        $pboSature = (clone $dossierQuery)->where('statut', StatutDossier::PBO_SATURE->value)->count();
+        $tauxReussite = $totalDossiers > 0 ? round((100 * $realises) / $totalDossiers, 1) : 0.0;
 
         // ========= Délai moyen =========
         $avgDelayDays = (clone $dossierQuery)
@@ -123,33 +143,14 @@ $teamsKpi = DossierRaccordement::select(
             ->get();
 
         // ========= Répartitions =========
-        $byStatut = (clone $dossierQuery)
-            ->select('statut', DB::raw('COUNT(*) as c'))
-            ->groupBy('statut')
-            ->pluck('c', 'statut');
+        $byStatut = (clone $dossierQuery)->select('statut', DB::raw('COUNT(*) as c'))->groupBy('statut')->pluck('c', 'statut');
 
-        $byTypeService = (clone $dossierQuery)
-            ->select('type_service', DB::raw('COUNT(*) as c'))
-            ->groupBy('type_service')
-            ->pluck('c', 'type_service');
+        $byTypeService = (clone $dossierQuery)->select('type_service', DB::raw('COUNT(*) as c'))->groupBy('type_service')->pluck('c', 'type_service');
 
-        $byZone = (clone $dossierQuery)
-            ->join('clients', 'clients.id', '=', 'dossiers_raccordement.client_id')
-            ->select('clients.zone', DB::raw('COUNT(*) as c'))
-            ->groupBy('clients.zone')
-            ->orderByDesc('c')
-            ->limit(8)
-            ->get();
+        $byZone = (clone $dossierQuery)->join('clients', 'clients.id', '=', 'dossiers_raccordement.client_id')->select('clients.zone', DB::raw('COUNT(*) as c'))->groupBy('clients.zone')->orderByDesc('c')->limit(8)->get();
 
         // ========= Top techniciens =========
-        $topTechs = (clone $dossierQuery)
-            ->leftJoin('users', 'users.id', '=', 'dossiers_raccordement.assigned_to')
-            ->where('dossiers_raccordement.statut', $STATUT_REA)
-            ->select('users.name', DB::raw('COUNT(*) as done'))
-            ->groupBy('users.name')
-            ->orderByDesc('done')
-            ->limit(5)
-            ->get();
+        $topTechs = (clone $dossierQuery)->leftJoin('users', 'users.id', '=', 'dossiers_raccordement.assigned_to')->where('dossiers_raccordement.statut', $STATUT_REA)->select('users.name', DB::raw('COUNT(*) as done'))->groupBy('users.name')->orderByDesc('done')->limit(5)->get();
 
         // ========= Interventions =========
         $intervCount = Intervention::whereBetween(DB::raw($dateExpr('created_at')), [$from, $to])->count();
@@ -175,8 +176,8 @@ $teamsKpi = DossierRaccordement::select(
         $labels = $created = $realised = [];
         for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
             $key = date('Y-m-d', $d);
-            $labels[]   = $key;
-            $created[]  = (int) ($createdSeries->firstWhere('d', $key)->c ?? 0);
+            $labels[] = $key;
+            $created[] = (int) ($createdSeries->firstWhere('d', $key)->c ?? 0);
             $realised[] = (int) ($realisedSeries->firstWhere('d', $key)->c ?? 0);
         }
 
@@ -185,97 +186,80 @@ $teamsKpi = DossierRaccordement::select(
         foreach ($created as $i => $v) {
             $sumC += (int) $v;
             $sumR += (int) ($realised[$i] ?? 0);
-            $createdCum[]   = $sumC;
-            $realisedCum[]  = $sumR;
+            $createdCum[] = $sumC;
+            $realisedCum[] = $sumR;
         }
+
+       
 
 
         // Dossiers corbeille : statut en attente / reporté / contrainte / etc.
 
         // Comptage par équipe uniquement si assigned_team_id n'est pas null
-$corbeilleCount = DossierRaccordement::select('assigned_team_id', \DB::raw('count(*) as total'))
-->whereNotNull('assigned_team_id') // uniquement dossiers avec équipe
-->whereNotIn('statut', [$STATUT_REA])
-->groupBy('assigned_team_id')
-->pluck('total', 'assigned_team_id');
+        $corbeilleCount = DossierRaccordement::select('assigned_team_id', \DB::raw('count(*) as total'))
+            ->whereNotNull('assigned_team_id') // uniquement dossiers avec équipe
+            ->whereNotIn('statut', [$STATUT_REA])
+            ->groupBy('assigned_team_id')
+            ->pluck('total', 'assigned_team_id');
 
-// Remplacer ID → nom d'équipe
-$teams = \App\Models\Team::whereIn('id', $corbeilleCount->keys())->pluck('name','id');
+        // Remplacer ID → nom d'équipe
+        $teams = \App\Models\Team::whereIn('id', $corbeilleCount->keys())->pluck('name', 'id');
 
-$corbeilleCount = $corbeilleCount->mapWithKeys(function($count, $teamId) use ($teams) {
-return [$teams[$teamId] ?? "Équipe inconnue" => $count];
-});
+        $corbeilleCount = $corbeilleCount->mapWithKeys(function ($count, $teamId) use ($teams) {
+            return [$teams[$teamId] ?? 'Équipe inconnue' => $count];
+        });
 
-// Somme totale
-$totalCorbeille = $corbeilleCount->sum();
+        // Somme totale
+        $totalCorbeille = $corbeilleCount->sum();
 
+        // Dossiers actifs
+        $activeCount = (clone $dossierQuery)->where('statut', 'ACTIVE')->count();
 
-// Dossiers actifs
-$activeCount = (clone $dossierQuery)
-->where('statut', 'ACTIVE')
-->count();
-
-// Dossiers avec RDV
-$rdvCount = (clone $dossierQuery)
-->where('statut', 'nouveau_rendez_vous')
-->count();
-
+        // Dossiers avec RDV
+        $rdvCount = (clone $dossierQuery)->where('statut', 'nouveau_rendez_vous')->count();
 
         // ========= Retour =========
-        return view('dashboard.index', compact(
-            'from', 'to',
-            'totalClients', 'totalDossiers',
-            'ouverts', 'realises', 'annules', 'tauxReussite', 'pboSature',
-            'avgDelayDays',
-            'byStatut', 'byTypeService', 'byZone',
-            'topTechs',
-            'intervCount', 'intervAvgDuration',
-            'lastDossiers', 'lastInterventions',
-            'labels', 'created', 'realised', 'createdCum', 'realisedCum','corbeilleCount', 'activeCount', 'rdvCount','totalCorbeille','teamsKpi'
-        ));
+        return view('dashboard.index', compact('from', 'to', 'totalClients', 'totalDossiers', 'ouverts', 'realises', 'annules', 'tauxReussite', 'pboSature', 'avgDelayDays', 'byStatut', 'byTypeService', 'byZone', 'topTechs', 'intervCount', 'intervAvgDuration', 'lastDossiers', 'lastInterventions', 'labels', 'created', 'realised', 'createdCum', 'realisedCum', 'corbeilleCount', 'activeCount', 'rdvCount', 'totalCorbeille', 'teamsKpi','teamsKpiToday'));
     }
 
-public function exportExcel(Request $request): BinaryFileResponse
-{
-    // On reprend les mêmes données que dans index()
-    $data = $this->index($request)->getData();
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        // On reprend les mêmes données que dans index()
+        $data = $this->index($request)->getData();
 
-    // Organiser les données à exporter
-    $rows = [
-        ['Période', $data['from'].' → '.$data['to']],
-        ['Total clients', $data['totalClients']],
-        ['Total dossiers', $data['totalDossiers']],
-        ['Dossiers ouverts', $data['ouverts']],
-        ['Dossiers réalisés', $data['realises']],
-        ['Taux de réussite', $data['tauxReussite'].' %'],
-        ['PBO saturés', $data['pboSature']],
-        ['Délai moyen (jours)', $data['avgDelayDays']],
-        [],
-        ['Répartition par statut'],
-    ];
+        // Organiser les données à exporter
+        $rows = [['Période', $data['from'] . ' → ' . $data['to']], ['Total clients', $data['totalClients']], ['Total dossiers', $data['totalDossiers']], ['Dossiers ouverts', $data['ouverts']], ['Dossiers réalisés', $data['realises']], ['Taux de réussite', $data['tauxReussite'] . ' %'], ['PBO saturés', $data['pboSature']], ['Délai moyen (jours)', $data['avgDelayDays']], [], ['Répartition par statut']];
 
-    foreach ($data['byStatut'] as $statut => $count) {
-        $rows[] = [$statut, $count];
+        foreach ($data['byStatut'] as $statut => $count) {
+            $rows[] = [$statut, $count];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Répartition par type de service'];
+        foreach ($data['byTypeService'] as $type => $count) {
+            $rows[] = [$type, $count];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Top techniciens'];
+        foreach ($data['topTechs'] as $tech) {
+            $rows[] = [$tech->name, $tech->done];
+        }
+
+        // Créer un export rapide à partir d’un array
+        return Excel::download(
+            new class ($rows) implements \Maatwebsite\Excel\Concerns\FromCollection {
+                private $rows;
+                public function __construct($rows)
+                {
+                    $this->rows = $rows;
+                }
+                public function collection()
+                {
+                    return collect($this->rows);
+                }
+            },
+            'dashboard_recap.xlsx',
+        );
     }
-
-    $rows[] = [];
-    $rows[] = ['Répartition par type de service'];
-    foreach ($data['byTypeService'] as $type => $count) {
-        $rows[] = [$type, $count];
-    }
-
-    $rows[] = [];
-    $rows[] = ['Top techniciens'];
-    foreach ($data['topTechs'] as $tech) {
-        $rows[] = [$tech->name, $tech->done];
-    }
-
-    // Créer un export rapide à partir d’un array
-    return Excel::download(new class($rows) implements \Maatwebsite\Excel\Concerns\FromCollection {
-        private $rows;
-        public function __construct($rows) { $this->rows = $rows; }
-        public function collection() { return collect($this->rows); }
-    }, 'dashboard_recap.xlsx');
-}
-
 }
