@@ -26,7 +26,7 @@
 
         <ul class="navbar-nav ml-auto">
     {{-- Lien personnalisé Alertes RDV --}}
-    <li class="nav-item">
+    <!-- <li class="nav-item">
     <a href="{{ route('dossiers.rdv_alerte') }}" class="nav-link">
         <i class="fas fa-bell"></i>
         <p>Alertes RDV
@@ -35,7 +35,7 @@
             @endif
         </p>
     </a>
-</li>
+</li> -->
 
         {{-- User menu link --}}
         @if(Auth::user())

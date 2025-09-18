@@ -418,12 +418,12 @@ return [
             'icon'   => 'fas fa-file-alt',
            // optionnel, si tu gères les permissions
         ],
-        [
-            'text' => ' Fiches Signées',
-            'route' => 'dossiers.rapports_rdv',
-            'icon' => 'fas fa-file-medical', // tu peux changer l'icône
-            // optionnel si tu utilises Spatie Permissions
-        ],
+        // [
+        //     'text' => ' Fiches Signées',
+        //     'route' => 'dossiers.rapports_rdv',
+        //     'icon' => 'fas fa-file-medical', // tu peux changer l'icône
+        //     // optionnel si tu utilises Spatie Permissions
+        // ],
 
         // [
         //     'text' => 'Extensions FTTH',
