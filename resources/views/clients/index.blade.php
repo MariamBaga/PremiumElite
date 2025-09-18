@@ -161,7 +161,7 @@
           @foreach($clients as $i => $c)
             @php $d = $c->lastDossier; @endphp
             <tr>
-              <td>{{ $i+1 }}</td>
+            <td>{{ $i + $clients->firstItem() }}</td>
               <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
               <td class="text-nowrap">{{ $d?->ligne ?? $c->numero_ligne }}</td>
               <td class="text-nowrap">{{ $d?->contact ?? $c->telephone }}</td>
