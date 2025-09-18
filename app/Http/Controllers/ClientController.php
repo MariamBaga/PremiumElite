@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+
 class ClientController extends Controller
 {
     // Pas de __construct middleware ici ; on protège via routes
@@ -76,9 +77,26 @@ class ClientController extends Controller
             ->when(!empty($data['date_fin_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_fin_travaux', '<=', $data['date_fin_to'])));
 
         // 👉 Pas de paginate : on renvoie la collection entière et DataTables gère le tri/recherche côté front
-        $clients = $q->get();
+
+// après
+$clients = $q->paginate(10); // 10 par page
 
         return view('clients.index', compact('clients'));
+    }
+
+
+    public function data(Request $request)
+    {
+        $query = Client::with('lastDossier');
+
+        return DataTables::of($query)
+            ->addColumn('ligne', function($client){
+                return $client->lastDossier?->ligne ?? $client->numero_ligne;
+            })
+            ->addColumn('actions', function($client){
+                return view('clients.partials.actions', compact('client'))->render();
+            })
+            ->make(true);
     }
 
     public function create()
