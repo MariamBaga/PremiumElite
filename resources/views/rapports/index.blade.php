@@ -23,8 +23,7 @@
                 </div>
                 <div class="col-md-4">
                     <label>Statut du dossier</label>
-                    <select name="statut" class="form-control">
-                        <option value="">-- Tous --</option>
+                    <select name="statut[]" class="form-control" multiple>
                         <option value="en_appel">En appel</option>
                         <option value="injoignable">Injoignable</option>
                         <option value="nouveau_rendez_vous">Rendez-vous</option>
@@ -33,8 +32,10 @@
                         <option value="active">Activé</option>
                         <option value="realise">Réalisé</option>
                     </select>
+                    <small class="form-text text-muted">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs statuts.</small>
                 </div>
             </div>
+
             <div class="row mt-3">
                 <div class="col-md-4">
                     <label>Format</label>
@@ -45,6 +46,7 @@
                     </select>
                 </div>
             </div>
+
             <button class="btn btn-primary mt-3">
                 <i class="fas fa-download"></i> Télécharger
             </button>

@@ -419,7 +419,7 @@ return [
            // optionnel, si tu gères les permissions
         ],
         [
-            'text' => 'Rapports & RDV',
+            'text' => ' Fiches Signées',
             'route' => 'dossiers.rapports_rdv',
             'icon' => 'fas fa-file-medical', // tu peux changer l'icône
             // optionnel si tu utilises Spatie Permissions

@@ -15,7 +15,6 @@
                 <td>{{ $dossier->client->displayName ?? '-' }}</td>
                 <td>{{ $dossier->client->telephone ?? '-' }}</td>
                 <td>{{ \Illuminate\Support\Str::headline($dossier->statut?->value ?? $dossier->statut) }}</td>
-
                 <td>{{ optional($dossier->date_planifiee)->format('d/m/Y') }}</td>
                 <td>{{ $dossier->rapport_intervention ?? '-' }}</td>
                 <td>{{ $dossier->created_at->format('d/m/Y H:i') }}</td>

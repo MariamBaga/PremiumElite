@@ -21,8 +21,9 @@ class RapportActiviteExport implements FromView
             ->whereBetween('created_at', [$this->request->date_from, $this->request->date_to])
             ->orderBy('created_at', 'desc');
 
+        // Support multi-statut
         if ($this->request->filled('statut')) {
-            $query->where('statut', $this->request->statut);
+            $query->whereIn('statut', $this->request->statut);
         }
 
         $dossiers = $query->get();

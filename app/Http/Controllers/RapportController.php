@@ -11,7 +11,6 @@ class RapportController extends Controller
 {
     public function index()
     {
-        // Juste afficher le formulaire avec filtres
         return view('rapports.index');
     }
 
@@ -20,10 +19,11 @@ class RapportController extends Controller
         $request->validate([
             'date_from' => 'required|date',
             'date_to'   => 'required|date|after_or_equal:date_from',
+            'statut'    => 'nullable|array',
+            'statut.*'  => 'string',
             'format'    => 'required|in:excel,csv,pdf',
         ]);
 
-        // Export avec Laravel Excel
         $fileName = "rapport_activite_" . now()->format('Ymd_His');
 
         switch ($request->format) {
@@ -32,7 +32,10 @@ class RapportController extends Controller
             case 'csv':
                 return Excel::download(new RapportActiviteExport($request), $fileName.'.csv');
             case 'pdf':
-                return Excel::download(new RapportActiviteExport($request), $fileName.'.pdf');
+                // PDF via DomPDF
+                $dossiers = (new RapportActiviteExport($request))->view()->getData()['dossiers'];
+                $pdf = \PDF::loadView('rapports.export', compact('dossiers'));
+                return $pdf->download($fileName.'.pdf');
         }
     }
 }
