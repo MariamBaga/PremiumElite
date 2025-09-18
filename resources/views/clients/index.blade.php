@@ -265,22 +265,41 @@
   {{-- DataTables est déjà packagé avec AdminLTE. Si besoin, assure-toi que ces plugins sont enable dans config/adminlte.php --}}
   <script>
     $(function () {
-      $('#dossiersTable').DataTable({
-        // options DataTables
+    console.log("🚀 DataTables init lancé");
+
+    // Vérif si jQuery est bien là
+    if (typeof $ === 'undefined') {
+        console.error("❌ jQuery non chargé !");
+        return;
+    } else {
+        console.log("✅ jQuery version :", $.fn.jquery);
+    }
+
+    // Vérif si DataTables est bien chargé
+    if (!$.fn.DataTable) {
+        console.error("❌ DataTables non chargé !");
+        return;
+    } else {
+        console.log("✅ DataTables version :", $.fn.DataTable.version);
+    }
+
+    // Init DataTables
+    let table = $('#dossiersTable').DataTable({
         responsive: true,
         autoWidth: false,
         deferRender: true,
         pageLength: 10,
         lengthMenu: [[10,25,50,100,-1],[10,25,50,100,'Tous']],
-        order: [[0,'asc']], // par #
+        order: [[0,'asc']],
         language: {
-          url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
         },
-        // boutons export si Buttons est activé
         dom: 'Bfrtip',
         buttons: ['copy','csv','excel','pdf','print','colvis']
-      });
     });
+
+    console.log("✅ DataTables activé sur #dossiersTable, nb lignes :", table.rows().count());
+});
 
     document.querySelectorAll('.statut-select').forEach(select => {
     select.dataset.oldValue = select.value;
