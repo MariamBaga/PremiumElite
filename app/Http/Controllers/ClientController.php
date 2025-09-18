@@ -26,75 +26,60 @@ class ClientController extends Controller
 
         $data = $request->validate([
             // Filtres CLIENT (existants)
-            'type'                => 'nullable|in:residentiel,professionnel',
-            'search'              => 'nullable|string|max:200',
-            'numero_ligne'        => 'nullable|string|max:50',
-            'numero_point_focal'  => 'nullable|string|max:50',
-            'localisation'        => 'nullable|string|max:100',
-            'date_paiement_from'  => 'nullable|date',
-            'date_paiement_to'    => 'nullable|date',
-            'date_affect_from'    => 'nullable|date',
-            'date_affect_to'      => 'nullable|date',
-            'statut'              => 'nullable|string|in:' . implode(',', array_keys(\App\Enums\StatutDossier::labels())),
+            'type' => 'nullable|in:residentiel,professionnel',
+            'search' => 'nullable|string|max:200',
+            'numero_ligne' => 'nullable|string|max:50',
+            'numero_point_focal' => 'nullable|string|max:50',
+            'localisation' => 'nullable|string|max:100',
+            'date_paiement_from' => 'nullable|date',
+            'date_paiement_to' => 'nullable|date',
+            'date_affect_from' => 'nullable|date',
+            'date_affect_to' => 'nullable|date',
+            'statut' => 'nullable|string|in:' . implode(',', array_keys(\App\Enums\StatutDossier::labels())),
 
             // 🆕 Filtres Dossier (nouvelle structure)
-            'service_acces'       => 'nullable|in:FTTH,Cuivre',
-            'categorie'           => 'nullable|in:B2B,B2C',
-            'active'              => 'nullable|in:0,1',
-            'localite'            => 'nullable|string|max:100',
-            'date_recep_from'     => 'nullable|date',
-            'date_recep_to'       => 'nullable|date',
-            'date_fin_from'       => 'nullable|date',
-            'date_fin_to'         => 'nullable|date',
+            'service_acces' => 'nullable|in:FTTH,Cuivre',
+            'categorie' => 'nullable|in:B2B,B2C',
+            'active' => 'nullable|in:0,1',
+            'localite' => 'nullable|string|max:100',
+            'date_recep_from' => 'nullable|date',
+            'date_recep_to' => 'nullable|date',
+            'date_fin_from' => 'nullable|date',
+            'date_fin_to' => 'nullable|date',
         ]);
 
         $q = Client::with(['lastDossier', 'lastDossier.team'])
             // Visibilité chef d’équipe
-            ->when($user->hasRole('chef_equipe') && $teamId, fn($qry) =>
-                $qry->whereHas('lastDossier', fn($dq) => $dq->where('assigned_team_id', $teamId))
-            )
+            ->when($user->hasRole('chef_equipe') && $teamId, fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('assigned_team_id', $teamId)))
             ->when($user->hasRole('chef_equipe') && !$teamId, fn($qry) => $qry->whereRaw('0=1'))
 
             // ---- Filtres CLIENT
-            ->when(!empty($data['type']),                     fn($qry) => $qry->where('type', $data['type']))
-            ->when(!empty($data['numero_ligne']),            fn($qry) => $qry->where('numero_ligne','like','%'.$data['numero_ligne'].'%'))
-            ->when(!empty($data['numero_point_focal']),      fn($qry) => $qry->where('numero_point_focal','like','%'.$data['numero_point_focal'].'%'))
-            ->when(!empty($data['localisation']),            fn($qry) => $qry->where('localisation','like','%'.$data['localisation'].'%'))
-            ->when(!empty($data['date_paiement_from']),      fn($qry) => $qry->whereDate('date_paiement','>=',$data['date_paiement_from']))
-            ->when(!empty($data['date_paiement_to']),        fn($qry) => $qry->whereDate('date_paiement','<=',$data['date_paiement_to']))
-            ->when(!empty($data['date_affect_from']),        fn($qry) => $qry->whereDate('date_affectation','>=',$data['date_affect_from']))
-            ->when(!empty($data['date_affect_to']),          fn($qry) => $qry->whereDate('date_affectation','<=',$data['date_affect_to']))
+            ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
+            ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%' . $data['numero_ligne'] . '%'))
+            ->when(!empty($data['numero_point_focal']), fn($qry) => $qry->where('numero_point_focal', 'like', '%' . $data['numero_point_focal'] . '%'))
+            ->when(!empty($data['localisation']), fn($qry) => $qry->where('localisation', 'like', '%' . $data['localisation'] . '%'))
+            ->when(!empty($data['date_paiement_from']), fn($qry) => $qry->whereDate('date_paiement', '>=', $data['date_paiement_from']))
+            ->when(!empty($data['date_paiement_to']), fn($qry) => $qry->whereDate('date_paiement', '<=', $data['date_paiement_to']))
+            ->when(!empty($data['date_affect_from']), fn($qry) => $qry->whereDate('date_affectation', '>=', $data['date_affect_from']))
+            ->when(!empty($data['date_affect_to']), fn($qry) => $qry->whereDate('date_affectation', '<=', $data['date_affect_to']))
 
             // ---- Filtres via le DERNIER DOSSIER (nouvelle structure + statut)
-            ->when(!empty($data['statut']),        fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('statut', $data['statut'])))
+            ->when(!empty($data['statut']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('statut', $data['statut'])))
             ->when(!empty($data['service_acces']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('service_acces', $data['service_acces'])))
-            ->when(!empty($data['categorie']),     fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('categorie', $data['categorie'])))
-            ->when($request->has('active'),
-    fn($qry) => $qry->whereHas('lastDossier',
-        fn($dq) => $dq->where('is_active', $request->input('active') === '1')
-    )
-)
+            ->when(!empty($data['categorie']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('categorie', $data['categorie'])))
+            ->when($request->has('active'), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('is_active', $request->input('active') === '1')))
 
-            ->when(!empty($data['localite']),      fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('localite','like','%'.$data['localite'].'%')))
-            ->when(!empty($data['date_recep_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) =>
-                $dq->whereDate('date_reception_raccordement','>=',$data['date_recep_from'])
-            ))
-            ->when(!empty($data['date_recep_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) =>
-                $dq->whereDate('date_reception_raccordement','<=',$data['date_recep_to'])
-            ))
-            ->when(!empty($data['date_fin_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) =>
-                $dq->whereDate('date_fin_travaux','>=',$data['date_fin_from'])
-            ))
-            ->when(!empty($data['date_fin_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) =>
-                $dq->whereDate('date_fin_travaux','<=',$data['date_fin_to'])
-            ));
+            ->when(!empty($data['localite']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('localite', 'like', '%' . $data['localite'] . '%')))
+            ->when(!empty($data['date_recep_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_reception_raccordement', '>=', $data['date_recep_from'])))
+            ->when(!empty($data['date_recep_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_reception_raccordement', '<=', $data['date_recep_to'])))
+            ->when(!empty($data['date_fin_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_fin_travaux', '>=', $data['date_fin_from'])))
+            ->when(!empty($data['date_fin_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_fin_travaux', '<=', $data['date_fin_to'])));
 
         // 👉 Pas de paginate : on renvoie la collection entière et DataTables gère le tri/recherche côté front
         $clients = $q->get();
 
         return view('clients.index', compact('clients'));
     }
-
 
     public function create()
     {
@@ -142,7 +127,6 @@ class ClientController extends Controller
 
     public function edit(Client $client)
     {
-
         // Charger le dossier existant s’il y en a un
         $dossier = DossierRaccordement::where('client_id', $client->id)->first();
 
@@ -165,8 +149,16 @@ class ClientController extends Controller
 
             // 2) Mise à jour ou création du dossier lié
             $dossierData = $request->only([
-                'type_service', 'pbo', 'pm', 'statut', 'description',
-                'assigned_to', 'assigned_team_id', 'date_planifiee', 'date_realisation', 'zone',
+                'type_service',
+                'pbo',
+                'pm',
+                'statut',
+                'description',
+                'assigned_to',
+                'assigned_team_id',
+                'date_planifiee',
+                'date_realisation',
+                'zone',
 
                 // 🔹 Nouveaux champs
                 'ligne',
@@ -223,11 +215,9 @@ class ClientController extends Controller
         return redirect()->route('clients.index')->with('success', 'Tous les clients (et dossiers liés) ont été supprimés.');
     }
 
-
-
     public function active()
     {
-        $clients = Client::whereHas('dossiers', function($q) {
+        $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'active');
         })->get();
 
@@ -236,7 +226,7 @@ class ClientController extends Controller
 
     public function realise()
     {
-        $clients = Client::whereHas('dossiers', function($q) {
+        $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'realise');
         })->get();
 
@@ -245,7 +235,7 @@ class ClientController extends Controller
 
     public function nouveauRdv()
     {
-        $clients = Client::whereHas('dossiers', function($q) {
+        $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'nouveau_rendez_vous');
         })->get();
 
@@ -254,20 +244,18 @@ class ClientController extends Controller
 
     public function enAppel()
     {
-        $clients = Client::whereHas('dossiers', function($q) {
+        $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'en_appel');
         })->get();
-
 
         return view('clients.dossiers.en_appel', compact('clients'));
     }
 
     public function injoignables()
     {
-        $clients = Client::whereHas('dossiers', function($q) {
+        $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'injoignable');
         })->get();
-
 
         return view('clients.dossiers.injoignables', compact('clients'));
     }

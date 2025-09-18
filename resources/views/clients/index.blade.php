@@ -270,7 +270,7 @@
         responsive: true,
         autoWidth: false,
         deferRender: true,
-        pageLength: 25,
+        pageLength: 10,
         lengthMenu: [[10,25,50,100,-1],[10,25,50,100,'Tous']],
         order: [[0,'asc']], // par #
         language: {
