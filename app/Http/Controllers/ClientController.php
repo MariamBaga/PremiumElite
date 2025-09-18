@@ -237,44 +237,46 @@ $clients = $q->paginate(10); // 10 par page
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'active');
-        })->get();
+        })->paginate(10);
 
         return view('clients.dossiers.active', compact('clients'));
     }
 
     public function realise()
-    {
-        $clients = Client::whereHas('dossiers', function ($q) {
-            $q->where('statut', 'realise');
-        })->get();
+{
+    $clients = Client::whereHas('dossiers', function ($q) {
+        $q->where('statut', 'realise');
+    })->paginate(10); // ✅ paginate au lieu de get()
 
-        return view('clients.dossiers.realise', compact('clients'));
-    }
+    return view('clients.dossiers.realise', compact('clients'));
+}
 
-    public function nouveauRdv()
-    {
-        $clients = Client::whereHas('dossiers', function ($q) {
-            $q->where('statut', 'nouveau_rendez_vous');
-        })->get();
 
-        return view('clients.dossiers.nouveau_rdv', compact('clients'));
-    }
+public function nouveauRdv()
+{
+    $clients = Client::whereHas('dossiers', function ($q) {
+        $q->where('statut', 'nouveau_rendez_vous');
+    })->paginate(10); // ✅ pagination 10 par page
 
-    public function enAppel()
-    {
-        $clients = Client::whereHas('dossiers', function ($q) {
-            $q->where('statut', 'en_appel');
-        })->get();
+    return view('clients.dossiers.nouveau_rdv', compact('clients'));
+}
 
-        return view('clients.dossiers.en_appel', compact('clients'));
-    }
+public function enAppel()
+{
+    $clients = Client::whereHas('dossiers', function ($q) {
+        $q->where('statut', 'en_appel');
+    })->paginate(10);
 
-    public function injoignables()
-    {
-        $clients = Client::whereHas('dossiers', function ($q) {
-            $q->where('statut', 'injoignable');
-        })->get();
+    return view('clients.dossiers.en_appel', compact('clients'));
+}
 
-        return view('clients.dossiers.injoignables', compact('clients'));
-    }
+public function injoignables()
+{
+    $clients = Client::whereHas('dossiers', function ($q) {
+        $q->where('statut', 'injoignable');
+    })->paginate(10);
+
+    return view('clients.dossiers.injoignables', compact('clients'));
+}
+
 }

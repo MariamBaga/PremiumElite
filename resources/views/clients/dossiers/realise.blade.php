@@ -6,10 +6,15 @@
     <h1>Dossiers Réalisés</h1>
 @stop
 
+
+
 @section('content')
 <div class="card">
     <div class="card-body">
-        <div class="table-responsive">
+        {{-- Wrapper pour scrollbar horizontale en haut --}}
+        <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
+
+        <div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">
             <table id="dossiersTable" class="table table-striped table-hover align-middle w-100">
                 <thead>
                     <tr>
@@ -36,58 +41,96 @@
                 </thead>
                 <tbody>
                     @foreach($clients as $i => $c)
-                        @php $d = $c->dossiers->first(); @endphp
+                        @php $d = $c->lastDossier; @endphp
                         <tr>
-                            <td>{{ $i+1 }}</td>
-                            <td>{{ $c->displayName }}</td>
-                            <td>{{ $d?->ligne ?? $c->numero_ligne }}</td>
-                            <td>{{ $d?->contact ?? $c->telephone }}</td>
-                            <td>{{ $d?->service_acces }}</td>
-                            <td>{{ $d?->localite }}</td>
-                            <td>{{ $d?->categorie }}</td>
-                            <td>{{ optional($d?->date_reception_raccordement)->format('d/m/Y') }}</td>
-                            <td>{{ optional($d?->date_fin_travaux)->format('d/m/Y') }}</td>
-                            <td>{{ $d?->port }}</td>
-                            <td>{{ $d?->pbo_lineaire_utilise }}</td>
-                            <td>{{ $d?->nb_poteaux_implantes }}</td>
-                            <td>{{ $d?->nb_armements_poteaux }}</td>
-                            <td>{{ $d?->statut_label }}</td>
-                            <td>{{ $d?->taux_reporting_j1 }}</td>
-                            <td>
-                                @if($d?->is_active) <span class="badge bg-success">Oui</span>
-                                @else <span class="badge bg-secondary">Non</span>
+                            <td>{{ $i + $clients->firstItem() }}</td>
+                            <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
+                            <td class="text-nowrap">{{ $d?->ligne ?? $c->numero_ligne }}</td>
+                            <td class="text-nowrap">{{ $d?->contact ?? $c->telephone }}</td>
+                            <td class="text-nowrap">{{ $d?->service_acces }}</td>
+                            <td class="text-nowrap">{{ $d?->localite }}</td>
+                            <td class="text-nowrap">{{ $d?->categorie }}</td>
+                            <td class="text-nowrap">{{ optional($d?->date_reception_raccordement)->format('d/m/Y') }}</td>
+                            <td class="text-nowrap">{{ optional($d?->date_fin_travaux)->format('d/m/Y') }}</td>
+                            <td class="text-nowrap">{{ $d?->port }}</td>
+                            <td class="text-nowrap">{{ $d?->pbo_lineaire_utilise }}</td>
+                            <td class="text-nowrap">{{ $d?->nb_poteaux_implantes }}</td>
+                            <td class="text-nowrap">{{ $d?->nb_armements_poteaux }}</td>
+                            <td class="text-nowrap">{{ $d?->statut_label }}</td>
+                            <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
+                            <td class="text-nowrap">
+                                @if($d?->is_active)
+                                    <span class="badge bg-success">Oui</span>
+                                @else
+                                    <span class="badge bg-secondary">Non</span>
                                 @endif
                             </td>
-                            <td>{{ $d?->observation }}</td>
-                            <td>{{ $d?->pilote_raccordement }}</td>
+                            <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
+                            <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
-                                @can('clients.edit')
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
-                                @endcan
+                                <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
+                                    @can('clients.edit')
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
+                                    @endcan
+
+
+
+                                </div>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
+
+        <div class="mt-3">
+            {{ $clients->links('pagination::bootstrap-5') }}
+        </div>
+
+
     </div>
 </div>
 @stop
 
+@push('css')
+<style>
+    .dataTables_wrapper .dataTables_length select {
+        padding-right: 24px;
+    }
+    .table td,
+    .table th {
+        white-space: nowrap;
+    }
+</style>
+@endpush
+
 @push('js')
 <script>
-$(function () {
     $('#dossiersTable').DataTable({
+        paging: false,
+        searching: false,
+        info: false,
+        ordering: false,
         responsive: true,
         autoWidth: false,
-        pageLength: 25,
-        lengthMenu: [[10,25,50,100,-1],[10,25,50,100,'Tous']],
-        order: [[0,'asc']],
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json' },
-        dom: 'Bfrtip',
-        buttons: ['copy','csv','excel','pdf','print','colvis']
     });
-});
+
+    // Scroll horizontal synchronisé
+    const topWrapper = document.querySelector('.scroll-top-wrapper');
+    const tableWrapper = document.querySelector('.table-responsive');
+    const cloneTable = tableWrapper.querySelector('table').cloneNode(true);
+    cloneTable.style.visibility = 'hidden';
+    cloneTable.style.pointerEvents = 'none';
+    topWrapper.appendChild(cloneTable);
+
+    topWrapper.addEventListener('scroll', () => {
+        tableWrapper.scrollLeft = topWrapper.scrollLeft;
+    });
+    tableWrapper.addEventListener('scroll', () => {
+        topWrapper.scrollLeft = tableWrapper.scrollLeft;
+    });
+
+
 </script>
 @endpush

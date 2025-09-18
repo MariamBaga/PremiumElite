@@ -150,113 +150,122 @@
 
             {{-- TABLEAU DataTables (nouvelle structure) --}}
             {{-- Wrapper pour scrollbar horizontale en haut --}}
-<div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
+            <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
 
-<div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">
-    <table id="dossiersTable" class="table table-striped table-hover align-middle w-100">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>CLIENT</th>
-                <th>LIGNE</th>
-                <th>Contact</th>
-                <th>Service</th>
-                <th>LOCALITE</th>
-                <th>Catégorie</th>
-                <th>Réception</th>
-                <th>Fin Travaux</th>
-                <th>Port</th>
-                <th>PBO / Linéaire</th>
-                <th>Poteaux</th>
-                <th>Armements</th>
-                <th>Statut</th>
-                <th>Reporting J+1</th>
-                <th>ACTIVE</th>
-                <th>Observation</th>
-                <th>Pilote</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($clients as $i => $c)
-                @php $d = $c->lastDossier; @endphp
-                <tr>
-                    <td>{{ $i + $clients->firstItem() }}</td>
-                    <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
-                    <td class="text-nowrap">{{ $d?->ligne ?? $c->numero_ligne }}</td>
-                    <td class="text-nowrap">{{ $d?->contact ?? $c->telephone }}</td>
-                    <td class="text-nowrap">{{ $d?->service_acces }}</td>
-                    <td class="text-nowrap">{{ $d?->localite }}</td>
-                    <td class="text-nowrap">{{ $d?->categorie }}</td>
-                    <td class="text-nowrap">{{ optional($d?->date_reception_raccordement)->format('d/m/Y') }}</td>
-                    <td class="text-nowrap">{{ optional($d?->date_fin_travaux)->format('d/m/Y') }}</td>
-                    <td class="text-nowrap">{{ $d?->port }}</td>
-                    <td class="text-nowrap">{{ $d?->pbo_lineaire_utilise }}</td>
-                    <td class="text-nowrap">{{ $d?->nb_poteaux_implantes }}</td>
-                    <td class="text-nowrap">{{ $d?->nb_armements_poteaux }}</td>
-                    <td class="text-nowrap">{{ $d?->statut_label ?? (\App\Enums\StatutDossier::labels()[$d?->statut?->value ?? 'en_appel'] ?? $d?->statut?->value) }}</td>
-                    <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
-                    <td class="text-nowrap">
-                        @if ($d?->is_active)
-                            <span class="badge bg-success">Oui</span>
-                        @else
-                            <span class="badge bg-secondary">Non</span>
-                        @endif
-                    </td>
-                    <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
-                    <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
-                    <td class="text-end">
-                        <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
-                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('clients.show', $c) }}">Ouvrir</a>
-                            @can('clients.edit')
-                                <a class="btn btn-sm btn-outline-primary" href="{{ route('clients.edit', $c) }}">Éditer</a>
-                            @endcan
+            <div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">
+                <table id="dossiersTable" class="table table-striped table-hover align-middle w-100">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CLIENT</th>
+                            <th>LIGNE</th>
+                            <th>Contact</th>
+                            <th>Service</th>
+                            <th>LOCALITE</th>
+                            <th>Catégorie</th>
+                            <th>Réception</th>
+                            <th>Fin Travaux</th>
+                            <th>Port</th>
+                            <th>PBO / Linéaire</th>
+                            <th>Poteaux</th>
+                            <th>Armements</th>
+                            <th>Statut</th>
+                            <th>Reporting J+1</th>
+                            <th>ACTIVE</th>
+                            <th>Observation</th>
+                            <th>Pilote</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($clients as $i => $c)
+                            @php $d = $c->lastDossier; @endphp
+                            <tr>
+                                <td>{{ $i + $clients->firstItem() }}</td>
+                                <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
+                                <td class="text-nowrap">{{ $d?->ligne ?? $c->numero_ligne }}</td>
+                                <td class="text-nowrap">{{ $d?->contact ?? $c->telephone }}</td>
+                                <td class="text-nowrap">{{ $d?->service_acces }}</td>
+                                <td class="text-nowrap">{{ $d?->localite }}</td>
+                                <td class="text-nowrap">{{ $d?->categorie }}</td>
+                                <td class="text-nowrap">{{ optional($d?->date_reception_raccordement)->format('d/m/Y') }}
+                                </td>
+                                <td class="text-nowrap">{{ optional($d?->date_fin_travaux)->format('d/m/Y') }}</td>
+                                <td class="text-nowrap">{{ $d?->port }}</td>
+                                <td class="text-nowrap">{{ $d?->pbo_lineaire_utilise }}</td>
+                                <td class="text-nowrap">{{ $d?->nb_poteaux_implantes }}</td>
+                                <td class="text-nowrap">{{ $d?->nb_armements_poteaux }}</td>
+                                <td class="text-nowrap">
+                                    {{ $d?->statut_label ?? (\App\Enums\StatutDossier::labels()[$d?->statut?->value ?? 'en_appel'] ?? $d?->statut?->value) }}
+                                </td>
+                                <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
+                                <td class="text-nowrap">
+                                    @if ($d?->is_active)
+                                        <span class="badge bg-success">Oui</span>
+                                    @else
+                                        <span class="badge bg-secondary">Non</span>
+                                    @endif
+                                </td>
+                                <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
+                                <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                            href="{{ route('clients.show', $c) }}">Ouvrir</a>
+                                        @can('clients.edit')
+                                            <a class="btn btn-sm btn-outline-primary"
+                                                href="{{ route('clients.edit', $c) }}">Éditer</a>
+                                        @endcan
 
-                            @php
-                                $dossier = $d ?? new \App\Models\DossierRaccordement(['client_id' => $c->id]);
-                            @endphp
+                                        @php
+                                            $dossier =
+                                                $d ?? new \App\Models\DossierRaccordement(['client_id' => $c->id]);
+                                        @endphp
 
-                            @can('dossiers.assign')
-                                <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}" class="d-inline-flex">
-                                    @csrf
-                                    <select name="assigned_team_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                                        <option value="">-- Équipe --</option>
-                                        @foreach (\App\Models\Team::all() as $team)
-                                            <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>
-                                                {{ $team->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </form>
-                            @endcan
+                                        @can('dossiers.assign')
+                                            <form method="POST" action="{{ route('dossiers.assign-team', $dossier) }}"
+                                                class="d-inline-flex">
+                                                @csrf
+                                                <select name="assigned_team_id" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()">
+                                                    <option value="">-- Équipe --</option>
+                                                    @foreach (\App\Models\Team::all() as $team)
+                                                        <option value="{{ $team->id }}" @selected($dossier->assigned_team_id == $team->id)>
+                                                            {{ $team->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </form>
+                                        @endcan
 
-                            @can('updateStatus', $dossier)
-                                <form method="POST" action="{{ route('dossiers.status', $dossier) }}" class="d-inline-flex align-items-center gap-1">
-                                    @csrf
-                                    <select name="statut" class="form-select form-select-sm statut-select" data-dossier-id="{{ $dossier->id }}" required>
-                                        @php $user = auth()->user(); @endphp
-                                        @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
-                                            @if (
-                                                $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
-                                                $user->hasRole('chef_equipe') &&
-                                                !$user->hasAnyRole(['superadmin', 'coordinateur'])
-                                            )
-                                                @continue
-                                            @endif
-                                            <option value="{{ $value }}" @selected(($dossier->statut?->value ?? 'en_appel') === $value)>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button class="btn btn-sm btn-primary">OK</button>
-                                </form>
-                            @endcan
-                        </div>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+                                        @can('updateStatus', $dossier)
+                                            <form method="POST" action="{{ route('dossiers.status', $dossier) }}"
+                                                class="d-inline-flex align-items-center gap-1">
+                                                @csrf
+                                                <select name="statut" class="form-select form-select-sm statut-select"
+                                                    data-dossier-id="{{ $dossier->id }}" required>
+                                                    @php $user = auth()->user(); @endphp
+                                                    @foreach (\App\Enums\StatutDossier::labels() as $value => $label)
+                                                        @if (
+                                                            $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
+                                                                $user->hasRole('chef_equipe') &&
+                                                                !$user->hasAnyRole(['superadmin', 'coordinateur']))
+                                                            @continue
+                                                        @endif
+                                                        <option value="{{ $value }}" @selected(($dossier->statut?->value ?? 'en_appel') === $value)>
+                                                            {{ $label }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <button class="btn btn-sm btn-primary">OK</button>
+                                            </form>
+                                        @endcan
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
 
 
@@ -306,23 +315,23 @@
 
 
 
-    // Synchroniser scroll horizontal en haut
-    const topWrapper = document.querySelector('.scroll-top-wrapper');
-    const tableWrapper = document.querySelector('.table-responsive');
+        // Synchroniser scroll horizontal en haut
+        const topWrapper = document.querySelector('.scroll-top-wrapper');
+        const tableWrapper = document.querySelector('.table-responsive');
 
-    // Crée un clone invisible du tableau pour scrollbar top
-    const cloneTable = tableWrapper.querySelector('table').cloneNode(true);
-    cloneTable.style.visibility = 'hidden';
-    cloneTable.style.pointerEvents = 'none';
-    topWrapper.appendChild(cloneTable);
+        // Crée un clone invisible du tableau pour scrollbar top
+        const cloneTable = tableWrapper.querySelector('table').cloneNode(true);
+        cloneTable.style.visibility = 'hidden';
+        cloneTable.style.pointerEvents = 'none';
+        topWrapper.appendChild(cloneTable);
 
-    topWrapper.addEventListener('scroll', () => {
-        tableWrapper.scrollLeft = topWrapper.scrollLeft;
-    });
+        topWrapper.addEventListener('scroll', () => {
+            tableWrapper.scrollLeft = topWrapper.scrollLeft;
+        });
 
-    tableWrapper.addEventListener('scroll', () => {
-        topWrapper.scrollLeft = tableWrapper.scrollLeft;
-    });
+        tableWrapper.addEventListener('scroll', () => {
+            topWrapper.scrollLeft = tableWrapper.scrollLeft;
+        });
 
         document.querySelectorAll('.statut-select').forEach(select => {
             select.dataset.oldValue = select.value;
