@@ -39,8 +39,25 @@
         {{-- Membres texte --}}
         <div class="col-md-6 mb-3">
           <label>Membres (texte)</label>
-          <textarea name="members_names" class="form-control" rows="6" placeholder="Un membre par ligne ou séparé par une virgule">@if(old('members_names')){{ old('members_names') }}@else{{ implode("\n", json_decode($team->members_names ?? '[]', true)) }}@endif</textarea>
-          <small class="text-muted">Liste des noms des membres non-utilisateurs.</small>
+          @php
+    $members_text = old('members_names');
+
+    if (!$members_text) {
+        $members = $team->members_names;
+
+        if (is_string($members)) {
+            $members = json_decode($members, true) ?? [];
+        } elseif (!is_array($members)) {
+            $members = [];
+        }
+
+        $members_text = implode("\n", $members);
+    }
+@endphp
+
+<textarea name="members_names" class="form-control" rows="6" placeholder="Un membre par ligne ou séparé par une virgule">{{ $members_text }}</textarea>
+<small class="text-muted">Liste des noms des membres non-utilisateurs.</small>
+  <small class="text-muted">Liste des noms des membres non-utilisateurs.</small>
         </div>
 
 
