@@ -43,7 +43,7 @@
           <small class="text-muted">Liste des noms des membres non-utilisateurs.</small>
         </div>
 
-        
+
 
         {{-- Chef --}}
         <div class="col-md-6 mb-3">

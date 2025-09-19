@@ -145,12 +145,22 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:2000',
             'members'     => 'array',
             'members.*'   => 'exists:users,id',
+            'members_names' => 'nullable|string', 
             'lead_id'     => 'nullable|exists:users,id',
             'dossier_ids' => 'array',
             'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
         ]);
 
         $team->update(collect($data)->only('name','zone','description')->toArray());
+        // Mise à jour des membres en texte libre
+if (!empty($data['members_names'])) {
+    $names = preg_split("/[\r\n,]+/", $data['members_names']);
+    $team->members_names = json_encode(array_map('trim', $names));
+} else {
+    $team->members_names = null;
+}
+$team->save();
+
         $team->members()->sync($data['members'] ?? []);
         if (!empty($data['lead_id'])) {
             $team->setLeader(User::find($data['lead_id']));
