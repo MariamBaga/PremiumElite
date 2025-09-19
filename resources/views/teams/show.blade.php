@@ -139,13 +139,13 @@
         @can('teams.update')
           <a href="{{ route('teams.edit',$team) }}" class="btn btn-primary">Éditer</a>
         @endcan
-        @can('teams.delete')
+        <!-- @can('teams.delete')
           <form method="POST" action="{{ route('teams.destroy',$team) }}" class="ms-2"
                 onsubmit="return confirm('Mettre cette équipe en corbeille ?')">
             @csrf @method('DELETE')
             <button class="btn btn-danger">Mettre en corbeille</button>
           </form>
-        @endcan
+        @endcan -->
       </div>
     </div>
 

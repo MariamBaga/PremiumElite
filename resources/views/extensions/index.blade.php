@@ -54,7 +54,7 @@
       </table>
     </div>
 
-    {{ $extensions->links() }}
+    {{ $extensions->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @stop

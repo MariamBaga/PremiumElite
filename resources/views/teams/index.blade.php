@@ -46,7 +46,7 @@
             @can('teams.view')<a class="btn btn-sm btn-outline-secondary" href="{{ route('teams.show',$t) }}">Ouvrir</a>@endcan
             @can('teams.update')<a class="btn btn-sm btn-outline-primary" href="{{ route('teams.edit',$t) }}">Éditer</a>@endcan
 
-       
+
 <a class="btn btn-sm btn-outline-dark" href="{{ route('teams.inbox',$t) }}">Corbeille équipe</a>
 
 
@@ -62,7 +62,7 @@
       </tbody>
     </table>
 
-    {{ $teams->links() }}
+    {{ $teams->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @stop

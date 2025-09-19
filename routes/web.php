@@ -25,6 +25,8 @@ use App\Http\Controllers\Ftth\{
     IndexController as FtthIndexController
 };
 
+use App\Http\Controllers\NotificationController;
+
 use App\Http\Controllers\Admin\UserController;
 
 /*
@@ -88,19 +90,29 @@ Route::post('/zone_depourvue', [DossierRaccordementController::class,'storeZoneD
 Route::post('/realise', [DossierRaccordementController::class,'storeRealise'])->name('dossiers.realise');
 
 
+Route::get('/dossiers/rapports-signes', [DossierRaccordementController::class, 'listRapportsSignes'])
+    ->name('dossiers.rapports-signes');
+
 
 // web.php
 Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'listRapportsRdv'])
     ->name('dossiers.rapports_rdv');
+    Route::delete('/dossiers/{dossier}/delete-rapport', [DossierRaccordementController::class, 'deleteRapport'])->name('dossiers.deleteRapport');
+    Route::delete('/dossiers/delete-all-rapports', [DossierRaccordementController::class, 'deleteAllRapports'])->name('dossiers.deleteAllRapports');
 
         // Import
         Route::post('/import', [DossierImportController::class,'import'])->name('dossiers.import');
-        Route::get('dossiers/alertes-rdv', [DossierRaccordementController::class, 'rdvAlerte'])
-        ->name('dossiers.rdv_alerte')
+     
        ;
 
 
     });
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+    ->name('notifications.read');
+
+Route::get('/notifications', [NotificationController::class, 'index'])
+    ->name('notifications.index');
 
 
 

@@ -59,7 +59,7 @@
       </table>
     </div>
 
-    {{ $tickets->links() }}
+    {{ $tickets->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @stop

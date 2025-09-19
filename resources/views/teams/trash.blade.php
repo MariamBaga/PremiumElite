@@ -40,14 +40,14 @@
           </tr>
 
 
-    
+
         @empty
           <tr><td colspan="4" class="text-muted">Corbeille vide.</td></tr>
         @endforelse
       </tbody>
     </table>
 
-    {{ $teams->links() }}
+    {{ $teams->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @stop

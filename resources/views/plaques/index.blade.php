@@ -53,7 +53,7 @@
       </table>
     </div>
 
-    {{ $plaques->links() }}
+    {{ $plaques->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @stop

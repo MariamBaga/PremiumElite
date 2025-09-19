@@ -8,6 +8,9 @@ use App\Enums\StatutDossier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\TeamDossier;
+  // DossierRaccordementController.php
+  use App\Notifications\NouveauRdvNotification;
+  use App\Models\User;
 
 class DossierRaccordementController extends Controller
 {
@@ -217,7 +220,8 @@ class DossierRaccordementController extends Controller
         return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
     }
 
-    // DossierRaccordementController.php
+
+
     public function storeNouveauRdv(Request $request)
     {
         $request->validate([
@@ -229,15 +233,26 @@ class DossierRaccordementController extends Controller
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
         $this->authorize('updateStatus', $dossier);
 
-        // Mettre à jour le statut et la nouvelle date
         $dossier->update([
             'statut' => 'nouveau_rendez_vous',
             'date_planifiee' => $request->date_rdv,
             'description' => $request->commentaire_rdv,
         ]);
 
+
+         // ✅ Notifier tous les rôles importants
+    $rolesToNotify = ['admin', 'superadmin', 'coordinateur']; // ajouter d'autres si besoin
+    $usersToNotify = User::role($rolesToNotify)->get();
+
+    foreach ($usersToNotify as $user) {
+        $user->notify(new NouveauRdvNotification($dossier));
+    }
+
+
+
         return back()->with('success', 'Nouveau rendez-vous enregistré.');
     }
+
 
 
 
@@ -339,6 +354,16 @@ public function storeRealise(Request $request)
 }
 
 // Activé (rapport + fiche client)
+public function deleteRapport(DossierRaccordement $dossier)
+{
+    $dossier->delete(); // soft delete si tu as softDeletes
+    return back()->with('success', 'Dossier supprimé.');
+}
+public function deleteAllRapports()
+{
+    DossierRaccordement::whereNotNull('rapport_intervention')->orWhere('statut', 'nouveau_rendez_vous')->delete();
+    return back()->with('success', 'Tous les dossiers avec rapport ou RDV ont été supprimés.');
+}
 
 
     // DossierRaccordementController.php
@@ -365,9 +390,29 @@ public function storeRealise(Request $request)
         }
         // Les autres rôles (admin, superviseur, coordinateur, superadmin) voient tout
 
-        $dossiers = $query->orderBy('updated_at', 'desc')->get();
+        $dossiers = $query->orderBy('updated_at', 'desc')->paginate(10); // 10 par page
+
 
         return view('dossiers.showrapport', compact('dossiers'));
+    }
+    public function listRapportsSignes()
+    {
+        $user = auth()->user();
+
+        $query = DossierRaccordement::query()
+            ->whereNotNull('rapport_satisfaction'); // ✅ uniquement les rapports signés
+
+        // 🔒 Filtrage par rôle
+        if ($user->hasRole('chef_equipe')) {
+            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+            $query->where('assigned_team_id', $teamId);
+        } elseif ($user->hasRole('client')) {
+            $query->where('client_id', $user->client_id);
+        }
+
+        $dossiers = $query->with('client')->latest()->paginate(10);
+
+        return view('dossiers.rapports_signes', compact('dossiers'));
     }
 
     public function assignTeam(Request $request, DossierRaccordement $dossier)
@@ -389,24 +434,6 @@ public function storeRealise(Request $request)
     }
 
     // Retourne les dossiers avec rendez-vous pour aujourd'hui ou demain
-    public function rdvAlerte()
-    {
-        $user = auth()->user();
-
-        $query = DossierRaccordement::query()
-            ->whereNotNull('date_planifiee')
-            ->whereDate('date_planifiee', '>=', now()->format('Y-m-d'))
-            ->whereDate('date_planifiee', '<=', now()->addDay()->format('Y-m-d'));
-
-        if ($user->hasRole('chef_equipe')) {
-            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
-            $query->where('assigned_team_id', $teamId);
-        }
-
-        $rdvs = $query->orderBy('date_planifiee', 'asc')->get();
-
-        return view('dossiers.alertes_rdv', compact('rdvs'));
-    }
 
 
 

@@ -26,16 +26,49 @@
 
         <ul class="navbar-nav ml-auto">
     {{-- Lien personnalisé Alertes RDV --}}
-    <!-- <li class="nav-item">
-    <a href="{{ route('dossiers.rdv_alerte') }}" class="nav-link">
-        <i class="fas fa-bell"></i>
-        <p>Alertes RDV
-            @if($rdvAlertCount > 0)
-                <span class="badge badge-danger">{{ $rdvAlertCount }}</span>
-            @endif
-        </p>
-    </a>
-</li> -->
+   
+
+<li class="nav-item dropdown" id="notifications-dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="far fa-bell"></i>
+                    @if (auth()->user()->unreadNotifications->count())
+                        <span id="notif-count" class="badge badge-warning navbar-badge">
+                            {{ auth()->user()->unreadNotifications->count() }}
+                        </span>
+                    @endif
+                </a>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <span class="dropdown-header">
+                        <span id="notif-header-count">{{ auth()->user()->unreadNotifications->count() }}</span>
+                        Notifications
+                    </span>
+                    <div class="dropdown-divider"></div>
+
+                    <div id="notif-list">
+                        @forelse(auth()->user()->unreadNotifications as $notif)
+                            <a href="{{ route('dossiers.show', $notif->data['dossier_id']) }}" class="dropdown-item"
+                                onclick="event.preventDefault(); document.getElementById('notif-{{ $notif->id }}').submit();">
+                                <i class="fas fa-calendar-check mr-2"></i>
+                                {{ $notif->data['message'] }}
+                                <span class="float-right text-muted text-sm">
+                                    {{ $notif->created_at->diffForHumans() }}
+                                </span>
+                            </a>
+                            <form id="notif-{{ $notif->id }}" action="{{ route('notifications.read', $notif->id) }}"
+                                method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                            <div class="dropdown-divider"></div>
+                        @empty
+                            <span class="dropdown-item text-center text-muted">Aucune nouvelle notification</span>
+                        @endforelse
+                    </div>
+
+                    <a href="{{ route('notifications.index') }}" class="dropdown-item dropdown-footer">
+                        Voir toutes les notifications
+                    </a>
+                </div>
+            </li>
 
         {{-- User menu link --}}
         @if(Auth::user())

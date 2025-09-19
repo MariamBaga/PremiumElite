@@ -276,7 +276,7 @@
             </div>
 
             <div class="mt-2">
-                {{ $clients->links() }}
+                {{ $clients->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
@@ -362,7 +362,7 @@
             </div>
 
             <div class="mt-2">
-              {{ $dossiers->appends(request()->except('page') + ['tab'=>'dossiers'])->links() }}
+              {{ $dossiers->appends(request()->except('page') + ['tab'=>'dossiers'])->links('pagination::bootstrap-5') }}
             </div>
 
           </div>
