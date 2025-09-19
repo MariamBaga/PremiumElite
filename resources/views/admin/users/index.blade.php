@@ -77,7 +77,7 @@
             </table>
         </div>
         <div class="card-footer">
-            {{ $users->withQueryString()->links() }} {{-- pagination --}}
+            {{ $users->withQueryString()->links('pagination::bootstrap-5')}} {{-- pagination --}}
         </div>
     </div>
 </div>
