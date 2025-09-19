@@ -34,15 +34,41 @@ class DashboardController extends Controller
 
             $dossierQuery->where('assigned_team_id', $user->team_id);
         }
-
+        $teams = \App\Models\Team::all();
         // Récupérer les performances par équipe (7 derniers jours par exemple)
-        $teamsKpi = DossierRaccordement::select(
+        $teamsKpi = $teams->map(function($team) use ($from, $to) {
+            $stats = \App\Models\DossierRaccordement::where('assigned_team_id', $team->id)
+                ->whereBetween('date_fin_travaux', [$from, $to])
+                ->selectRaw("
+                    SUM(CASE WHEN statut = '".StatutDossier::REALISE->value."' THEN 1 ELSE 0 END) as realises,
+                    SUM(CASE WHEN statut = '".StatutDossier::ACTIVE->value."' THEN 1 ELSE 0 END) as actives,
+                    SUM(CASE WHEN statut = '".StatutDossier::PBO_SATURE->value."' THEN 1 ELSE 0 END) as pbo_satures
+                ")
+                ->first();
+
+            return [
+                'team_id'     => $team->id,
+                'team_name'   => $team->name,
+                'realises'    => (int) ($stats->realises ?? 0),
+                'actives'     => (int) ($stats->actives ?? 0),
+                'pbo_satures' => (int) ($stats->pbo_satures ?? 0),
+            ];
+        });
+
+
+        // KPI équipes pour aujourd'hui (exemple : même structure que $teamsKpi mais filtré sur la date du jour)
+
+        $teamsKpiToday = DossierRaccordement::select(
             'assigned_team_id',
             DB::raw("SUM(CASE WHEN statut = '".StatutDossier::REALISE->value."' THEN 1 ELSE 0 END) as realises"),
             DB::raw("SUM(CASE WHEN statut = '".StatutDossier::ACTIVE->value."' THEN 1 ELSE 0 END) as actives"),
             DB::raw("SUM(CASE WHEN statut = '".StatutDossier::PBO_SATURE->value."' THEN 1 ELSE 0 END) as pbo_satures")
         )
-        ->whereBetween('date_fin_travaux', [$from, $to])
+        ->where(function($q) {
+            $q->whereDate('date_fin_travaux', now()->toDateString())   // date aujourd’hui
+              ->orWhere('statut', StatutDossier::REALISE->value)       // déjà réalisé
+              ->orWhere('statut', StatutDossier::ACTIVE->value);       // déjà actif
+        })
         ->groupBy('assigned_team_id')
         ->with('assignedTeam')
         ->get()
@@ -57,28 +83,7 @@ class DashboardController extends Controller
         });
 
 
-        // KPI équipes pour aujourd'hui (exemple : même structure que $teamsKpi mais filtré sur la date du jour)
-$today = now()->toDateString();
 
-$teamsKpiToday = DossierRaccordement::select(
-    'assigned_team_id',
-    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::REALISE->value."' THEN 1 ELSE 0 END) as realises"),
-    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::ACTIVE->value."' THEN 1 ELSE 0 END) as actives"),
-    DB::raw("SUM(CASE WHEN statut = '".StatutDossier::PBO_SATURE->value."' THEN 1 ELSE 0 END) as pbo_satures")
-)
-->whereDate('date_fin_travaux', $today)
-->groupBy('assigned_team_id')
-->with('assignedTeam')
-->get()
-->map(function($item) {
-    return [
-        'team_id'     => $item->assigned_team_id,
-        'team_name'   => $item->assignedTeam?->name ?? 'Équipe inconnue',
-        'realises'    => (int) $item->realises,
-        'actives'     => (int) $item->actives,
-        'pbo_satures' => (int) $item->pbo_satures,
-    ];
-});
 
 
 
@@ -190,7 +195,7 @@ $teamsKpiToday = DossierRaccordement::select(
             $realisedCum[] = $sumR;
         }
 
-       
+
 
 
         // Dossiers corbeille : statut en attente / reporté / contrainte / etc.
