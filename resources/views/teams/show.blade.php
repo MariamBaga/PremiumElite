@@ -20,17 +20,29 @@
           <dt class="col-sm-3">Chef</dt><dd class="col-sm-9">{{ $team->lead?->name ?? '—' }}</dd>
           <dt class="col-sm-3">Description</dt><dd class="col-sm-9">{{ $team->description ?? '—' }}</dd>
           <dt class="col-sm-3">Membres (texte)</dt>
-          <dd class="col-sm-9">
-            @if(!empty($team->members_names))
-              <ul class="mb-0">
-                @foreach(json_decode($team->members_names, true) as $name)
-                  <li>{{ $name }}</li>
-                @endforeach
-              </ul>
-            @else
-              <span class="text-muted">Aucun membre texte</span>
-            @endif
-          </dd>
+<dd class="col-sm-9">
+    @php
+        $members = $team->members_names;
+
+        // Décode seulement si c'est une chaîne JSON
+        if (is_string($members)) {
+            $members = json_decode($members, true) ?? [];
+        } elseif (!is_array($members)) {
+            $members = [];
+        }
+    @endphp
+
+    @if(!empty($members))
+        <ul class="mb-0">
+            @foreach($members as $name)
+                <li>{{ $name }}</li>
+            @endforeach
+        </ul>
+    @else
+        <span class="text-muted">Aucun membre texte</span>
+    @endif
+</dd>
+
         </dl>
       </div>
     </div>
