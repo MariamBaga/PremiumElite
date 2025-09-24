@@ -22,12 +22,15 @@ class RapportActiviteExport implements FromView
             ->orderBy('created_at', 'desc');
 
         // Support multi-statut
-        if ($this->request->filled('statut')) {
-            $query->whereIn('statut', $this->request->statut);
-        }
+         // Support multi-statut
+         $selectedStatuses = [];
+         if ($this->request->filled('statut')) {
+             $query->whereIn('statut', $this->request->statut);
+             $selectedStatuses = $this->request->statut; // <-- stocker pour la vue
+         }
 
         $dossiers = $query->get();
 
-        return view('rapports.export', compact('dossiers'));
+        return view('rapports.export', compact('dossiers', 'selectedStatuses'));
     }
 }

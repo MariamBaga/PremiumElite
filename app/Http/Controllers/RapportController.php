@@ -24,7 +24,8 @@ class RapportController extends Controller
             'format'    => 'required|in:excel,csv,pdf',
         ]);
 
-        $fileName = "rapport_activite_" . now()->format('Ymd_His');
+        $selectedStatuses = $request->input('statut', []); // <-- récupère les statuts sélectionnés
+     $fileName = "rapport_activite_" . now()->format('Ymd_His');
 
         switch ($request->format) {
             case 'excel':
@@ -34,7 +35,7 @@ class RapportController extends Controller
             case 'pdf':
                 // PDF via DomPDF
                 $dossiers = (new RapportActiviteExport($request))->view()->getData()['dossiers'];
-                $pdf = \PDF::loadView('rapports.export', compact('dossiers'));
+                $pdf = \PDF::loadView('rapports.export', compact('dossiers', 'selectedStatuses'));
                 return $pdf->download($fileName.'.pdf');
         }
     }

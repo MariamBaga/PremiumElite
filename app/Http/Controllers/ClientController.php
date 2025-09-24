@@ -279,4 +279,25 @@ public function injoignables()
     return view('clients.dossiers.injoignables', compact('clients'));
 }
 
+
+public function deleteMultiple(Request $request)
+{
+    $request->validate([
+        'clients' => 'required|array',
+        'clients.*' => 'exists:clients,id',
+    ]);
+
+    DB::transaction(function () use ($request) {
+        $clientIds = $request->input('clients');
+
+        // Supprimer les dossiers liés
+        DossierRaccordement::whereIn('client_id', $clientIds)->delete();
+
+        // Supprimer les clients
+        Client::whereIn('id', $clientIds)->delete();
+    });
+
+    return redirect()->route('clients.index')->with('success', 'Clients sélectionnés et leurs dossiers supprimés avec succès.');
+}
+
 }
