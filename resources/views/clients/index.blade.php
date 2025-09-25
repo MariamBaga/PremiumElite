@@ -153,7 +153,7 @@
             <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
                 @csrf
                 @method('DELETE')
-                @can('client.delete')
+                @can('clients.delete')
                 <button type="submit" class="btn btn-danger mb-2"
                     onclick="return confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')">
                     Supprimer sélection
@@ -165,7 +165,7 @@
                     <table id="dossiersTable" class="table table-striped table-hover align-middle w-100">
                         <thead>
                             <tr>
-                                @can('client.delete')
+                                @can('clients.delete')
                                 <th><input type="checkbox" id="checkAll"></th>
                                 @endcan
                                 <th>#</th>
@@ -193,7 +193,7 @@
                             @foreach ($clients as $i => $c)
                                 @php $d = $c->lastDossier; @endphp
                                 <tr>
-                                    @can('client.delete')
+                                    @can('clients.delete')
                                     <td>
                                         <input type="checkbox" name="clients[]" value="{{ $c->id }}"
                                             class="client-checkbox">
@@ -399,9 +399,37 @@
                 }
             });
         });
-        document.getElementById('checkAll').addEventListener('change', function() {
-            document.querySelectorAll('.client-checkbox').forEach(cb => cb.checked = this.checked);
+       // ✅ Sélectionner/Désélectionner toutes les cases
+const checkAll = document.getElementById('checkAll');
+if (checkAll) {
+    checkAll.addEventListener('change', function () {
+        document.querySelectorAll('.client-checkbox').forEach(cb => {
+            cb.checked = this.checked;
         });
+    });
+}
+
+// ✅ Si une case individuelle change, mettre à jour "Tout sélectionner"
+document.querySelectorAll('.client-checkbox').forEach(cb => {
+    cb.addEventListener('change', function () {
+        const all = document.querySelectorAll('.client-checkbox').length;
+        const checked = document.querySelectorAll('.client-checkbox:checked').length;
+        checkAll.checked = (all === checked);
+    });
+});
+
+// ✅ Empêcher la suppression si rien n’est coché
+const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+if (bulkDeleteForm) {
+    bulkDeleteForm.addEventListener('submit', function (e) {
+        if (!document.querySelectorAll('.client-checkbox:checked').length) {
+            e.preventDefault();
+            alert('Veuillez sélectionner au moins un client avant de supprimer.');
+        }
+    });
+}
+
+
 
         // ===== Déjà existant =====
         document.getElementById('rapportForm').addEventListener('submit', function() {
