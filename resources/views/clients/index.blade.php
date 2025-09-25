@@ -153,17 +153,21 @@
             <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
                 @csrf
                 @method('DELETE')
+                @can('client.delete')
                 <button type="submit" class="btn btn-danger mb-2"
                     onclick="return confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')">
                     Supprimer sélection
                 </button>
+                @endcan
                 <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
 
                 <div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">
                     <table id="dossiersTable" class="table table-striped table-hover align-middle w-100">
                         <thead>
                             <tr>
+                                @can('client.delete')
                                 <th><input type="checkbox" id="checkAll"></th>
+                                @endcan
                                 <th>#</th>
                                 <th>CLIENT</th>
                                 <th>LIGNE</th>
@@ -189,10 +193,12 @@
                             @foreach ($clients as $i => $c)
                                 @php $d = $c->lastDossier; @endphp
                                 <tr>
+                                    @can('client.delete')
                                     <td>
                                         <input type="checkbox" name="clients[]" value="{{ $c->id }}"
                                             class="client-checkbox">
                                     </td>
+                                    @endcan
                                     <td>{{ $i + $clients->firstItem() }}</td>
                                     <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
                                     <td class="text-nowrap">{{ $d?->ligne ?? $c->numero_ligne }}</td>
