@@ -150,6 +150,20 @@
 
             {{-- TABLEAU DataTables (nouvelle structure) --}}
             {{-- Wrapper pour scrollbar horizontale en haut --}}
+            @can('clients.delete')
+<div style="text-align: center; margin: 1rem 0;">
+    <form action="{{ route('clients.purgeAll') }}" method="POST" style="display:inline;">
+        @csrf
+        @method('DELETE')
+        <button type="submit"
+            style="background-color: #b71c1c; border-color: #b71c1c; color: #fff; padding: 0.35rem 0.75rem; font-size: 0.875rem; border-radius: 0.25rem; cursor: pointer;"
+            onclick="return confirm('⚠️ Cette action va SUPPRIMER TOUS les clients et leurs dossiers. Êtes-vous sûr ?');">
+            Supprimer TOUS (Clients + Dossiers)
+        </button>
+    </form>
+</div>
+@endcan
+
             <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
                 @csrf
                 @method('DELETE')
@@ -323,14 +337,35 @@
 @push('js')
     {{-- DataTables est déjà packagé avec AdminLTE. Si besoin, assure-toi que ces plugins sont enable dans config/adminlte.php --}}
     <script>
-        $('#dossiersTable').DataTable({
-            paging: false, // ❌ désactive la pagination DataTables
-            searching: false, // (optionnel) désactive la recherche côté front
-            info: false, // désactive le texte "Affiche 1 à 10 de X"
-            ordering: false, // (optionnel) désactive le tri
-            responsive: true,
-            autoWidth: false,
-        });
+        const table = $('#dossiersTable').DataTable({
+    paging: false,
+    searching: false,
+    info: false,
+    ordering: false,
+    responsive: true,
+    autoWidth: false
+});
+
+// ✅ Gestion du « tout sélectionner »
+$(document).on('change', '#checkAll', function () {
+    const checked = this.checked;
+    $('.client-checkbox').prop('checked', checked);
+});
+
+// ✅ Si une case individuelle change, mettre à jour l’entête
+$(document).on('change', '.client-checkbox', function () {
+    const all = $('.client-checkbox').length;
+    const checked = $('.client-checkbox:checked').length;
+    $('#checkAll').prop('checked', all === checked);
+});
+
+// ✅ Empêcher la suppression si rien n’est coché
+$('#bulkDeleteForm').on('submit', function (e) {
+    if (!$('.client-checkbox:checked').length) {
+        e.preventDefault();
+        alert('Veuillez sélectionner au moins un client avant de supprimer.');
+    }
+});
 
 
 
@@ -399,35 +434,7 @@
                 }
             });
         });
-       // ✅ Sélectionner/Désélectionner toutes les cases
-const checkAll = document.getElementById('checkAll');
-if (checkAll) {
-    checkAll.addEventListener('change', function () {
-        document.querySelectorAll('.client-checkbox').forEach(cb => {
-            cb.checked = this.checked;
-        });
-    });
-}
 
-// ✅ Si une case individuelle change, mettre à jour "Tout sélectionner"
-document.querySelectorAll('.client-checkbox').forEach(cb => {
-    cb.addEventListener('change', function () {
-        const all = document.querySelectorAll('.client-checkbox').length;
-        const checked = document.querySelectorAll('.client-checkbox:checked').length;
-        checkAll.checked = (all === checked);
-    });
-});
-
-// ✅ Empêcher la suppression si rien n’est coché
-const bulkDeleteForm = document.getElementById('bulkDeleteForm');
-if (bulkDeleteForm) {
-    bulkDeleteForm.addEventListener('submit', function (e) {
-        if (!document.querySelectorAll('.client-checkbox:checked').length) {
-            e.preventDefault();
-            alert('Veuillez sélectionner au moins un client avant de supprimer.');
-        }
-    });
-}
 
 
 

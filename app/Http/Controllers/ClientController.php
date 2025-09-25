@@ -300,6 +300,21 @@ public function deleteMultiple(Request $request)
     return redirect()->route('clients.index')->with('success', 'Clients sélectionnés et leurs dossiers supprimés avec succès.');
 }
 
+
+
+public function purgeAll()
+{
+    DB::transaction(function () {
+        // 🔴 Supprimer tous les dossiers liés
+        DossierRaccordement::query()->delete();
+
+        // 🔴 Supprimer tous les clients
+        Client::query()->delete();
+    });
+
+    return redirect()->route('clients.index')
+                     ->with('success', 'Tous les clients et leurs dossiers ont été supprimés avec succès.');
+}
 public function bulkDelete(Request $request)
 {
     $clientIds = $request->input('clients', []);

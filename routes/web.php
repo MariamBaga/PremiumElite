@@ -133,7 +133,9 @@ Route::get('/notifications', [NotificationController::class, 'index'])
     ->name('clients.delete-multiple')
     ->middleware('can:clients.delete');
 
-  
+    Route::delete('/clients/purge-all', [ClientController::class, 'purgeAll'])
+    ->name('clients.purgeAll')
+    ->middleware('can:clients.delete');
 
     Route::prefix('clients')->group(function () {
         Route::get('/',          [ClientController::class,'index'])->name('clients.index');
