@@ -107,6 +107,24 @@ Route::get('/dossiers/rapports-rdv', [DossierRaccordementController::class, 'lis
 
 
     });
+    Route::post('/dossiers/indisponible',
+    [DossierRaccordementController::class, 'storeIndisponible']
+)->name('dossiers.indisponible.store');
+
+Route::delete('teams/{team}/dossiers/{dossier}', [TeamController::class, 'removeDossier'])
+    ->name('teams.remove-dossier')
+  ;
+  // Ajouter un membre texte
+Route::post('teams/{team}/members/add-text', [TeamController::class, 'addMember'])
+->name('teams.add-member-text')
+;
+
+// Retirer un membre texte
+Route::delete('teams/{team}/members/remove-text', [TeamController::class, 'removeMember'])
+->name('teams.remove-member-text')
+;
+
+
 
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
     ->name('notifications.read');
@@ -261,13 +279,14 @@ Route::get('/notifications', [NotificationController::class, 'index'])
 | Superadmin
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth','verified','role:superadmin'])
+Route::middleware(['auth','verified','role:superadmin|admin'])
     ->prefix('superadmin')
     ->group(function () {
         Route::resource('users', UserController::class)
             ->except('show')
             ->names('admin.users');
     });
+
 
 
 /*

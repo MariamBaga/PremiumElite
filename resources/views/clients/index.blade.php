@@ -309,6 +309,8 @@
             @include('dossiers.partials.zone_depourvue_modal')
             @include('dossiers.partials.injoignables')
             @include('dossiers.partials.pob_sature_modal')
+            @include('dossiers.partials.indisponible_modal')
+
 
             @include('dossiers.partials.realise_modal')
         </div>
@@ -429,7 +431,14 @@ $('#bulkDeleteForm').on('submit', function (e) {
                     modal = new bootstrap.Modal(document.getElementById('zoneDepourvueModal'));
                     modal.show();
                     this.value = this.dataset.oldValue;
-                } else {
+                }
+                else if (this.value === 'indisponible') {
+    document.getElementById('indisponibleDossierId').value = dossierId;
+    const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
+}
+ else {
                     this.dataset.oldValue = this.value;
                 }
             });

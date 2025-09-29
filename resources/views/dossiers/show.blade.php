@@ -169,7 +169,7 @@
                 @can('assign', \App\Models\DossierRaccordement::class)
                     <form method="POST" action="{{ route('dossiers.assign', $dossier) }}" class="mb-3">
                         @csrf
-                        <div class="mb-2">
+                        <!-- <div class="mb-2">
                             <label>Technicien</label>
                             <select name="assigned_to" class="form-control">
                                 <option value="">--</option>
@@ -178,7 +178,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
+                        </div> -->
                         <div class="mb-2">
                             <label>Date planifiée</label>
                             <input type="datetime-local" name="date_planifiee" class="form-control"
@@ -228,7 +228,7 @@
         @include('dossiers.partials.zone_depourvue_modal')
         @include('dossiers.partials.injoignables')
         @include('dossiers.partials.pob_sature_modal')
-
+        @include('dossiers.partials.indisponible_modal')
         @include('dossiers.partials.realise_modal')
 
     </div>

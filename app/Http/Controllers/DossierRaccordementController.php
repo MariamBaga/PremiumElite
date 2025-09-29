@@ -185,17 +185,20 @@ class DossierRaccordementController extends Controller
         return back()->with('success', 'Intervention enregistrée');
     }
 
-        public function storeRapport(Request $request)
+    public function storeRapport(Request $request)
     {
         $request->validate(
             [
-                'dossier_id' => 'required|exists:dossiers_raccordement,id',
-                'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
+                'dossier_id'       => 'required|exists:dossiers_raccordement,id',
+                'rapport_file'     => 'required|mimes:pdf,doc,docx,txt|max:5120',
                 'rapport_intervention' => 'required|string',
+                'port'             => 'required|string|max:50',
+                'lineaire_m'       => 'required|integer|min:0', // linéaire câble tiré
+                'type_cable'       => 'required|string|max:100',
             ],
             [
                 'rapport_file.mimes' => 'Le fichier doit être un PDF, Word ou Texte.',
-                'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+                'rapport_file.max'   => 'Le fichier ne doit pas dépasser 5 Mo.',
             ],
         );
 
@@ -209,8 +212,11 @@ class DossierRaccordementController extends Controller
             $dossier->rapport_satisfaction = $path;
         }
 
-        // Sauvegarde du texte
+        // Sauvegarde du texte et des infos techniques
         $dossier->rapport_intervention = $request->rapport_intervention;
+        $dossier->port = $request->port;
+        $dossier->lineaire_m = $request->lineaire_m; // ici on stocke le linéaire câble tiré
+        $dossier->type_cable = $request->type_cable;
 
         // Mettre le statut à "active"
         $dossier->statut = 'active';
@@ -276,50 +282,37 @@ public function storeInjoignable(Request $request)
 }
 
 // PBO saturé (upload rapport)
+// DossierController.php
 public function storePboSature(Request $request)
 {
     $request->validate([
-        'dossier_id'   => 'required|exists:dossiers_raccordement,id',
-        'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
+        'dossier_id' => 'required|exists:dossiers_raccordement,id',
+        'rapport'    => 'required|string|max:5000',
     ]);
 
     $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-
-    if ($request->hasFile('rapport_file')) {
-        $file = $request->file('rapport_file');
-        $filename = 'pbo_sature_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('rapports', $filename, 'public');
-        $dossier->rapport_satisfaction = $path;
-    }
-
     $dossier->statut = 'pbo_sature';
+    $dossier->rapport_satisfaction = $request->rapport;
     $dossier->save();
 
-    return back()->with('success', 'Dossier mis en PBO saturé avec rapport ajouté.');
+    return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
 }
 
-// Zone dépourvue (upload rapport)
 public function storeZoneDepourvue(Request $request)
 {
     $request->validate([
-        'dossier_id'   => 'required|exists:dossiers_raccordement,id',
-        'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
+        'dossier_id' => 'required|exists:dossiers_raccordement,id',
+        'rapport'    => 'required|string|max:5000',
     ]);
 
     $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-
-    if ($request->hasFile('rapport_file')) {
-        $file = $request->file('rapport_file');
-        $filename = 'zone_depourvue_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('rapports', $filename, 'public');
-        $dossier->rapport_satisfaction = $path;
-    }
-
     $dossier->statut = 'zone_depourvue';
+    $dossier->rapport_satisfaction = $request->rapport;
     $dossier->save();
 
-    return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport.');
+    return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
 }
+
 
 public function storeRealise(Request $request)
 {
@@ -351,6 +344,33 @@ public function storeRealise(Request $request)
     $dossier->save();
 
     return back()->with('success', 'Dossier marqué comme réalisé avec rapport et raison de non activation.');
+}
+
+public function storeIndisponible(Request $request)
+{
+    $request->validate([
+        'dossier_id'   => 'required|exists:dossiers_raccordement,id',
+        'raison'       => 'required|string|max:255',
+        'capture_file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+    ]);
+
+    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+
+    // ✅ upload capture
+    $path = null;
+    if ($request->hasFile('capture_file')) {
+        $file = $request->file('capture_file');
+        $filename = 'indisponible_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('captures', $filename, 'public');
+    }
+
+    $dossier->update([
+        'statut'        => 'indisponible',
+        'description'   => $request->raison,
+        'capture_message' => $path, // 🔹 colonne à prévoir dans la table
+    ]);
+
+    return back()->with('success', 'Dossier marqué comme indisponible (raison + capture).');
 }
 
 // Activé (rapport + fiche client)

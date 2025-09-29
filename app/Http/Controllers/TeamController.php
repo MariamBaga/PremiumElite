@@ -54,6 +54,7 @@ class TeamController extends Controller
 
         $dossiers = DossierRaccordement::with('client')
             ->whereNull('assigned_team_id')
+            ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
             ->latest()->limit(200)->get(); // limite pour éviter des listes énormes
         return view('teams.create', compact('users','dossiers'));
     }
@@ -96,6 +97,7 @@ class TeamController extends Controller
             // On ne touche qu’aux dossiers non assignés (évite d’écraser une autre équipe par erreur)
             DossierRaccordement::whereIn('id', $data['dossier_ids'])
                 ->whereNull('assigned_team_id')
+                ->where('statut', '!=', 'en_appel')
                 ->update(['assigned_team_id' => $team->id]);
         }
 
@@ -145,7 +147,7 @@ class TeamController extends Controller
             'description' => 'nullable|string|max:2000',
             'members'     => 'array',
             'members.*'   => 'exists:users,id',
-            'members_names' => 'nullable|string', 
+            'members_names' => 'nullable|string',
             'lead_id'     => 'nullable|exists:users,id',
             'dossier_ids' => 'array',
             'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
@@ -179,11 +181,11 @@ $team->save();
             DossierRaccordement::whereIn('id', $toDetach)->update(['assigned_team_id' => null]);
         }
         if ($toAttach->isNotEmpty()) {
-            // attacher même si un dossier était pris par erreur par une autre équipe ?
-            // Ici on force l’assignation à cette équipe :
-            DossierRaccordement::whereIn('id', $toAttach)->update(['assigned_team_id' => $team->id]);
-            // Si tu veux éviter d’écraser, remplace par ->whereNull('assigned_team_id')...
+            DossierRaccordement::whereIn('id', $toAttach)
+                ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
+                ->update(['assigned_team_id' => $team->id]);
         }
+
 
         return redirect()->route('teams.show',$team)->with('success','Équipe mise à jour et dossiers synchronisés.');
     }
@@ -192,9 +194,10 @@ $team->save();
     public function destroy(Team $team)
     {
         $this->authorize('delete', $team);
-        $team->delete(); // Soft delete => corbeille
-        return redirect()->route('teams.index')->with('success','Équipe mise en corbeille.');
+        $team->forceDelete(); // suppression définitive
+        return redirect()->route('teams.index')->with('success','Équipe supprimée.');
     }
+
 
     // ----- Corbeille -----
 
@@ -265,20 +268,65 @@ $team->save();
 
     public function addMember(Request $request, Team $team)
     {
-        $this->authorize('update', $team); // ou permission:teams.manage-members
-        $request->validate(['user_id'=>'required|exists:users,id']);
-        $team->members()->syncWithoutDetaching([$request->user_id]);
-        return back()->with('success','Membre ajouté.');
+        $this->authorize('update', $team);
+
+        $request->validate([
+            'name' => 'required|string|max:120'
+        ]);
+
+        // Récupérer les membres actuels
+        $members = $team->members_names ? json_decode($team->members_names, true) : [];
+
+        // Ajouter le nouveau membre
+        $members[] = $request->name;
+
+        // Sauvegarder
+        $team->members_names = json_encode($members);
+        $team->save();
+
+        return back()->with('success', 'Membre ajouté à l’équipe.');
     }
 
-    public function removeMember(Team $team, User $user)
+
+    public function removeMember(Request $request, Team $team)
     {
         $this->authorize('update', $team);
-        $team->members()->detach($user->id);
-        // si c’était le chef
-        if ($team->lead_id === $user->id) {
-            $team->demoteLeader();
-        }
-        return back()->with('success','Membre retiré.');
+
+        $request->validate([
+            'name' => 'required|string'
+        ]);
+
+        // Récupérer les membres actuels
+        $members = $team->members_names ? json_decode($team->members_names, true) : [];
+
+        // Retirer le membre
+        $members = array_filter($members, fn($m) => $m !== $request->name);
+
+        // Réindexer et sauvegarder
+        $team->members_names = json_encode(array_values($members));
+        $team->save();
+
+        return back()->with('success', 'Membre retiré de l’équipe.');
     }
+
+    /**
+ * Retirer un dossier assigné de l'équipe.
+ */
+public function removeDossier(Team $team, DossierRaccordement $dossier)
+{
+    $this->authorize('update', $team);
+
+    // Vérifier que le dossier appartient bien à cette équipe
+    if ($dossier->assigned_team_id !== $team->id) {
+        return back()->with('error', 'Ce dossier n’est pas assigné à cette équipe.');
+    }
+
+    // Désassigner le dossier
+    $dossier->assigned_team_id = null;
+    $dossier->save();
+
+    return back()->with('success', "Dossier '{$dossier->reference}' retiré de l’équipe.");
+}
+
+
 }

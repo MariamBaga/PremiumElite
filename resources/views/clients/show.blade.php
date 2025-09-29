@@ -210,7 +210,12 @@ document.querySelectorAll('.statut-select').forEach(select => {
             modal = new bootstrap.Modal(document.getElementById('zoneDepourvueModal'));
             modal.show();
             this.value = this.dataset.oldValue;
-        } else {
+        }  else if (this.value === 'indisponible') {
+    document.getElementById('indisponibleDossierId').value = dossierId;
+    const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
+} else {
             this.dataset.oldValue = this.value;
         }
     });

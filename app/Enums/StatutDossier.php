@@ -7,6 +7,7 @@ namespace App\Enums;
 
 enum StatutDossier: string
 {
+    case INDISPONIBLE   = 'indisponible';   // ✅ nouveau
     case INJOIGNABLE    = 'injoignable';
     case PBO_SATURE     = 'pbo_sature';
     case ZONE_DEPOURVUE = 'zone_depourvue';
@@ -20,6 +21,7 @@ enum StatutDossier: string
     public static function labels(): array
     {
         return [
+            self::INDISPONIBLE->value   => 'Indisponible', // ✅
             self::INJOIGNABLE->value    => 'Injoignable',
             self::PBO_SATURE->value     => 'PBO saturé',
             self::ZONE_DEPOURVUE->value => 'Zone dépourvue',
