@@ -6,7 +6,29 @@
 @stop
 
 
-
+@push('css')
+<style>
+.scroll-top-wrapper {
+    overflow-x: scroll !important;
+    overflow-y: hidden;
+    height: 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ccc;
+    scrollbar-color: #007bff #e9ecef;
+    scrollbar-width: thin;
+}
+.scroll-top-wrapper::-webkit-scrollbar {
+    height: 10px;
+}
+.scroll-top-wrapper::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+.scroll-top-wrapper::-webkit-scrollbar-track {
+    background: #e9ecef;
+}
+</style>
+@endpush
 
 @section('content')
 <div class="card">
