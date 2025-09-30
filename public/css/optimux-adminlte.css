@@ -22,6 +22,25 @@
     border-radius: 6px;           /* arrondir légèrement si souhaité */
     padding: 4px;                 /* espace autour du logo */
   }
+  .scroll-top-wrapper {
+    overflow-x: scroll !important;
+    overflow-y: hidden;
+    height: 16px; /* hauteur de la scrollbar */
+    background: #f8f9fa; /* fond clair pour bien la voir */
+    border-bottom: 1px solid #ccc;
+    scrollbar-color: #007bff #e9ecef; /* couleur (Firefox) */
+    scrollbar-width: thin; /* barre fine mais visible */
+}
+.scroll-top-wrapper::-webkit-scrollbar {
+    height: 10px; /* épaisseur scrollbar */
+}
+.scroll-top-wrapper::-webkit-scrollbar-thumb {
+    background: #007bff; /* couleur poignée */
+    border-radius: 4px;
+}
+.scroll-top-wrapper::-webkit-scrollbar-track {
+    background: #e9ecef;
+}
 
   /* Fond + séparateurs du sidebar */
   .main-sidebar.sidebar-dark-primary{
@@ -201,22 +220,3 @@
     background:#252943; border-radius:8px;
   }
 
-  .scroll-top-wrapper {
-    overflow-x: scroll !important;
-    overflow-y: hidden;
-    height: 16px; /* hauteur de la scrollbar */
-    background: #f8f9fa; /* fond clair pour bien la voir */
-    border-bottom: 1px solid #ccc;
-    scrollbar-color: #007bff #e9ecef; /* couleur (Firefox) */
-    scrollbar-width: thin; /* barre fine mais visible */
-}
-.scroll-top-wrapper::-webkit-scrollbar {
-    height: 10px; /* épaisseur scrollbar */
-}
-.scroll-top-wrapper::-webkit-scrollbar-thumb {
-    background: #007bff; /* couleur poignée */
-    border-radius: 4px;
-}
-.scroll-top-wrapper::-webkit-scrollbar-track {
-    background: #e9ecef;
-}
