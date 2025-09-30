@@ -8,6 +8,7 @@ use App\Models\DossierRaccordement;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
+use App\Enums\StatutDossier; // ✅ ajoute ceci
 use Illuminate\Support\Str;
 
 
@@ -278,6 +279,40 @@ public function injoignables()
 
     return view('clients.dossiers.injoignables', compact('clients'));
 }
+
+
+public function indisponible()
+{
+    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))
+                     ->paginate(10);
+
+    return view('clients.dossiers.indisponible', compact('clients'));
+}
+
+public function pboSature()
+{
+    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))
+                     ->paginate(10);
+
+    return view('clients.dossiers.pbo_sature', compact('clients'));
+}
+
+public function zoneDepourvue()
+{
+    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))
+                     ->paginate(10);
+
+    return view('clients.dossiers.zone_depourvue', compact('clients'));
+}
+
+public function enEquipe()
+{
+    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))
+                     ->paginate(10);
+
+    return view('clients.dossiers.en_equipe', compact('clients'));
+}
+
 
 
 public function deleteMultiple(Request $request)

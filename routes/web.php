@@ -164,8 +164,15 @@ Route::get('/notifications', [NotificationController::class, 'index'])
         Route::get('/dossiers/active',        [ClientController::class,'active'])->name('clients.dossiers.active');
     Route::get('/dossiers/realise',       [ClientController::class,'realise'])->name('clients.dossiers.realise');
     Route::get('/dossiers/nouveau_rdv',   [ClientController::class,'nouveauRdv'])->name('clients.dossiers.nouveau_rdv');
+
     Route::get('/en-appel', [ClientController::class, 'enAppel'])->name('clients.en_appel');
     Route::get('/injoignables', [ClientController::class, 'injoignables'])->name('clients.injoignables');
+
+    Route::get('/dossiers/indisponible', [ClientController::class, 'indisponible'])->name('clients.dossiers.indisponible');
+Route::get('/dossiers/pbo-sature', [ClientController::class, 'pboSature'])->name('clients.dossiers.pbo_sature');
+Route::get('/dossiers/zone-depourvue', [ClientController::class, 'zoneDepourvue'])->name('clients.dossiers.zone_depourvue');
+Route::get('/dossiers/en-equipe', [ClientController::class, 'enEquipe'])->name('clients.dossiers.en_equipe');
+
         Route::get('/{client}',  [ClientController::class,'show'])->name('clients.show');
         Route::get('/{client}/edit', [ClientController::class,'edit'])->name('clients.edit');
         Route::put('/{client}',  [ClientController::class,'update'])->name('clients.update');

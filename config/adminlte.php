@@ -391,6 +391,21 @@ return [
                     'route' => 'clients.injoignables', // idem
                     'icon' => 'fas fa-user-slash',
                 ],
+                [
+                    'text' => 'Indisponibles',
+                    'route' => 'clients.dossiers.indisponible',
+                    'icon' => 'fas fa-ban',
+                ],
+                [
+                    'text' => 'PBO saturés',
+                    'route' => 'clients.dossiers.pbo_sature',
+                    'icon' => 'fas fa-exclamation-triangle',
+                ],
+                [
+                    'text' => 'Zones dépourvues',
+                    'route' => 'clients.dossiers.zone_depourvue',
+                    'icon' => 'fas fa-map-marker-alt',
+                ],
             ],
         ],
 
