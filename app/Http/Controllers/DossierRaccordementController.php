@@ -264,22 +264,33 @@ class DossierRaccordementController extends Controller
 
 
     // Injoignable (avec commentaire action prise)
-public function storeInjoignable(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        'action_pris' => 'required|string',
-    ]);
+    public function storeInjoignable(Request $request)
+    {
+        $request->validate([
+            'dossier_id'    => 'required|exists:dossiers_raccordement,id',
+            'action_pris'   => 'required|string|max:255',
+            'capture_file'  => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
 
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-    $dossier->update([
-        'statut' => 'injoignable',
-        'description' => $request->action_pris,
-    ]);
+        // ✅ upload capture (optionnelle)
+        $path = null;
+        if ($request->hasFile('capture_file')) {
+            $file = $request->file('capture_file');
+            $filename = 'injoignable_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('captures', $filename, 'public');
+        }
 
-    return back()->with('success', "Dossier marqué comme injoignable (action précisée).");
-}
+        $dossier->update([
+            'statut'          => 'injoignable',
+            'description'     => $request->action_pris,
+            'capture_message' => $path,
+        ]);
+
+        return back()->with('success', "Dossier marqué comme injoignable (action précisée + capture).");
+    }
+
 
 // PBO saturé (upload rapport)
 // DossierController.php

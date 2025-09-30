@@ -26,7 +26,7 @@ class RapportController extends Controller
 
         // ✅ Si "Exporter tous les statuts" est cliqué
         if ($request->has('all_statuses')) {
-            $request->merge(['statut' => \App\Enums\StatutDossier::labels()]); // prend toutes les clés de l'enum
+            $request->merge(['statut' => array_keys(\App\Enums\StatutDossier::labels())]);
         }
 
         $selectedStatuses = $request->input('statut', []);

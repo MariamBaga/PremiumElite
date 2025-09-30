@@ -222,9 +222,16 @@ class DashboardController extends Controller
 
         // Dossiers avec RDV
         $rdvCount = (clone $dossierQuery)->where('statut', 'nouveau_rendez_vous')->count();
+        $rdvDossiers = (clone $dossierQuery)->where('statut', StatutDossier::NOUVEAU_RENDEZ_VOUS->value);
+
+        if ($user->hasRole('chef_equipe')) {
+            $rdvDossiers->where('assigned_team_id', $user->team_id);
+        }
+        
+        $rdvDossiers = $rdvDossiers->get();
 
         // ========= Retour =========
-        return view('dashboard.index', compact('from', 'to', 'totalClients', 'totalDossiers', 'ouverts', 'realises', 'annules', 'tauxReussite', 'pboSature', 'avgDelayDays', 'byStatut', 'byTypeService', 'byZone', 'topTechs', 'intervCount', 'intervAvgDuration', 'lastDossiers', 'lastInterventions', 'labels', 'created', 'realised', 'createdCum', 'realisedCum', 'corbeilleCount', 'activeCount', 'rdvCount', 'totalCorbeille', 'teamsKpi','teamsKpiToday'));
+        return view('dashboard.index', compact('from', 'to', 'totalClients', 'totalDossiers', 'ouverts', 'realises', 'annules', 'tauxReussite', 'pboSature', 'avgDelayDays', 'byStatut', 'byTypeService', 'byZone', 'topTechs', 'intervCount', 'intervAvgDuration', 'lastDossiers', 'lastInterventions', 'labels', 'created', 'realised', 'createdCum', 'realisedCum', 'corbeilleCount', 'activeCount', 'rdvCount', 'rdvDossiers', 'totalCorbeille', 'teamsKpi','teamsKpiToday'));
     }
 
     public function exportExcel(Request $request): BinaryFileResponse

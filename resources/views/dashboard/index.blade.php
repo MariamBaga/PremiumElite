@@ -361,7 +361,10 @@
         </div> -->
     </div>
 
+    @include('dossiers.partials.alert_nouveau_rdv_modal')
+
 @stop
+
 
 @section('js')
     <script>
@@ -532,5 +535,11 @@ let chartTeamsKpi = new Chart(ctxTeams, {
             chartTeamsKpi.data.datasets[2].data = top3.map(t => t.pbo_satures);
             chartTeamsKpi.update();
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        var rdvModal = new bootstrap.Modal(document.getElementById('rdvModal'));
+        rdvModal.show();
+    });
+    
     </script>
 @stop
