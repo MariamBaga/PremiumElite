@@ -42,14 +42,14 @@
                 @foreach($members as $member)
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         {{ $member }}
-                        <!-- @can('teams.manage-members')
+                        @can('teams.manage-members')
                             <form method="POST" action="{{ route('teams.remove-member-text', $team) }}" class="m-0 p-0">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="name" value="{{ $member }}">
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Retirer ce membre ?')">Supprimer</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Retirer ce membre ?')">Retirer</button>
                             </form>
-                        @endcan -->
+                        @endcan
                     </li>
                 @endforeach
             </ul>
@@ -57,13 +57,13 @@
             <div class="text-muted mb-3">Aucun membre texte.</div>
         @endif
 
-        <!-- @can('teams.manage-members')
+        @can('teams.manage-members')
           <form method="POST" action="{{ route('teams.add-member-text', $team) }}" class="d-flex gap-2">
             @csrf
             <input type="text" name="name" class="form-control" placeholder="Ajouter un membre texte" required>
             <button class="btn btn-success">Ajouter</button>
           </form>
-        @endcan -->
+        @endcan
       </div>
     </div>
 

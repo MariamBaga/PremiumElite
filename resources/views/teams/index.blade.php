@@ -50,13 +50,13 @@
 <a class="btn btn-sm btn-outline-dark" href="{{ route('teams.inbox',$t) }}">Corbeille équipe</a>
 
 
-            <!-- @can('teams.delete')
+            @can('teams.delete')
             <form class="d-inline" method="POST" action="{{ route('teams.destroy',$t) }}" onsubmit="return confirm('Supprimer l’équipe ?')">
     @csrf @method('DELETE')
     <button class="btn btn-sm btn-outline-danger">Supprimer l’équipe</button>
 </form>
 
-            @endcan -->
+            @endcan
           </td>
         </tr>
       @endforeach
