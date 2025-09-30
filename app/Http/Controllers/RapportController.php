@@ -24,8 +24,13 @@ class RapportController extends Controller
             'format'    => 'required|in:excel,csv,pdf',
         ]);
 
-        $selectedStatuses = $request->input('statut', []); // <-- récupère les statuts sélectionnés
-     $fileName = "rapport_activite_" . now()->format('Ymd_His');
+        // ✅ Si "Exporter tous les statuts" est cliqué
+        if ($request->has('all_statuses')) {
+            $request->merge(['statut' => \App\Enums\StatutDossier::labels()]); // prend toutes les clés de l'enum
+        }
+
+        $selectedStatuses = $request->input('statut', []);
+        $fileName = "rapport_activite_" . now()->format('Ymd_His');
 
         switch ($request->format) {
             case 'excel':
@@ -33,10 +38,10 @@ class RapportController extends Controller
             case 'csv':
                 return Excel::download(new RapportActiviteExport($request), $fileName.'.csv');
             case 'pdf':
-                // PDF via DomPDF
                 $dossiers = (new RapportActiviteExport($request))->view()->getData()['dossiers'];
                 $pdf = \PDF::loadView('rapports.export', compact('dossiers', 'selectedStatuses'));
                 return $pdf->download($fileName.'.pdf');
         }
     }
+
 }

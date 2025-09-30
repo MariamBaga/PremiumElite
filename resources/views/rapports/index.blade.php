@@ -21,19 +21,31 @@
                     <label>Date fin</label>
                     <input type="date" name="date_to" class="form-control" required>
                 </div>
-                <div class="col-md-4">
-                    <label>Statut du dossier</label>
-                    <select name="statut[]" class="form-control" multiple>
-                        <option value="en_appel">En appel</option>
-                        <option value="injoignable">Injoignable</option>
-                        <option value="nouveau_rendez_vous">Rendez-vous</option>
-                        <option value="pbo_sature">PBO saturé</option>
-                        <option value="zone_depouvue">Zone dépourvue</option>
-                        <option value="active">Activé</option>
-                        <option value="realise">Réalisé</option>
-                    </select>
-                    <small class="form-text text-muted">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs statuts.</small>
-                </div>
+            </div>
+
+            {{-- Cases à cocher pour les statuts --}}
+            <div class="mt-3">
+                <label><strong>Statuts du dossier</strong></label><br>
+                @php
+                $statuts = [
+        'indisponible' => 'Indisponible',
+        'injoignable' => 'Injoignable',
+        'pbo_sature' => 'PBO saturé',
+        'zone_depourvue' => 'Zone dépourvue',
+        'realise' => 'Réalisé',
+        'en_appel' => 'En appel',
+        'en_equipe' => 'En équipe',
+        'active' => 'Activé',
+        'nouveau_rendez_vous' => 'Nouveau rendez-vous',
+    ];
+                @endphp
+
+                @foreach($statuts as $value => $label)
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" name="statut[]" value="{{ $value }}" id="statut_{{ $value }}" class="form-check-input">
+                        <label class="form-check-label" for="statut_{{ $value }}">{{ $label }}</label>
+                    </div>
+                @endforeach
             </div>
 
             <div class="row mt-3">
@@ -47,9 +59,15 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary mt-3">
-                <i class="fas fa-download"></i> Télécharger
-            </button>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> Télécharger la sélection
+                </button>
+
+                <button class="btn btn-success" name="all_statuses" value="1">
+                    <i class="fas fa-download"></i> Télécharger tous les statuts
+                </button>
+            </div>
         </form>
     </div>
 </div>
