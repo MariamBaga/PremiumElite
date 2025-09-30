@@ -129,6 +129,7 @@ class TeamController extends Controller
         $dossiers = DossierRaccordement::with('client')
             ->where(function($q) use ($team){
                 $q->whereNull('assigned_team_id')
+                ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
                   ->orWhere('assigned_team_id', $team->id);
             })
             ->latest()->limit(300)->get();
