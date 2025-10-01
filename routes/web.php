@@ -132,7 +132,8 @@ Route::delete('teams/{team}/members/remove-text', [TeamController::class, 'remov
 Route::get('/notifications', [NotificationController::class, 'index'])
     ->name('notifications.index');
 
-
+    Route::get('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+    ->name('notifications.readAll');  // <-- c'est ce qu'il manquait
 
 
     Route::get('/rapports/activite', [RapportController::class, 'index'])->name('rapports.index');
