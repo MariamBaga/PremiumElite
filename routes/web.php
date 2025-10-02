@@ -77,6 +77,10 @@ Route::middleware(['auth','verified'])->group(function () {
         // Génération de rapport & nouveau RDV
         Route::post('/rapport',      [DossierRaccordementController::class,'storeRapport'])->name('dossiers.rapport');
         Route::post('/nouveau_rdv',  [DossierRaccordementController::class,'storeNouveauRdv'])->name('dossiers.nouveau_rdv');
+        Route::post(
+            '/dossiers/depassement-lineaire',
+            [DossierRaccordementController::class, 'storeDepassementLineaire']
+        )->name('dossiers.depassement.store');
 
         // Injoignable
 Route::post('/injoignable', [DossierRaccordementController::class,'storeInjoignable'])->name('dossiers.injoignable');

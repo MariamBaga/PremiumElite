@@ -295,12 +295,13 @@
                                     </td>
                                     <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
                                     <td class="text-nowrap">
-                                        @if ($d?->is_active)
-                                            <span class="badge bg-success">Oui</span>
-                                        @else
-                                            <span class="badge bg-secondary">Non</span>
-                                        @endif
-                                    </td>
+    @if ($d?->statut?->value === \App\Enums\StatutDossier::ACTIVE->value)
+        <span class="badge bg-success">Oui</span>
+    @else
+        <span class="badge bg-secondary">Non</span>
+    @endif
+</td>
+
                                     <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
                                     <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
                                     <td class="text-end">
@@ -372,6 +373,7 @@
             @include('dossiers.partials.injoignables')
             @include('dossiers.partials.pob_sature_modal')
             @include('dossiers.partials.indisponible_modal')
+            @include('dossiers.partials.depassement_lineaire_modal')
 
 
             @include('dossiers.partials.realise_modal')
@@ -498,7 +500,13 @@
                     const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
                     modal.show();
                     this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
-                } else {
+                } else if (this.value === 'depassement_lineaire') {
+    document.getElementById('depassementLineaireDossierId').value = dossierId;
+    modal = new bootstrap.Modal(document.getElementById('depassementLineaireModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // garde l'ancien tant que pas validé
+}
+ else {
                     this.dataset.oldValue = this.value;
                 }
             });

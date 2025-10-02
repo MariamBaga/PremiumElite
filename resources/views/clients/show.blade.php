@@ -215,7 +215,13 @@ document.querySelectorAll('.statut-select').forEach(select => {
     const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
     modal.show();
     this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
-} else {
+} else if (this.value === 'depassement_lineaire') {
+    document.getElementById('depassementLineaireDossierId').value = dossierId;
+    modal = new bootstrap.Modal(document.getElementById('depassementLineaireModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // garde l'ancien tant que pas validé
+}
+ else {
             this.dataset.oldValue = this.value;
         }
     });

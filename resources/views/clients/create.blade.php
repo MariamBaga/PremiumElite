@@ -124,7 +124,7 @@
                     <label>PM</label>
                     <input name="pm" class="form-control" value="{{ old('pm') }}">
                 </div>
-                <div class="col-md-3 mb-3">
+                <!-- <div class="col-md-3 mb-3">
                     <label>Statut</label>
                     <select name="statut" class="form-control">
                         @foreach (\App\Enums\StatutDossier::cases() as $statut)
@@ -133,9 +133,9 @@
                             </option>
                         @endforeach
                     </select>
-                </div>
+                </div> -->
 
-                <div class="col-md-3 mb-3">
+                <!-- <div class="col-md-3 mb-3">
                     <label>Technicien assigné</label>
                     <select name="assigned_to" class="form-control">
                         <option value="">-- Aucun --</option>
@@ -143,7 +143,7 @@
                             <option value="{{ $tech->id }}" @selected(old('assigned_to') == $tech->id)>{{ $tech->name }}</option>
                         @endforeach
                     </select>
-                </div>
+                </div> -->
                 <div class="col-md-3 mb-3">
                     <label>Équipe assignée</label>
                     <select name="assigned_team_id" class="form-control">
@@ -227,13 +227,13 @@
                 </div>
 
                 {{-- Active --}}
-                <div class="col-md-3 mb-3">
+                <!-- <div class="col-md-3 mb-3">
                     <label>Active</label>
                     <select name="is_active" class="form-control">
                         <option value="1" @selected(old('is_active')==1)>Oui</option>
                         <option value="0" @selected(old('is_active')==0)>Non</option>
                     </select>
-                </div>
+                </div> -->
 
                 {{-- Observation --}}
                 <div class="col-12 mb-3">
@@ -253,7 +253,7 @@
                     <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                 </div>
 
-                
+
             </div>
 
             </div>

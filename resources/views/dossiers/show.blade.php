@@ -230,6 +230,7 @@
         @include('dossiers.partials.pob_sature_modal')
         @include('dossiers.partials.indisponible_modal')
         @include('dossiers.partials.realise_modal')
+        @include('dossiers.partials.depassement_lineaire_modal')
 
     </div>
 
