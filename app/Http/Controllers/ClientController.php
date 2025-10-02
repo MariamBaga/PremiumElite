@@ -10,7 +10,7 @@ use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
 use App\Enums\StatutDossier; // ✅ ajoute ceci
 use Illuminate\Support\Str;
-
+use App\Models\Team; // <-- ajouter en haut du contrôleur
 
 class ClientController extends Controller
 {
@@ -20,10 +20,10 @@ class ClientController extends Controller
     {
         $user = auth()->user();
 
-        // Chef d'équipe → restreindre à son équipe
-        $teamId = null;
+        // Si l'utilisateur est chef d'équipe, récupérer tous les IDs d'équipes dont il est lead
+        $teamIds = [];
         if ($user->hasRole('chef_equipe')) {
-            $teamId = \App\Models\Team::where('lead_id', $user->id)->value('id');
+            $teamIds = Team::where('lead_id', $user->id)->pluck('id')->toArray();
         }
 
         $data = $request->validate([
@@ -39,7 +39,7 @@ class ClientController extends Controller
             'date_affect_to' => 'nullable|date',
             'statut' => 'nullable|string|in:' . implode(',', array_keys(\App\Enums\StatutDossier::labels())),
 
-            // 🆕 Filtres Dossier (nouvelle structure)
+            // Nouveaux filtres dossiers
             'service_acces' => 'nullable|in:FTTH,Cuivre',
             'categorie' => 'nullable|in:B2B,B2C',
             'active' => 'nullable|in:0,1',
@@ -51,11 +51,16 @@ class ClientController extends Controller
         ]);
 
         $q = Client::with(['lastDossier', 'lastDossier.team'])
-            // Visibilité chef d’équipe
-            ->when($user->hasRole('chef_equipe') && $teamId, fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('assigned_team_id', $teamId)))
-            ->when($user->hasRole('chef_equipe') && !$teamId, fn($qry) => $qry->whereRaw('0=1'))
+            // Visibilité chef d’équipe : si chef, restreindre aux clients dont le lastDossier appartient aux équipes du chef
+            ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+                if (!empty($teamIds)) {
+                    return $qry->whereHas('lastDossier', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds));
+                }
+                // si le chef n'a AUCUNE équipe, on renvoie rien
+                return $qry->whereRaw('0 = 1');
+            })
 
-            // ---- Filtres CLIENT
+            // ---- Filtres CLIENT (existants) ----
             ->when(!empty($data['type']), fn($qry) => $qry->where('type', $data['type']))
             ->when(!empty($data['numero_ligne']), fn($qry) => $qry->where('numero_ligne', 'like', '%' . $data['numero_ligne'] . '%'))
             ->when(!empty($data['numero_point_focal']), fn($qry) => $qry->where('numero_point_focal', 'like', '%' . $data['numero_point_focal'] . '%'))
@@ -70,31 +75,26 @@ class ClientController extends Controller
             ->when(!empty($data['service_acces']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('service_acces', $data['service_acces'])))
             ->when(!empty($data['categorie']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('categorie', $data['categorie'])))
             ->when($request->has('active'), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('is_active', $request->input('active') === '1')))
-
             ->when(!empty($data['localite']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->where('localite', 'like', '%' . $data['localite'] . '%')))
             ->when(!empty($data['date_recep_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_reception_raccordement', '>=', $data['date_recep_from'])))
             ->when(!empty($data['date_recep_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_reception_raccordement', '<=', $data['date_recep_to'])))
             ->when(!empty($data['date_fin_from']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_fin_travaux', '>=', $data['date_fin_from'])))
             ->when(!empty($data['date_fin_to']), fn($qry) => $qry->whereHas('lastDossier', fn($dq) => $dq->whereDate('date_fin_travaux', '<=', $data['date_fin_to'])));
 
-        // 👉 Pas de paginate : on renvoie la collection entière et DataTables gère le tri/recherche côté front
-
-// après
-$clients = $q->paginate(10); // 10 par page
+        $clients = $q->paginate(10);
 
         return view('clients.index', compact('clients'));
     }
-
 
     public function data(Request $request)
     {
         $query = Client::with('lastDossier');
 
         return DataTables::of($query)
-            ->addColumn('ligne', function($client){
+            ->addColumn('ligne', function ($client) {
                 return $client->lastDossier?->ligne ?? $client->numero_ligne;
             })
-            ->addColumn('actions', function($client){
+            ->addColumn('actions', function ($client) {
                 return view('clients.partials.actions', compact('client'))->render();
             })
             ->make(true);
@@ -244,126 +244,114 @@ $clients = $q->paginate(10); // 10 par page
     }
 
     public function realise()
-{
-    $clients = Client::whereHas('dossiers', function ($q) {
-        $q->where('statut', 'realise');
-    })->paginate(10); // ✅ paginate au lieu de get()
+    {
+        $clients = Client::whereHas('dossiers', function ($q) {
+            $q->where('statut', 'realise');
+        })->paginate(10); // ✅ paginate au lieu de get()
 
-    return view('clients.dossiers.realise', compact('clients'));
-}
-
-
-public function nouveauRdv()
-{
-    $clients = Client::whereHas('dossiers', function ($q) {
-        $q->where('statut', 'nouveau_rendez_vous');
-    })->paginate(10); // ✅ pagination 10 par page
-
-    return view('clients.dossiers.nouveau_rdv', compact('clients'));
-}
-
-public function enAppel()
-{
-    $clients = Client::whereHas('dossiers', function ($q) {
-        $q->where('statut', 'en_appel');
-    })->paginate(10);
-
-    return view('clients.dossiers.en_appel', compact('clients'));
-}
-
-public function injoignables()
-{
-    $clients = Client::whereHas('dossiers', function ($q) {
-        $q->where('statut', 'injoignable');
-    })->paginate(10);
-
-    return view('clients.dossiers.injoignables', compact('clients'));
-}
-
-
-public function indisponible()
-{
-    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))
-                     ->paginate(10);
-
-    return view('clients.dossiers.indisponible', compact('clients'));
-}
-
-public function pboSature()
-{
-    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))
-                     ->paginate(10);
-
-    return view('clients.dossiers.pbo_sature', compact('clients'));
-}
-
-public function zoneDepourvue()
-{
-    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))
-                     ->paginate(10);
-
-    return view('clients.dossiers.zone_depourvue', compact('clients'));
-}
-
-public function enEquipe()
-{
-    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))
-                     ->paginate(10);
-
-    return view('clients.dossiers.en_equipe', compact('clients'));
-}
-
-
-
-public function deleteMultiple(Request $request)
-{
-    $request->validate([
-        'clients' => 'required|array',
-        'clients.*' => 'exists:clients,id',
-    ]);
-
-    DB::transaction(function () use ($request) {
-        $clientIds = $request->input('clients');
-
-        // Supprimer les dossiers liés
-        DossierRaccordement::whereIn('client_id', $clientIds)->delete();
-
-        // Supprimer les clients
-        Client::whereIn('id', $clientIds)->delete();
-    });
-
-    return redirect()->route('clients.index')->with('success', 'Clients sélectionnés et leurs dossiers supprimés avec succès.');
-}
-
-
-
-public function purgeAll()
-{
-    DB::transaction(function () {
-        // 🔴 Supprimer tous les dossiers liés
-        DossierRaccordement::query()->delete();
-
-        // 🔴 Supprimer tous les clients
-        Client::query()->delete();
-    });
-
-    return redirect()->route('clients.index')
-                     ->with('success', 'Tous les clients et leurs dossiers ont été supprimés avec succès.');
-}
-public function bulkDelete(Request $request)
-{
-    $clientIds = $request->input('clients', []);
-
-    if (empty($clientIds)) {
-        return redirect()->back()->with('error', 'Aucun client sélectionné.');
+        return view('clients.dossiers.realise', compact('clients'));
     }
 
-    DB::transaction(function () use ($clientIds) {
-        DossierRaccordement::whereIn('client_id', $clientIds)->delete();
-        Client::whereIn('id', $clientIds)->delete();
-    });
+    public function nouveauRdv()
+    {
+        $clients = Client::whereHas('dossiers', function ($q) {
+            $q->where('statut', 'nouveau_rendez_vous');
+        })->paginate(10); // ✅ pagination 10 par page
 
-    return redirect()->route('clients.index')->with('success', 'Clients et dossiers supprimés avec succès.');
-}
+        return view('clients.dossiers.nouveau_rdv', compact('clients'));
+    }
 
+    public function enAppel()
+    {
+        $clients = Client::whereHas('dossiers', function ($q) {
+            $q->where('statut', 'en_appel');
+        })->paginate(10);
+
+        return view('clients.dossiers.en_appel', compact('clients'));
+    }
+
+    public function injoignables()
+    {
+        $clients = Client::whereHas('dossiers', function ($q) {
+            $q->where('statut', 'injoignable');
+        })->paginate(10);
+
+        return view('clients.dossiers.injoignables', compact('clients'));
+    }
+
+    public function indisponible()
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))->paginate(10);
+
+        return view('clients.dossiers.indisponible', compact('clients'));
+    }
+
+    public function pboSature()
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))->paginate(10);
+
+        return view('clients.dossiers.pbo_sature', compact('clients'));
+    }
+
+    public function zoneDepourvue()
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))->paginate(10);
+
+        return view('clients.dossiers.zone_depourvue', compact('clients'));
+    }
+
+    public function enEquipe()
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))->paginate(10);
+
+        return view('clients.dossiers.en_equipe', compact('clients'));
+    }
+
+    public function deleteMultiple(Request $request)
+    {
+        $request->validate([
+            'clients' => 'required|array',
+            'clients.*' => 'exists:clients,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            $clientIds = $request->input('clients');
+
+            // Supprimer les dossiers liés
+            DossierRaccordement::whereIn('client_id', $clientIds)->delete();
+
+            // Supprimer les clients
+            Client::whereIn('id', $clientIds)->delete();
+        });
+
+        return redirect()->route('clients.index')->with('success', 'Clients sélectionnés et leurs dossiers supprimés avec succès.');
+    }
+
+    public function purgeAll()
+    {
+        DB::transaction(function () {
+            // 🔴 Supprimer tous les dossiers liés
+            DossierRaccordement::query()->delete();
+
+            // 🔴 Supprimer tous les clients
+            Client::query()->delete();
+        });
+
+        return redirect()->route('clients.index')->with('success', 'Tous les clients et leurs dossiers ont été supprimés avec succès.');
+    }
+    public function bulkDelete(Request $request)
+    {
+        $clientIds = $request->input('clients', []);
+
+        if (empty($clientIds)) {
+            return redirect()->back()->with('error', 'Aucun client sélectionné.');
+        }
+
+        DB::transaction(function () use ($clientIds) {
+            DossierRaccordement::whereIn('client_id', $clientIds)->delete();
+            Client::whereIn('id', $clientIds)->delete();
+        });
+
+        return redirect()->route('clients.index')->with('success', 'Clients et dossiers supprimés avec succès.');
+    }
 }

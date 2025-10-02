@@ -166,5 +166,16 @@
         </div>
     </div>
 </div>
-
+@include('dossiers.partials.alert_nouveau_rdv_modal')
 @stop
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vérifie si le tableau contient des RDV
+    @if($rdvDossiers->isNotEmpty())
+        var rdvModal = new bootstrap.Modal(document.getElementById('rdvModal'));
+        rdvModal.show();
+    @endif
+});
+</script>
+
+

@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Models\TeamDossier;
 
+
 class DashboardController extends Controller
 {
     public function index(Request $request)
@@ -218,7 +219,9 @@ class DashboardController extends Controller
         $totalCorbeille = $corbeilleCount->sum();
 
         // Dossiers actifs
-        $activeCount = (clone $dossierQuery)->where('statut', 'ACTIVE')->count();
+        $activeCount = (clone $dossierQuery)
+    ->where('statut', StatutDossier::ACTIVE->value)
+    ->count();
 
         // Dossiers avec RDV
         $rdvCount = (clone $dossierQuery)->where('statut', 'nouveau_rendez_vous')->count();
@@ -227,11 +230,34 @@ class DashboardController extends Controller
         if ($user->hasRole('chef_equipe')) {
             $rdvDossiers->where('assigned_team_id', $user->team_id);
         }
-        
+
         $rdvDossiers = $rdvDossiers->get();
 
-        // ========= Retour =========
-        return view('dashboard.index', compact('from', 'to', 'totalClients', 'totalDossiers', 'ouverts', 'realises', 'annules', 'tauxReussite', 'pboSature', 'avgDelayDays', 'byStatut', 'byTypeService', 'byZone', 'topTechs', 'intervCount', 'intervAvgDuration', 'lastDossiers', 'lastInterventions', 'labels', 'created', 'realised', 'createdCum', 'realisedCum', 'corbeilleCount', 'activeCount', 'rdvCount', 'rdvDossiers', 'totalCorbeille', 'teamsKpi','teamsKpiToday'));
+       // Dossiers avec RDV manqués (exemple : statut "nouveau_rendez_vous" mais date dépassée)
+$rdvManques = (clone $dossierQuery)
+->where('statut', StatutDossier::NOUVEAU_RENDEZ_VOUS->value)
+->whereDate('date_planifiee', '<', now()) // RDV planifié avant aujourd'hui
+->count();
+
+// Dossiers avec RDV réussis ou réalisés
+$rdvReussis = (clone $dossierQuery)
+->where(function($q) {
+    $q->where('statut', StatutDossier::REALISE->value)
+      ->orWhere('statut', StatutDossier::ACTIVE->value);
+})
+->count();
+
+// Passer les données à la vue
+return view('dashboard.index', compact(
+'from', 'to', 'totalClients', 'totalDossiers', 'ouverts', 'realises',
+'annules', 'tauxReussite', 'pboSature', 'avgDelayDays', 'byStatut',
+'byTypeService', 'byZone', 'topTechs', 'intervCount', 'intervAvgDuration',
+'lastDossiers', 'lastInterventions', 'labels', 'created', 'realised',
+'createdCum', 'realisedCum', 'corbeilleCount', 'activeCount', 'rdvCount',
+'rdvDossiers', 'totalCorbeille', 'teamsKpi','teamsKpiToday',
+'rdvManques', 'rdvReussis'
+));
+
     }
 
     public function exportExcel(Request $request): BinaryFileResponse

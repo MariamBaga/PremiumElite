@@ -168,6 +168,17 @@
             </div>
         </div>
     </div>
+    <div class="row">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Dossiers et RDV manqués</div>
+            <div class="card-body" style="height:300px;">
+                <canvas id="chartRdv"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     {{-- =======================
        LIGNE 4 : Top zones + Types de service
@@ -334,31 +345,31 @@
         </div>
 
         <!-- <div class="col-lg-6">
-          <div class="card h-100">
-            <div class="card-header">Derniers dossiers</div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead><tr><th>Réf.</th><th>Abonner</th><th>Statut</th><th>Type</th><th>Planifiée</th></tr></thead>
-                  <tbody>
-                    @foreach ($lastDossiers as $d)
+              <div class="card h-100">
+                <div class="card-header">Derniers dossiers</div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                      <thead><tr><th>Réf.</th><th>Abonner</th><th>Statut</th><th>Type</th><th>Planifiée</th></tr></thead>
+                      <tbody>
+                        @foreach ($lastDossiers as $d)
     <tr>
-                        <td><a href="{{ route('clients.show', $d) }}">{{ $d->reference }}</a></td>
-                        <td>{{ $d->client?->displayName }}</td>
-                        <td><span class="badge bg-secondary">{{ \Illuminate\Support\Str::headline($d->statut?->value ?? $d->statut) }}</span></td>
-                        <td class="text-nowrap">{{ ucfirst($d->type_service) }}</td>
-                        <td class="text-nowrap">{{ optional($d->date_planifiee)->format('d/m/Y H:i') }}</td>
-                      </tr>
+                            <td><a href="{{ route('clients.show', $d) }}">{{ $d->reference }}</a></td>
+                            <td>{{ $d->client?->displayName }}</td>
+                            <td><span class="badge bg-secondary">{{ \Illuminate\Support\Str::headline($d->statut?->value ?? $d->statut) }}</span></td>
+                            <td class="text-nowrap">{{ ucfirst($d->type_service) }}</td>
+                            <td class="text-nowrap">{{ optional($d->date_planifiee)->format('d/m/Y H:i') }}</td>
+                          </tr>
     @endforeach
-                  </tbody>
-                </table>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="card-footer text-end">
+                  <a href="{{ route('clients.index') }}" class="btn btn-outline-primary btn-sm">Voir tout</a>
+                </div>
               </div>
-            </div>
-            <div class="card-footer text-end">
-              <a href="{{ route('clients.index') }}" class="btn btn-outline-primary btn-sm">Voir tout</a>
-            </div>
-          </div>
-        </div> -->
+            </div> -->
     </div>
 
     @include('dossiers.partials.alert_nouveau_rdv_modal')
@@ -430,7 +441,25 @@
                 maintainAspectRatio: false
             }
         });
-
+        makeChart('chartRdv', {
+    type: 'doughnut',
+    data: {
+        labels: ['RDV réussis / réalisés', 'RDV manqués'],
+        datasets: [{
+            data: [{{ $rdvReussis }}, {{ $rdvManques }}],
+            backgroundColor: ['#28a745', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
         // Bar zones
         makeChart('chartZones', {
             type: 'bar',
@@ -496,18 +525,37 @@
 
         // Création du graphique
         const ctxTeams = document.getElementById('chartTeamsKpi');
-let chartTeamsKpi = new Chart(ctxTeams, {
-    type: 'bar',
-    data: {
-        labels: datasets7d.labels,
-        datasets: [
-            { label:'Réalisés (7 j.)', data: datasets7d.realises, backgroundColor:'rgba(54, 162, 235, 0.7)' },
-            { label:'Activés (7 j.)', data: datasets7d.actives, backgroundColor:'rgba(75, 192, 192, 0.7)' },
-            { label:'PBO Saturés (7 j.)', data: datasets7d.pbo, backgroundColor:'rgba(255, 99, 132, 0.7)' }
-        ]
-    },
-    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } } }
-});
+        let chartTeamsKpi = new Chart(ctxTeams, {
+            type: 'bar',
+            data: {
+                labels: datasets7d.labels,
+                datasets: [{
+                        label: 'Réalisés (7 j.)',
+                        data: datasets7d.realises,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    },
+                    {
+                        label: 'Activés (7 j.)',
+                        data: datasets7d.actives,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                    },
+                    {
+                        label: 'PBO Saturés (7 j.)',
+                        data: datasets7d.pbo,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
 
 
         // Boutons
@@ -537,9 +585,8 @@ let chartTeamsKpi = new Chart(ctxTeams, {
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-        var rdvModal = new bootstrap.Modal(document.getElementById('rdvModal'));
-        rdvModal.show();
-    });
-    
+            var rdvModal = new bootstrap.Modal(document.getElementById('rdvModal'));
+            rdvModal.show();
+        });
     </script>
 @stop

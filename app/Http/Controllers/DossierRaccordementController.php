@@ -8,9 +8,9 @@ use App\Enums\StatutDossier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\TeamDossier;
-  // DossierRaccordementController.php
-  use App\Notifications\NouveauRdvNotification;
-  use App\Models\User;
+// DossierRaccordementController.php
+use App\Notifications\NouveauRdvNotification;
+use App\Models\User;
 
 class DossierRaccordementController extends Controller
 {
@@ -104,7 +104,7 @@ class DossierRaccordementController extends Controller
         $this->authorize('assign', DossierRaccordement::class);
 
         if (!$dossier->isModifiable()) {
-            return back()->withErrors('Impossible de modifier l’affectation : dossier activé ou realisé.');
+            return back()->withErrors('Impossible de modifier l’affectation : dossier activé ou réalisé.');
         }
 
         $data = $request->validate([
@@ -119,11 +119,25 @@ class DossierRaccordementController extends Controller
                 ->withInput();
         }
 
+        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
+        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+        }
+
+        // ✅ On met à jour le dossier
         $dossier->update([
-            'assigned_to' => $data['assigned_to'] ?? $dossier->assigned_to,
-            'assigned_team_id' => $data['assigned_team_id'] ?? $dossier->assigned_team_id,
+            'assigned_to' => $data['assigned_to'] ?? null,
+            'assigned_team_id' => $data['assigned_team_id'] ?? null,
             'date_planifiee' => $data['date_planifiee'] ?? $dossier->date_planifiee,
         ]);
+
+        // ✅ Synchroniser avec la corbeille d’équipe
+        if (!empty($data['assigned_team_id'])) {
+            TeamDossier::updateOrCreate(['team_id' => $data['assigned_team_id'], 'dossier_id' => $dossier->id], ['etat' => 'en_cours', 'updated_by' => auth()->id()]);
+        } else {
+            // Si on enlève l’équipe → on supprime l’entrée dans la corbeille
+            TeamDossier::where('dossier_id', $dossier->id)->delete();
+        }
 
         return back()->with('success', 'Affectation mise à jour');
     }
@@ -189,16 +203,16 @@ class DossierRaccordementController extends Controller
     {
         $request->validate(
             [
-                'dossier_id'       => 'required|exists:dossiers_raccordement,id',
-                'rapport_file'     => 'required|mimes:pdf,doc,docx,txt|max:5120',
+                'dossier_id' => 'required|exists:dossiers_raccordement,id',
+                'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
                 'rapport_intervention' => 'required|string',
-                'port'             => 'required|string|max:50',
-                'lineaire_m'       => 'required|integer|min:0', // linéaire câble tiré
-                'type_cable'       => 'required|string|max:100',
+                'port' => 'required|string|max:50',
+                'lineaire_m' => 'required|integer|min:0', // linéaire câble tiré
+                'type_cable' => 'required|string|max:100',
             ],
             [
                 'rapport_file.mimes' => 'Le fichier doit être un PDF, Word ou Texte.',
-                'rapport_file.max'   => 'Le fichier ne doit pas dépasser 5 Mo.',
+                'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
             ],
         );
 
@@ -226,8 +240,6 @@ class DossierRaccordementController extends Controller
         return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
     }
 
-
-
     public function storeNouveauRdv(Request $request)
     {
         $request->validate([
@@ -245,31 +257,24 @@ class DossierRaccordementController extends Controller
             'description' => $request->commentaire_rdv,
         ]);
 
+        // ✅ Notifier tous les rôles importants
+        $rolesToNotify = ['admin', 'superadmin', 'coordinateur']; // ajouter d'autres si besoin
+        $usersToNotify = User::role($rolesToNotify)->get();
 
-         // ✅ Notifier tous les rôles importants
-    $rolesToNotify = ['admin', 'superadmin', 'coordinateur']; // ajouter d'autres si besoin
-    $usersToNotify = User::role($rolesToNotify)->get();
-
-    foreach ($usersToNotify as $user) {
-        $user->notify(new NouveauRdvNotification($dossier));
-    }
-
-
+        foreach ($usersToNotify as $user) {
+            $user->notify(new NouveauRdvNotification($dossier));
+        }
 
         return back()->with('success', 'Nouveau rendez-vous enregistré.');
     }
-
-
-
-
 
     // Injoignable (avec commentaire action prise)
     public function storeInjoignable(Request $request)
     {
         $request->validate([
-            'dossier_id'    => 'required|exists:dossiers_raccordement,id',
-            'action_pris'   => 'required|string|max:255',
-            'capture_file'  => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'action_pris' => 'required|string|max:255',
+            'capture_file' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
@@ -283,119 +288,116 @@ class DossierRaccordementController extends Controller
         }
 
         $dossier->update([
-            'statut'          => 'injoignable',
-            'description'     => $request->action_pris,
+            'statut' => 'injoignable',
+            'description' => $request->action_pris,
             'capture_message' => $path,
         ]);
 
-        return back()->with('success', "Dossier marqué comme injoignable (action précisée + capture).");
+        return back()->with('success', 'Dossier marqué comme injoignable (action précisée + capture).');
     }
 
+    // PBO saturé (upload rapport)
+    // DossierController.php
+    public function storePboSature(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'rapport' => 'required|string|max:5000',
+        ]);
 
-// PBO saturé (upload rapport)
-// DossierController.php
-public function storePboSature(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        'rapport'    => 'required|string|max:5000',
-    ]);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier->statut = 'pbo_sature';
+        $dossier->rapport_satisfaction = $request->rapport;
+        $dossier->save();
 
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-    $dossier->statut = 'pbo_sature';
-    $dossier->rapport_satisfaction = $request->rapport;
-    $dossier->save();
-
-    return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
-}
-
-public function storeZoneDepourvue(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        'rapport'    => 'required|string|max:5000',
-    ]);
-
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-    $dossier->statut = 'zone_depourvue';
-    $dossier->rapport_satisfaction = $request->rapport;
-    $dossier->save();
-
-    return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
-}
-
-
-public function storeRealise(Request $request)
-{
-    $request->validate([
-        'dossier_id'            => 'required|exists:dossiers_raccordement,id',
-        'rapport_file'          => 'required|mimes:pdf,doc,docx,txt|max:5120',
-        'rapport_intervention'  => 'required|string',
-        'raison_non_activation' => 'required|string',
-    ]);
-
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-
-    // Upload du rapport signé (PDF/Word)
-    if ($request->hasFile('rapport_file')) {
-        $file = $request->file('rapport_file');
-        $filename = 'rapport_realise_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('rapports', $filename, 'public');
-        $dossier->rapport_satisfaction = $path;
+        return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
     }
 
-    // Texte intervention
-    $dossier->rapport_intervention = $request->rapport_intervention;
+    public function storeZoneDepourvue(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'rapport' => 'required|string|max:5000',
+        ]);
 
-    // Raison de non activation
-    $dossier->raison_non_activation = $request->raison_non_activation;
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier->statut = 'zone_depourvue';
+        $dossier->rapport_satisfaction = $request->rapport;
+        $dossier->save();
 
-    // Statut réalisé
-    $dossier->statut = 'realise';
-    $dossier->save();
-
-    return back()->with('success', 'Dossier marqué comme réalisé avec rapport et raison de non activation.');
-}
-
-public function storeIndisponible(Request $request)
-{
-    $request->validate([
-        'dossier_id'   => 'required|exists:dossiers_raccordement,id',
-        'raison'       => 'required|string|max:255',
-        'capture_file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-    ]);
-
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-
-    // ✅ upload capture
-    $path = null;
-    if ($request->hasFile('capture_file')) {
-        $file = $request->file('capture_file');
-        $filename = 'indisponible_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('captures', $filename, 'public');
+        return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
     }
 
-    $dossier->update([
-        'statut'        => 'indisponible',
-        'description'   => $request->raison,
-        'capture_message' => $path, // 🔹 colonne à prévoir dans la table
-    ]);
+    public function storeRealise(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
+            'rapport_intervention' => 'required|string',
+            'raison_non_activation' => 'required|string',
+        ]);
 
-    return back()->with('success', 'Dossier marqué comme indisponible (raison + capture).');
-}
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-// Activé (rapport + fiche client)
-public function deleteRapport(DossierRaccordement $dossier)
-{
-    $dossier->delete(); // soft delete si tu as softDeletes
-    return back()->with('success', 'Dossier supprimé.');
-}
-public function deleteAllRapports()
-{
-    DossierRaccordement::whereNotNull('rapport_intervention')->orWhere('statut', 'nouveau_rendez_vous')->delete();
-    return back()->with('success', 'Tous les dossiers avec rapport ou RDV ont été supprimés.');
-}
+        // Upload du rapport signé (PDF/Word)
+        if ($request->hasFile('rapport_file')) {
+            $file = $request->file('rapport_file');
+            $filename = 'rapport_realise_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('rapports', $filename, 'public');
+            $dossier->rapport_satisfaction = $path;
+        }
 
+        // Texte intervention
+        $dossier->rapport_intervention = $request->rapport_intervention;
+
+        // Raison de non activation
+        $dossier->raison_non_activation = $request->raison_non_activation;
+
+        // Statut réalisé
+        $dossier->statut = 'realise';
+        $dossier->save();
+
+        return back()->with('success', 'Dossier marqué comme réalisé avec rapport et raison de non activation.');
+    }
+
+    public function storeIndisponible(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'raison' => 'required|string|max:255',
+            'capture_file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+
+        // ✅ upload capture
+        $path = null;
+        if ($request->hasFile('capture_file')) {
+            $file = $request->file('capture_file');
+            $filename = 'indisponible_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('captures', $filename, 'public');
+        }
+
+        $dossier->update([
+            'statut' => 'indisponible',
+            'description' => $request->raison,
+            'capture_message' => $path, // 🔹 colonne à prévoir dans la table
+        ]);
+
+        return back()->with('success', 'Dossier marqué comme indisponible (raison + capture).');
+    }
+
+    // Activé (rapport + fiche client)
+    public function deleteRapport(DossierRaccordement $dossier)
+    {
+        $dossier->delete(); // soft delete si tu as softDeletes
+        return back()->with('success', 'Dossier supprimé.');
+    }
+    public function deleteAllRapports()
+    {
+        DossierRaccordement::whereNotNull('rapport_intervention')->orWhere('statut', 'nouveau_rendez_vous')->delete();
+        return back()->with('success', 'Tous les dossiers avec rapport ou RDV ont été supprimés.');
+    }
 
     // DossierRaccordementController.php
     // DossierRaccordementController.php
@@ -423,15 +425,13 @@ public function deleteAllRapports()
 
         $dossiers = $query->orderBy('updated_at', 'desc')->paginate(10); // 10 par page
 
-
         return view('dossiers.showrapport', compact('dossiers'));
     }
     public function listRapportsSignes()
     {
         $user = auth()->user();
 
-        $query = DossierRaccordement::query()
-            ->whereNotNull('rapport_satisfaction'); // ✅ uniquement les rapports signés
+        $query = DossierRaccordement::query()->whereNotNull('rapport_satisfaction'); // ✅ uniquement les rapports signés
 
         // 🔒 Filtrage par rôle
         if ($user->hasRole('chef_equipe')) {
@@ -448,24 +448,35 @@ public function deleteAllRapports()
 
     public function assignTeam(Request $request, DossierRaccordement $dossier)
     {
-        $this->authorize('assign', DossierRaccordement::class); // ou middleware can:dossiers.assign
+        $this->authorize('assign', DossierRaccordement::class);
 
         if (!$dossier->isModifiable()) {
             return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
         }
+
+
+
         $data = $request->validate([
             'assigned_team_id' => ['nullable', Rule::exists('teams', 'id')],
         ]);
-
+  // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
+        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+        }
         $dossier->update([
             'assigned_team_id' => $data['assigned_team_id'] ?? null,
         ]);
+
+        // ✅ Synchroniser avec la corbeille de l’équipe
+        if (!empty($data['assigned_team_id'])) {
+            TeamDossier::updateOrCreate(['team_id' => $data['assigned_team_id'], 'dossier_id' => $dossier->id], ['etat' => 'en_cours', 'updated_by' => auth()->id()]);
+        } else {
+            // Si on retire l’équipe, on peut supprimer l’entrée
+            TeamDossier::where('dossier_id', $dossier->id)->delete();
+        }
 
         return back()->with('success', $data['assigned_team_id'] ? 'Équipe assignée au dossier.' : 'Équipe retirée du dossier.');
     }
 
     // Retourne les dossiers avec rendez-vous pour aujourd'hui ou demain
-
-
-
 }

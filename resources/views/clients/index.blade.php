@@ -6,27 +6,46 @@
     <h1>Dossier FTTH</h1>
 @stop
 @push('css')
-<style>
-.scroll-top-wrapper {
-    overflow-x: scroll !important;
-    overflow-y: hidden;
-    height: 16px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ccc;
-    scrollbar-color: #007bff #e9ecef;
-    scrollbar-width: thin;
-}
-.scroll-top-wrapper::-webkit-scrollbar {
-    height: 10px;
-}
-.scroll-top-wrapper::-webkit-scrollbar-thumb {
-    background: #007bff;
-    border-radius: 4px;
-}
-.scroll-top-wrapper::-webkit-scrollbar-track {
-    background: #e9ecef;
-}
-</style>
+    <style>
+        .scroll-top-wrapper {
+            overflow-x: scroll !important;
+            overflow-y: hidden;
+            height: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ccc;
+            scrollbar-color: #007bff #e9ecef;
+            scrollbar-width: thin;
+        }
+
+        .scroll-top-wrapper::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .scroll-top-wrapper::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 4px;
+        }
+
+        .scroll-top-wrapper::-webkit-scrollbar-track {
+            background: #e9ecef;
+        }
+
+
+        .highlight-yellow {
+            background-color: #fff3cd !important;
+            /* jaune clair */
+        }
+
+        .highlight-orange {
+            background-color: #ffe0b2 !important;
+            /* orange clair */
+        }
+
+        .highlight-red {
+            background-color: #f8d7da !important;
+            /* rouge clair */
+        }
+    </style>
 @endpush
 
 
@@ -175,27 +194,27 @@
             {{-- TABLEAU DataTables (nouvelle structure) --}}
             {{-- Wrapper pour scrollbar horizontale en haut --}}
             @can('clients.delete')
-<div style="text-align: center; margin: 1rem 0;">
-    <form action="{{ route('clients.purgeAll') }}" method="POST" style="display:inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit"
-            style="background-color: #b71c1c; border-color: #b71c1c; color: #fff; padding: 0.35rem 0.75rem; font-size: 0.875rem; border-radius: 0.25rem; cursor: pointer;"
-            onclick="return confirm('⚠️ Cette action va SUPPRIMER TOUS les clients et leurs dossiers. Êtes-vous sûr ?');">
-            Supprimer TOUS (Clients + Dossiers)
-        </button>
-    </form>
-</div>
-@endcan
+                <div style="text-align: center; margin: 1rem 0;">
+                    <form action="{{ route('clients.purgeAll') }}" method="POST" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                            style="background-color: #b71c1c; border-color: #b71c1c; color: #fff; padding: 0.35rem 0.75rem; font-size: 0.875rem; border-radius: 0.25rem; cursor: pointer;"
+                            onclick="return confirm('⚠️ Cette action va SUPPRIMER TOUS les clients et leurs dossiers. Êtes-vous sûr ?');">
+                            Supprimer TOUS (Clients + Dossiers)
+                        </button>
+                    </form>
+                </div>
+            @endcan
 
             <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
                 @csrf
                 @method('DELETE')
                 @can('clients.delete')
-                <button type="submit" class="btn btn-danger mb-2"
-                    onclick="return confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')">
-                    Supprimer sélection
-                </button>
+                    <button type="submit" class="btn btn-danger mb-2"
+                        onclick="return confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')">
+                        Supprimer sélection
+                    </button>
                 @endcan
                 <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
 
@@ -204,7 +223,7 @@
                         <thead>
                             <tr>
                                 @can('clients.delete')
-                                <th><input type="checkbox" id="checkAll"></th>
+                                    <th><input type="checkbox" id="checkAll"></th>
                                 @endcan
                                 <th>#</th>
                                 <th>CLIENT</th>
@@ -229,13 +248,32 @@
                         </thead>
                         <tbody>
                             @foreach ($clients as $i => $c)
-                                @php $d = $c->lastDossier; @endphp
-                                <tr>
+                                @php
+                                    $d = $c->lastDossier;
+
+                                    // On calcule le nombre de jours écoulés depuis la date de réception
+                                    $jours =
+                                        $d && $d->date_reception_raccordement
+                                            ? \Carbon\Carbon::parse($d->date_reception_raccordement)->diffInDays(now())
+                                            : 0;
+
+                                    // Couleur selon le nombre de jours
+                                    $highlightClass = '';
+                                    if ($jours > 3) {
+                                        $highlightClass = 'highlight-red';
+                                    } elseif ($jours > 2) {
+                                        $highlightClass = 'highlight-orange';
+                                    } elseif ($jours > 1) {
+                                        $highlightClass = 'highlight-yellow';
+                                    }
+                                @endphp
+
+                                <tr class="{{ $highlightClass }}">
                                     @can('clients.delete')
-                                    <td>
-                                        <input type="checkbox" name="clients[]" value="{{ $c->id }}"
-                                            class="client-checkbox">
-                                    </td>
+                                        <td>
+                                            <input type="checkbox" name="clients[]" value="{{ $c->id }}"
+                                                class="client-checkbox">
+                                        </td>
                                     @endcan
                                     <td>{{ $i + $clients->firstItem() }}</td>
                                     <td class="text-truncate" style="max-width:220px;">{{ $c->displayName }}</td>
@@ -364,34 +402,34 @@
     {{-- DataTables est déjà packagé avec AdminLTE. Si besoin, assure-toi que ces plugins sont enable dans config/adminlte.php --}}
     <script>
         const table = $('#dossiersTable').DataTable({
-    paging: false,
-    searching: false,
-    info: false,
-    ordering: false,
-    responsive: true,
-    autoWidth: false
-});
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            responsive: true,
+            autoWidth: false
+        });
 
-// ✅ Gestion du « tout sélectionner »
-$(document).on('change', '#checkAll', function () {
-    const checked = this.checked;
-    $('.client-checkbox').prop('checked', checked);
-});
+        // ✅ Gestion du « tout sélectionner »
+        $(document).on('change', '#checkAll', function() {
+            const checked = this.checked;
+            $('.client-checkbox').prop('checked', checked);
+        });
 
-// ✅ Si une case individuelle change, mettre à jour l’entête
-$(document).on('change', '.client-checkbox', function () {
-    const all = $('.client-checkbox').length;
-    const checked = $('.client-checkbox:checked').length;
-    $('#checkAll').prop('checked', all === checked);
-});
+        // ✅ Si une case individuelle change, mettre à jour l’entête
+        $(document).on('change', '.client-checkbox', function() {
+            const all = $('.client-checkbox').length;
+            const checked = $('.client-checkbox:checked').length;
+            $('#checkAll').prop('checked', all === checked);
+        });
 
-// ✅ Empêcher la suppression si rien n’est coché
-$('#bulkDeleteForm').on('submit', function (e) {
-    if (!$('.client-checkbox:checked').length) {
-        e.preventDefault();
-        alert('Veuillez sélectionner au moins un client avant de supprimer.');
-    }
-});
+        // ✅ Empêcher la suppression si rien n’est coché
+        $('#bulkDeleteForm').on('submit', function(e) {
+            if (!$('.client-checkbox:checked').length) {
+                e.preventDefault();
+                alert('Veuillez sélectionner au moins un client avant de supprimer.');
+            }
+        });
 
 
 
@@ -455,14 +493,12 @@ $('#bulkDeleteForm').on('submit', function (e) {
                     modal = new bootstrap.Modal(document.getElementById('zoneDepourvueModal'));
                     modal.show();
                     this.value = this.dataset.oldValue;
-                }
-                else if (this.value === 'indisponible') {
-    document.getElementById('indisponibleDossierId').value = dossierId;
-    const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
-    modal.show();
-    this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
-}
- else {
+                } else if (this.value === 'indisponible') {
+                    document.getElementById('indisponibleDossierId').value = dossierId;
+                    const modal = new bootstrap.Modal(document.getElementById('indisponibleModal'));
+                    modal.show();
+                    this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
+                } else {
                     this.dataset.oldValue = this.value;
                 }
             });
