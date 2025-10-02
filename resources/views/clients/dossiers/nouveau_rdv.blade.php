@@ -81,13 +81,13 @@
                             <td class="text-nowrap">{{ $d?->nb_armements_poteaux }}</td>
                             <td class="text-nowrap">{{ $d?->statut_label }}</td>
                             <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
-                            <td class="text-nowrap">
-                                @if($d?->is_active)
-                                    <span class="badge bg-success">Oui</span>
-                                @else
-                                    <span class="badge bg-secondary">Non</span>
-                                @endif
-                            </td>
+                             <td class="text-nowrap">
+    @if ($d?->statut?->value === \App\Enums\StatutDossier::ACTIVE->value)
+        <span class="badge bg-success">Oui</span>
+    @else
+        <span class="badge bg-secondary">Non</span>
+    @endif
+</td>
                             <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
                             <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
                             <td class="text-end">
