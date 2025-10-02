@@ -387,31 +387,29 @@ class DossierRaccordementController extends Controller
         return back()->with('success', 'Dossier marqué comme indisponible (raison + capture).');
     }
 
-
     public function storeDepassementLineaire(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        'distance'   => 'required|numeric|min:1',
-        'gps_abonne' => 'required|string|max:255',
-        'gps_pbo'    => 'required|string|max:255',
-        'nom_pbo'    => 'required|string|max:255',
-    ]);
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'distance' => 'required|numeric|min:1',
+            'gps_abonne' => 'required|string|max:255',
+            'gps_pbo' => 'required|string|max:255',
+            'nom_pbo' => 'required|string|max:255',
+        ]);
 
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-    $dossier->update([
-        'statut'                 => \App\Enums\StatutDossier::DEPASSEMENT_LINEAIRE->value,
-        'depassement_distance'   => $request->distance,
-        'depassement_gps_abonne' => $request->gps_abonne,
-        'depassement_gps_pbo'    => $request->gps_pbo,
-        'depassement_nom_pbo'    => $request->nom_pbo,
-        'description'            => "Dépassement de {$request->distance}m - Abonné: {$request->gps_abonne}, PBO: {$request->gps_pbo}, Nom PBO: {$request->nom_pbo}",
-    ]);
+        $dossier->update([
+            'statut' => \App\Enums\StatutDossier::DEPASSEMENT_LINEAIRE->value,
+            'depassement_distance' => $request->distance,
+            'depassement_gps_abonne' => $request->gps_abonne,
+            'depassement_gps_pbo' => $request->gps_pbo,
+            'depassement_nom_pbo' => $request->nom_pbo,
+            'description' => "Dépassement de {$request->distance}m - Abonné: {$request->gps_abonne}, PBO: {$request->gps_pbo}, Nom PBO: {$request->nom_pbo}",
+        ]);
 
-    return back()->with('success', 'Dossier marqué comme Dépassement Linéaire.');
-}
-
+        return back()->with('success', 'Dossier marqué comme Dépassement Linéaire.');
+    }
 
     // Activé (rapport + fiche client)
     public function deleteRapport(DossierRaccordement $dossier)
@@ -480,12 +478,10 @@ class DossierRaccordementController extends Controller
             return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
         }
 
-
-
         $data = $request->validate([
             'assigned_team_id' => ['nullable', Rule::exists('teams', 'id')],
         ]);
-  // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
+        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
         if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
             return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
         }
