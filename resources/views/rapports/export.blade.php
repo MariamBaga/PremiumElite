@@ -1,61 +1,57 @@
-{{-- Titre du rapport --}}
-<h2 style="text-align: center; font-family: Arial, sans-serif; color: #333;">
-    Rapport d’activité
-</h2>
-
-{{-- Statuts sélectionnés (optionnel) --}}
-@if(!empty($selectedStatuses))
-    <p style="text-align: center; font-family: Arial, sans-serif; color: #555;">
-        Statuts sélectionnés : {{ implode(', ', $selectedStatuses) }}
-    </p>
-@endif
-
-
-
-
-
-
-
-
-
 <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
-    <thead>
-        <tr style="background-color: #4CAF50; color: white; text-align: left;">
-            <th style="border: 1px solid #ddd; padding: 8px;">Client</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Contact</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Téléphone</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Statut</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Date RDV</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Port utilisé</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Linéaire câble tiré (m)</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Type de câble</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Ligne</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Localité</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Catégorie</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Rapport intervention</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Date création</th>
+<thead>
+    <tr style="background-color: #4CAF50; color: white; text-align: left;">
+        <th>Client</th>
+        <th>Contact</th>
+        <th>Téléphone</th>
+        <th>Statut</th>
+        <th>Date RDV</th>
+        <th>Port utilisé</th>
+        <th>Linéaire câble tiré (m)</th>
+        <th>Type de câble</th>
+        <th>Ligne</th>
+        <th>Localité</th>
+        <th>Catégorie</th>
+        <th>Rapport intervention</th>
+        <th>Raison non activation</th>
+        <th>Capture</th>
+        <th>Dépassement distance</th>
+        <th>GPS Abonné</th>
+        <th>GPS PBO</th>
+        <th>Nom PBO</th>
+        <th>Date création</th>
+    </tr>
+</thead>
+<tbody>
+    @foreach ($dossiers as $dossier)
+        <tr>
+            <td>{{ $dossier->client->displayName ?? '-' }}</td>
+            <td>{{ $dossier->contact ?? '-' }}</td>
+            <td>{{ $dossier->client->telephone ?? '-' }}</td>
+            <td>{{ \Illuminate\Support\Str::headline($dossier->statut?->value ?? $dossier->statut) }}</td>
+            <td>{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') }}</td>
+            <td>{{ $dossier->port ?? '-' }}</td>
+            <td>{{ $dossier->lineaire_m ?? '-' }}</td>
+            <td>{{ $dossier->type_cable ?? '-' }}</td>
+            <td>{{ $dossier->ligne ?? '-' }}</td>
+            <td>{{ $dossier->localite ?? '-' }}</td>
+            <td>{{ $dossier->categorie ?? '-' }}</td>
+            <td>{{ $dossier->rapport_intervention ?? '-' }}</td>
+            <td>{{ $dossier->raison_non_activation ?? '-' }}</td>
+            <td>
+                @if($dossier->capture_message)
+                    <a href="{{ asset('storage/'.$dossier->capture_message) }}" target="_blank">Voir</a>
+                @else
+                    -
+                @endif
+            </td>
+            <td>{{ $dossier->depassement_distance ?? '-' }}</td>
+            <td>{{ $dossier->depassement_gps_abonne ?? '-' }}</td>
+            <td>{{ $dossier->depassement_gps_pbo ?? '-' }}</td>
+            <td>{{ $dossier->depassement_nom_pbo ?? '-' }}</td>
+            <td>{{ $dossier->created_at->format('d/m/Y H:i') }}</td>
         </tr>
-    </thead>
-    <tbody>
-        @foreach ($dossiers as $dossier)
-            <tr style="border: 1px solid #ddd; padding: 8px; background-color: {{ $loop->even ? '#f2f2f2' : 'white' }};">
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->client->displayName ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->contact ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->client->telephone ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ \Illuminate\Support\Str::headline($dossier->statut?->value ?? $dossier->statut) }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->port ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->lineaire_m ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->type_cable ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->ligne ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->localite ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->categorie ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->rapport_intervention ?? '-' }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $dossier->created_at->format('d/m/Y H:i') }}</td>
-            </tr>
-        @endforeach
-    </tbody>
+    @endforeach
+</tbody>
+
 </table>
-
-
-

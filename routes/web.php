@@ -160,6 +160,10 @@ Route::get('/notifications', [NotificationController::class, 'index'])
     ->name('clients.purgeAll')
     ->middleware('can:clients.delete');
 
+Route::get('/rendezvous/manques', [DashboardController::class, 'rdvManques'])
+    ->name('rdv.manques')
+    ->middleware('auth');
+
     Route::prefix('clients')->group(function () {
         Route::get('/',          [ClientController::class,'index'])->name('clients.index');
         Route::get('/create',    [ClientController::class,'create'])->name('clients.create');

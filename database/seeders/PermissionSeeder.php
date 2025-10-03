@@ -115,7 +115,7 @@ class PermissionSeeder extends Seeder
         $superadmin->givePermissionTo('dashsu');
 
         // Coordinateur
-        $coord->givePermissionTo(array_merge($dossierPerms, ['clients.view', 'clients.create', 'clients.update', 'clients.delete'], $teamPerms, $extPerms, $inboxPerms));
+        $coord->givePermissionTo(array_merge($dossierPerms, ['clients.view', 'clients.create', 'clients.update'], $teamPerms, $extPerms, $inboxPerms));
 
         // Superadmin → toutes les permissions sauf "chef_equipe"
         $allPermissions = Permission::where('name', '!=', 'dashequipe')->get();

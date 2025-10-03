@@ -409,6 +409,12 @@ return [
             ],
         ],
 
+        [
+            'text' => 'RDV Manqués',
+            'url'  => 'rendezvous/manques',
+            'icon' => 'fas fa-calendar-times', // icône FontAwesome
+            'label_color' => 'danger',
+        ],
         ['header' => 'EQUIPES'],
 
         [

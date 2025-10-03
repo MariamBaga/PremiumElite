@@ -394,107 +394,132 @@
             if (!el) return;
             new Chart(el, cfg);
         }
+// === Palette de couleurs unifiée ===
+const chartColors = {
+    blue: 'rgba(54, 162, 235, 0.7)',
+    green: 'rgba(75, 192, 192, 0.7)',
+    red: 'rgba(255, 99, 132, 0.7)',
+    yellow: 'rgba(255, 206, 86, 0.7)',
+    purple: 'rgba(153, 102, 255, 0.7)',
+    orange: 'rgba(255, 159, 64, 0.7)',
+    grey: 'rgba(201, 203, 207, 0.7)'
+};
 
         // Courbe volumes
-        makeChart('chartVolumes', {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                        label: 'Créés',
-                        data: created,
-                        fill: false,
-                        tension: .3,
-                        spanGaps: true
-                    },
-                    {
-                        label: 'Réalisés',
-                        data: realised,
-                        fill: false,
-                        tension: .3,
-                        spanGaps: true
-                    },
-                ]
+     // Courbe volumes
+makeChart('chartVolumes', {
+    type: 'line',
+    data: {
+        labels,
+        datasets: [
+            {
+                label: 'Créés',
+                data: created,
+                borderColor: chartColors.blue,
+                backgroundColor: 'rgba(54,162,235,0.2)',
+                fill: true,
+                tension: .3,
+                pointRadius: 4,
+                pointBackgroundColor: chartColors.blue
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
+            {
+                label: 'Réalisés',
+                data: realised,
+                borderColor: chartColors.green,
+                backgroundColor: 'rgba(75,192,192,0.2)',
+                fill: true,
+                tension: .3,
+                pointRadius: 4,
+                pointBackgroundColor: chartColors.green
             }
-        });
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
 
-        // Donut statuts
-        makeChart('chartStatuts', {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(byStatut),
-                datasets: [{
-                    data: Object.values(byStatut)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-        makeChart('chartRdv', {
+// Donut statuts
+makeChart('chartStatuts', {
     type: 'doughnut',
     data: {
-        labels: ['RDV réussis / réalisés', 'RDV manqués'],
+        labels: Object.keys(byStatut),
         datasets: [{
-            data: [{{ $rdvReussis }}, {{ $rdvManques }}],
-            backgroundColor: ['#28a745', '#dc3545']
+            data: Object.values(byStatut),
+            backgroundColor: [
+                chartColors.blue, chartColors.green,
+                chartColors.red, chartColors.orange,
+                chartColors.purple, chartColors.yellow
+            ]
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
+        plugins: { legend: { position: 'bottom' } }
     }
 });
-        // Bar zones
-        makeChart('chartZones', {
-            type: 'bar',
-            data: {
-                labels: byZone.map(z => z.zone ?? '—'),
-                datasets: [{
-                    label: 'Dossiers',
-                    data: byZone.map(z => z.c)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
 
-        // Donut types de service
-        makeChart('chartTypes', {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(byType),
-                datasets: [{
-                    data: Object.values(byType)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
+// Donut RDV réussis vs manqués
+makeChart('chartRdv', {
+    type: 'doughnut',
+    data: {
+        labels: ['RDV réussis / réalisés', 'RDV manqués'],
+        datasets: [{
+            data: [{{ $rdvReussis }}, {{ $rdvManques }}],
+            backgroundColor: [chartColors.green, chartColors.red]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Bar zones
+makeChart('chartZones', {
+    type: 'bar',
+    data: {
+        labels: byZone.map(z => z.zone ?? '—'),
+        datasets: [{
+            label: 'Dossiers',
+            data: byZone.map(z => z.c),
+            backgroundColor: chartColors.orange,
+            borderRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Donut types de service
+makeChart('chartTypes', {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(byType),
+        datasets: [{
+            data: Object.values(byType),
+            backgroundColor: [
+                chartColors.green, chartColors.blue,
+                chartColors.red, chartColors.purple,
+                chartColors.orange
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } }
+    }
+});
 
         // Bar Top équipes (si présent)
         // Fonction pour récupérer le top N selon "Réalisés"

@@ -300,4 +300,37 @@ return view('dashboard.index', compact(
             'dashboard_recap.xlsx',
         );
     }
+
+
+    public function rdvManques(Request $request)
+{
+    $user = Auth::user();
+
+    $query = DossierRaccordement::with('client')
+        ->where('statut', StatutDossier::NOUVEAU_RENDEZ_VOUS->value)
+        ->whereDate('date_planifiee', '<', now());
+
+    // Filtre chef d’équipe
+    if ($user->hasRole('chef_equipe')) {
+        $query->where('assigned_team_id', $user->team_id);
+    }
+
+    // Filtres supplémentaires
+    if ($request->filled('search')) {
+        $query->whereHas('client', function($q) use ($request) {
+            $q->where('nom', 'like', "%{$request->search}%")
+              ->orWhere('telephone', 'like', "%{$request->search}%")
+              ->orWhere('email', 'like', "%{$request->search}%");
+        });
+    }
+
+    if ($request->filled('type')) {
+        $query->where('type_service', $request->type);
+    }
+
+    $dossiers = $query->paginate(20);
+
+    return view('dashboard.rdv_manques', compact('dossiers'));
+}
+
 }
