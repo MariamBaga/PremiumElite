@@ -10,6 +10,16 @@
 
 @section('content')
 <div class="row">
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
     {{-- =================== Colonne principale =================== --}}
     <div class="col-lg-8">
         {{-- Informations client --}}
@@ -221,6 +231,13 @@ document.querySelectorAll('.statut-select').forEach(select => {
     modal.show();
     this.value = this.dataset.oldValue; // garde l'ancien tant que pas validé
 }
+else if (this.value === 'implantation_poteau') {
+    document.getElementById('implantationPoteauDossierId').value = dossierId;
+    modal = new bootstrap.Modal(document.getElementById('implantationPoteauModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // garde l'ancien statut tant que pas validé
+}
+
  else {
             this.dataset.oldValue = this.value;
         }

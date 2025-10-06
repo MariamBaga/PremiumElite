@@ -51,6 +51,7 @@
 
 @section('content')
     <div class="card">
+
         <div class="card-body">
             {{-- FILTRES --}}
             <form method="GET" class="row g-2 mb-3">
@@ -184,6 +185,16 @@
                 </div>
             @endcan
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if (session('success'))
                 <div class="alert alert-success mt-3">{{ session('success') }}</div>
             @endif
@@ -211,11 +222,15 @@
                 @csrf
                 @method('DELETE')
                 @can('clients.delete')
-                    <button type="submit" class="btn btn-danger mb-2"
-                        onclick="return confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')">
-                        Supprimer sélection
-                    </button>
-                @endcan
+    <div class="mb-2">
+        <button id="bulkDeleteBtn" class="btn btn-danger"
+            onclick="deleteSelectedClients(event)">
+            Supprimer sélection
+        </button>
+    </div>
+@endcan
+
+                </form> <!-- ✅ fermeture ici -->
                 <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
 
                 <div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">
@@ -295,12 +310,12 @@
                                     </td>
                                     <td class="text-nowrap">{{ $d?->taux_reporting_j1 }}</td>
                                     <td class="text-nowrap">
-    @if ($d?->statut?->value === \App\Enums\StatutDossier::ACTIVE->value)
-        <span class="badge bg-success">Oui</span>
-    @else
-        <span class="badge bg-secondary">Non</span>
-    @endif
-</td>
+                                        @if ($d?->statut?->value === \App\Enums\StatutDossier::ACTIVE->value)
+                                            <span class="badge bg-success">Oui</span>
+                                        @else
+                                            <span class="badge bg-secondary">Non</span>
+                                        @endif
+                                    </td>
 
                                     <td class="text-truncate" style="max-width:220px;">{{ $d?->observation }}</td>
                                     <td class="text-nowrap">{{ $d?->pilote_raccordement }}</td>
@@ -363,7 +378,7 @@
                     </table>
                 </div>
 
-            </form>
+
 
 
             @include('dossiers.partials.rapport_modal')
@@ -377,6 +392,12 @@
 
 
             @include('dossiers.partials.realise_modal')
+            @include('dossiers.partials.implantation_poteau_modal')
+
+
+
+
+
         </div>
         <div class="mt-3">
             {{ $clients->links('pagination::bootstrap-5') }}
@@ -411,6 +432,44 @@
             responsive: true,
             autoWidth: false
         });
+
+
+        
+        function deleteSelectedClients(event) {
+    event.preventDefault();
+    const selected = $('.client-checkbox:checked')
+        .map(function() { return this.value; })
+        .get();
+
+    if (selected.length === 0) {
+        alert('Veuillez sélectionner au moins un client avant de supprimer.');
+        return;
+    }
+
+    if (!confirm('Supprimer les clients sélectionnés avec leurs dossiers ?')) {
+        return;
+    }
+
+    // Création d’un formulaire caché à la volée
+    const form = $('<form>', {
+        method: 'POST',
+        action: '{{ route("clients.delete-multiple") }}'
+    });
+
+    form.append('@csrf');
+    form.append('@method("DELETE")');
+
+    selected.forEach(id => {
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'clients[]',
+            value: id
+        }));
+    });
+
+    $('body').append(form);
+    form.submit();
+}
 
         // ✅ Gestion du « tout sélectionner »
         $(document).on('change', '#checkAll', function() {
@@ -501,12 +560,16 @@
                     modal.show();
                     this.value = this.dataset.oldValue; // on garde l'ancien statut visuellement
                 } else if (this.value === 'depassement_lineaire') {
-    document.getElementById('depassementLineaireDossierId').value = dossierId;
-    modal = new bootstrap.Modal(document.getElementById('depassementLineaireModal'));
-    modal.show();
-    this.value = this.dataset.oldValue; // garde l'ancien tant que pas validé
-}
- else {
+                    document.getElementById('depassementLineaireDossierId').value = dossierId;
+                    modal = new bootstrap.Modal(document.getElementById('depassementLineaireModal'));
+                    modal.show();
+                    this.value = this.dataset.oldValue; // garde l'ancien tant que pas validé
+                } else if (this.value === 'implantation_poteau') {
+                    document.getElementById('implantationPoteauDossierId').value = dossierId;
+                    modal = new bootstrap.Modal(document.getElementById('implantationPoteauModal'));
+                    modal.show();
+                    this.value = this.dataset.oldValue; // garde l'ancien statut tant que pas validé
+                } else {
                     this.dataset.oldValue = this.value;
                 }
             });

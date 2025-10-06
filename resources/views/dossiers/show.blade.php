@@ -231,6 +231,7 @@
         @include('dossiers.partials.indisponible_modal')
         @include('dossiers.partials.realise_modal')
         @include('dossiers.partials.depassement_lineaire_modal')
+        @include('dossiers.partials.implantation_poteau_modal')
 
     </div>
 

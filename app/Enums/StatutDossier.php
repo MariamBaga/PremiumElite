@@ -14,6 +14,7 @@ enum StatutDossier: string
     case ACTIVE         = 'active';
     case NOUVEAU_RENDEZ_VOUS = 'nouveau_rendez_vous';
     case DEPASSEMENT_LINEAIRE = 'depassement_lineaire'; // ✅ nouveau statut
+    case IMPLANTATION_POTEAU = 'implantation_poteau'; // ✅ nouveau statut
 
     public static function labels(): array
     {
@@ -28,6 +29,7 @@ enum StatutDossier: string
             self::ACTIVE->value         => 'Active',
             self::NOUVEAU_RENDEZ_VOUS->value => 'Nouveau rendez-vous',
             self::DEPASSEMENT_LINEAIRE->value => 'Dépassement linéaire', // ✅ label
+            self::IMPLANTATION_POTEAU->value => 'Implantation poteau', // ✅ label
         ];
     }
 }

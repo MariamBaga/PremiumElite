@@ -103,25 +103,28 @@ class DossierRaccordementController extends Controller
     {
         $this->authorize('assign', DossierRaccordement::class);
 
-        if (!$dossier->isModifiable()) {
-            return back()->withErrors('Impossible de modifier l’affectation : dossier activé ou réalisé.');
-        }
-
         $data = $request->validate([
             'assigned_to' => 'nullable|exists:users,id',
             'assigned_team_id' => 'nullable|exists:teams,id',
             'date_planifiee' => 'nullable|date',
         ]);
 
+
+    // 3) empêcher assignment d'une équipe si dossier EN_APPEL
+        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier
+        ? $dossier->statut->value
+        : (string) ($dossier->statut ?? '');
+
+    if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+        return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+    }
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Impossible de modifier l’affectation : dossier activé ou réalisé.');
+        }
         if (empty($data['assigned_to']) && empty($data['assigned_team_id'])) {
             return back()
-                ->withErrors(['assigned_to' => 'Affecter un technicien ou une équipe est requis.'])
+                ->withErrors(['assigned_to' => 'Affecter une équipe est requis.'])
                 ->withInput();
-        }
-
-        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
-        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
-            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
         }
 
         // ✅ On met à jour le dossier
@@ -452,6 +455,26 @@ class DossierRaccordementController extends Controller
         return back()->with('success', 'Dossier marqué comme Dépassement Linéaire.');
     }
 
+    public function storeImplantationPoteau(Request $request)
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'gps_abonne' => 'required|string|max:255',
+            'date_rdv' => 'required|date|after_or_equal:today',
+        ]);
+
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+
+        $dossier->update([
+            'statut' => \App\Enums\StatutDossier::IMPLANTATION_POTEAU->value,
+            'implantation_gps_abonne' => $request->gps_abonne,
+            'date_planifiee' => $request->date_rdv, // ✅ on réutilise ton champ existant
+            'description' => "Implantation poteau - Abonné: {$request->gps_abonne}, RDV prévu le {$request->date_rdv}",
+        ]);
+
+        return back()->with('success', 'Dossier marqué comme Implantation Poteau avec date de rendez-vous planifiée.');
+    }
+
     // Activé (rapport + fiche client)
     public function deleteRapport(DossierRaccordement $dossier)
     {
@@ -514,18 +537,23 @@ class DossierRaccordementController extends Controller
     public function assignTeam(Request $request, DossierRaccordement $dossier)
     {
         $this->authorize('assign', DossierRaccordement::class);
-        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
-        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
-            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
-        }
-        if (!$dossier->isModifiable()) {
-            return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
-        }
 
         $data = $request->validate([
             'assigned_team_id' => ['nullable', Rule::exists('teams', 'id')],
         ]);
 
+
+    // 3) empêcher assignment d'une équipe si dossier EN_APPEL
+        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier
+        ? $dossier->statut->value
+        : (string) ($dossier->statut ?? '');
+
+    if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+        return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+    }
+        if (!$dossier->isModifiable()) {
+            return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
+        }
         $dossier->update([
             'assigned_team_id' => $data['assigned_team_id'] ?? null,
         ]);

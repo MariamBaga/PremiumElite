@@ -81,6 +81,9 @@ Route::middleware(['auth','verified'])->group(function () {
             '/dossiers/depassement-lineaire',
             [DossierRaccordementController::class, 'storeDepassementLineaire']
         )->name('dossiers.depassement.store');
+        Route::post('/implantation-poteau/store', [DossierRaccordementController::class, 'storeImplantationPoteau'])
+    ->name('dossiers.implantation.store');
+
 
         // Injoignable
 Route::post('/injoignable', [DossierRaccordementController::class,'storeInjoignable'])->name('dossiers.injoignable');
