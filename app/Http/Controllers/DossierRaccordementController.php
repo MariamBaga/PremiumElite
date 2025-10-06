@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Log;
 use App\Models\{DossierRaccordement, Client, TentativeContact, Intervention};
 use App\Http\Requests\{StoreDossierRequest, UpdateDossierRequest, UpdateStatutRequest, StoreTentativeRequest, StoreInterventionRequest};
 use App\Enums\StatutDossier;
@@ -298,35 +298,76 @@ class DossierRaccordementController extends Controller
 
     // PBO saturé (upload rapport)
     // DossierController.php
-    public function storePboSature(Request $request)
-    {
+
+
+public function storePboSature(Request $request)
+{
+    try {
+        Log::info('Début de storePboSature', ['request' => $request->all()]);
+
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport' => 'required|string|max:5000',
+            'rapport_intervention' => 'required|string|max:5000',
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
+
         $dossier->statut = 'pbo_sature';
         $dossier->rapport_satisfaction = $request->rapport;
         $dossier->save();
 
-        return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
-    }
+        Log::info('Dossier mis à jour avec succès', [
+            'dossier_id' => $dossier->id,
+            'statut' => $dossier->statut,
+            'rapport_satisfaction' => $dossier->rapport_satisfaction
+        ]);
 
-    public function storeZoneDepourvue(Request $request)
-    {
+        return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
+    } catch (\Throwable $e) {
+        Log::error('Erreur dans storePboSature', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'request' => $request->all(),
+        ]);
+        return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
+    }
+}
+
+public function storeZoneDepourvue(Request $request)
+{
+    try {
+        Log::info('Début de storeZoneDepourvue', ['request' => $request->all()]);
+
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport' => 'required|string|max:5000',
+            'rapport_intervention' => 'required|string|max:5000',
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
+
         $dossier->statut = 'zone_depourvue';
         $dossier->rapport_satisfaction = $request->rapport;
         $dossier->save();
 
+        Log::info('Dossier mis à jour avec succès', [
+            'dossier_id' => $dossier->id,
+            'statut' => $dossier->statut,
+            'rapport_satisfaction' => $dossier->rapport_satisfaction
+        ]);
+
         return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
+    } catch (\Throwable $e) {
+        Log::error('Erreur dans storeZoneDepourvue', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'request' => $request->all(),
+        ]);
+        return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
     }
+}
+
 
     public function storeRealise(Request $request)
     {
