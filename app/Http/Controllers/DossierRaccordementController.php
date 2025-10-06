@@ -299,75 +299,75 @@ class DossierRaccordementController extends Controller
     // PBO saturé (upload rapport)
     // DossierController.php
 
+    public function storePboSature(Request $request)
+    {
+        try {
+            Log::info('Début de storePboSature', ['request' => $request->all()]);
 
-public function storePboSature(Request $request)
-{
-    try {
-        Log::info('Début de storePboSature', ['request' => $request->all()]);
+            $request->validate([
+                'dossier_id' => 'required|exists:dossiers_raccordement,id',
+                'rapport_intervention' => 'required|string|max:5000',
+            ]);
 
-        $request->validate([
-            'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport_intervention' => 'required|string|max:5000',
-        ]);
+            $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+            Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
 
-        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-        Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
+            $dossier->statut = \App\Enums\StatutDossier::PBO_SATURE;
 
-        $dossier->statut = 'pbo_sature';
-        $dossier->rapport_satisfaction = $request->rapport;
-        $dossier->save();
+            $dossier->rapport_satisfaction = $request->rapport;
+            $dossier->save();
 
-        Log::info('Dossier mis à jour avec succès', [
-            'dossier_id' => $dossier->id,
-            'statut' => $dossier->statut,
-            'rapport_satisfaction' => $dossier->rapport_satisfaction
-        ]);
+            Log::info('Dossier mis à jour avec succès', [
+                'dossier_id' => $dossier->id,
+                'statut' => $dossier->statut,
+                'rapport_satisfaction' => $dossier->rapport_satisfaction,
+            ]);
 
-        return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
-    } catch (\Throwable $e) {
-        Log::error('Erreur dans storePboSature', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'request' => $request->all(),
-        ]);
-        return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
+            return back()->with('success', 'Dossier mis en PBO saturé avec rapport saisi.');
+        } catch (\Throwable $e) {
+            Log::error('Erreur dans storePboSature', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
+        }
     }
-}
 
-public function storeZoneDepourvue(Request $request)
-{
-    try {
-        Log::info('Début de storeZoneDepourvue', ['request' => $request->all()]);
+    public function storeZoneDepourvue(Request $request)
+    {
+        try {
+            Log::info('Début de storeZoneDepourvue', ['request' => $request->all()]);
 
-        $request->validate([
-            'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport_intervention' => 'required|string|max:5000',
-        ]);
+            $request->validate([
+                'dossier_id' => 'required|exists:dossiers_raccordement,id',
+                'rapport_intervention' => 'required|string|max:5000',
+            ]);
 
-        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
-        Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
+            $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+            Log::info('Dossier trouvé', ['dossier_id' => $dossier->id]);
 
-        $dossier->statut = 'zone_depourvue';
-        $dossier->rapport_satisfaction = $request->rapport;
-        $dossier->save();
+            $dossier->statut = \App\Enums\StatutDossier::ZONE_DEPOURVUE;
 
-        Log::info('Dossier mis à jour avec succès', [
-            'dossier_id' => $dossier->id,
-            'statut' => $dossier->statut,
-            'rapport_satisfaction' => $dossier->rapport_satisfaction
-        ]);
+            $dossier->rapport_satisfaction = $request->rapport;
+            $dossier->save();
 
-        return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
-    } catch (\Throwable $e) {
-        Log::error('Erreur dans storeZoneDepourvue', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'request' => $request->all(),
-        ]);
-        return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
+            Log::info('Dossier mis à jour avec succès', [
+                'dossier_id' => $dossier->id,
+                'statut' => $dossier->statut,
+                'rapport_satisfaction' => $dossier->rapport_satisfaction,
+            ]);
+
+            return back()->with('success', 'Dossier marqué comme zone dépourvue avec rapport saisi.');
+        } catch (\Throwable $e) {
+            Log::error('Erreur dans storeZoneDepourvue', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            return back()->with('error', 'Une erreur est survenue lors du traitement du dossier.');
+        }
     }
-}
-
 
     public function storeRealise(Request $request)
     {
@@ -514,7 +514,10 @@ public function storeZoneDepourvue(Request $request)
     public function assignTeam(Request $request, DossierRaccordement $dossier)
     {
         $this->authorize('assign', DossierRaccordement::class);
-
+        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
+        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+        }
         if (!$dossier->isModifiable()) {
             return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
         }
@@ -522,10 +525,7 @@ public function storeZoneDepourvue(Request $request)
         $data = $request->validate([
             'assigned_team_id' => ['nullable', Rule::exists('teams', 'id')],
         ]);
-        // ❌ Vérification : on ne peut pas assigner un dossier EN_APPEL à une équipe
-        if ($dossier->statut === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
-            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
-        }
+
         $dossier->update([
             'assigned_team_id' => $data['assigned_team_id'] ?? null,
         ]);
