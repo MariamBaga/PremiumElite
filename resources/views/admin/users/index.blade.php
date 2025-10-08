@@ -22,7 +22,7 @@
             @endforeach
         </select>
         <button type="submit" class="btn btn-primary">Filtrer</button>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Réinitialiser</a>
+        <!-- <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Réinitialiser</a> -->
     </form>
 
     @if(session('success'))
