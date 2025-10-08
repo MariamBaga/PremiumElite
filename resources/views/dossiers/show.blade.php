@@ -200,7 +200,7 @@
                                     @if (
                                         $value === \App\Enums\StatutDossier::EN_EQUIPE->value &&
                                             $user->hasRole('chef_equipe') &&
-                                            !$user->hasAnyRole(['superadmin', 'coordinateur']))
+                                            !$user->hasAnyRole(['superadmin', 'coordinateur', 'admin']))
                                         @continue
                                     @endif
                                     <option value="{{ $value }}" @selected($dossier->statut?->value === $value)>

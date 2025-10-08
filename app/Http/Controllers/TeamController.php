@@ -111,7 +111,7 @@ class TeamController extends Controller
     $user = auth()->user();
 
     // 🔒 Vérification des droits
-    if (!$user->hasAnyRole(['superadmin', 'coordinateur'])) {
+    if (!$user->hasAnyRole(['superadmin', 'coordinateur','admin'])) {
         if ($team->lead_id !== $user->id && !$team->members->contains($user->id)) {
             abort(403, "Accès refusé");
         }
