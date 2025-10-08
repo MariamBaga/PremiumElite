@@ -23,29 +23,27 @@ class TeamController extends Controller
         $q = Team::query()
             ->with(['lead'])
             ->when($request->filled('only_trashed'), fn($qr) => $qr->onlyTrashed())
-            ->when($request->filled('search'), function($qr) use ($request){
-                $s = '%'.$request->search.'%';
-                $qr->where(function($sub) use ($s) {
-                    $sub->where('name','like',$s)
-                        ->orWhere('zone','like',$s);
+            ->when($request->filled('search'), function ($qr) use ($request) {
+                $s = '%' . $request->search . '%';
+                $qr->where(function ($sub) use ($s) {
+                    $sub->where('name', 'like', $s)->orWhere('zone', 'like', $s);
                 });
             });
 
         // 🔒 Restriction : si ce n’est pas un superadmin ou coordinateur
-        if (!$user->hasAnyRole(['superadmin','coordinateur'])) {
-            $q->where(function($qr) use ($user) {
+        if (!$user->hasAnyRole(['superadmin', 'coordinateur', 'admin'])) {
+            $q->where(function ($qr) use ($user) {
                 $qr->where('lead_id', $user->id) // chef d'équipe
-                   ->orWhereHas('members', fn($m) => $m->where('users.id', $user->id)); // membre
+                    ->orWhereHas('members', fn($m) => $m->where('users.id', $user->id)); // membre
             });
         }
 
         $q->orderBy('name');
 
         return view('teams.index', [
-            'teams' => $q->paginate(15)->withQueryString()
+            'teams' => $q->paginate(15)->withQueryString(),
         ]);
     }
-
 
     public function create()
     {
@@ -55,8 +53,10 @@ class TeamController extends Controller
         $dossiers = DossierRaccordement::with('client')
             ->whereNull('assigned_team_id')
             ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
-            ->latest()->limit(200)->get(); // limite pour éviter des listes énormes
-        return view('teams.create', compact('users','dossiers'));
+            ->latest()
+            ->limit(200)
+            ->get(); // limite pour éviter des listes énormes
+        return view('teams.create', compact('users', 'dossiers'));
     }
 
     public function store(Request $request)
@@ -70,8 +70,7 @@ class TeamController extends Controller
             'members_names' => 'nullable|string',
             'lead_id' => 'nullable|exists:users,id',
             'dossier_ids' => 'array',
-'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
-
+            'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
         ]);
 
         $team = Team::create([
@@ -101,22 +100,20 @@ class TeamController extends Controller
                 ->update(['assigned_team_id' => $team->id]);
         }
 
-        return redirect()->route('teams.show', $team)->with('success','Équipe créée et dossiers assignés.');
+        return redirect()->route('teams.show', $team)->with('success', 'Équipe créée et dossiers assignés.');
     }
-
 
     public function show(Team $team)
     {
+        $user = auth()->user();
 
-    $user = auth()->user();
-
-    // 🔒 Vérification des droits
-    if (!$user->hasAnyRole(['superadmin', 'coordinateur','admin'])) {
-        if ($team->lead_id !== $user->id && !$team->members->contains($user->id)) {
-            abort(403, "Accès refusé");
+        // 🔒 Vérification des droits
+        if (!$user->hasAnyRole(['superadmin', 'coordinateur', 'admin'])) {
+            if ($team->lead_id !== $user->id && !$team->members->contains($user->id)) {
+                abort(403, 'Accès refusé');
+            }
         }
-    }
-        $team->load(['lead','members' => fn($q)=>$q->orderBy('name')]);
+        $team->load(['lead', 'members' => fn($q) => $q->orderBy('name')]);
         return view('teams.show', compact('team'));
     }
 
@@ -125,17 +122,18 @@ class TeamController extends Controller
         $this->authorize('update', $team);
         $users = User::role('chef_equipe')->orderBy('name')->get();
 
-
         $dossiers = DossierRaccordement::with('client')
-            ->where(function($q) use ($team){
+            ->where(function ($q) use ($team) {
                 $q->whereNull('assigned_team_id')
-                ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
-                  ->orWhere('assigned_team_id', $team->id);
+                    ->where('statut', '!=', 'en_appel') // <-- empêche les dossiers en appel
+                    ->orWhere('assigned_team_id', $team->id);
             })
-            ->latest()->limit(300)->get();
+            ->latest()
+            ->limit(300)
+            ->get();
 
-        $team->load('members','dossiers'); // pour pré-sélectionner
-        return view('teams.edit', compact('team','users','dossiers'));
+        $team->load('members', 'dossiers'); // pour pré-sélectionner
+        return view('teams.edit', compact('team', 'users', 'dossiers'));
     }
 
     public function update(Request $request, Team $team)
@@ -143,26 +141,26 @@ class TeamController extends Controller
         $this->authorize('update', $team);
 
         $data = $request->validate([
-            'name'        => 'required|string|max:100|unique:teams,name,'.$team->id,
-            'zone'        => 'nullable|string|max:100',
+            'name' => 'required|string|max:100|unique:teams,name,' . $team->id,
+            'zone' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:2000',
-            'members'     => 'array',
-            'members.*'   => 'exists:users,id',
+            'members' => 'array',
+            'members.*' => 'exists:users,id',
             'members_names' => 'nullable|string',
-            'lead_id'     => 'nullable|exists:users,id',
+            'lead_id' => 'nullable|exists:users,id',
             'dossier_ids' => 'array',
             'dossier_ids.*' => 'integer|exists:dossiers_raccordement,id',
         ]);
 
-        $team->update(collect($data)->only('name','zone','description')->toArray());
+        $team->update(collect($data)->only('name', 'zone', 'description')->toArray());
         // Mise à jour des membres en texte libre
-if (!empty($data['members_names'])) {
-    $names = preg_split("/[\r\n,]+/", $data['members_names']);
-    $team->members_names = json_encode(array_map('trim', $names));
-} else {
-    $team->members_names = null;
-}
-$team->save();
+        if (!empty($data['members_names'])) {
+            $names = preg_split("/[\r\n,]+/", $data['members_names']);
+            $team->members_names = json_encode(array_map('trim', $names));
+        } else {
+            $team->members_names = null;
+        }
+        $team->save();
 
         $team->members()->sync($data['members'] ?? []);
         if (!empty($data['lead_id'])) {
@@ -172,7 +170,9 @@ $team->save();
         }
 
         // 🔄 Sync dossiers
-        $new = collect($data['dossier_ids'] ?? [])->map(fn($v)=>(int)$v)->values();
+        $new = collect($data['dossier_ids'] ?? [])
+            ->map(fn($v) => (int) $v)
+            ->values();
         $current = $team->dossiers()->pluck('id');
 
         $toDetach = $current->diff($new); // enlever
@@ -187,25 +187,22 @@ $team->save();
                 ->update(['assigned_team_id' => $team->id]);
         }
 
-
-        return redirect()->route('teams.show',$team)->with('success','Équipe mise à jour et dossiers synchronisés.');
+        return redirect()->route('teams.show', $team)->with('success', 'Équipe mise à jour et dossiers synchronisés.');
     }
-
 
     public function destroy(Team $team)
     {
         $this->authorize('delete', $team);
         $team->forceDelete(); // suppression définitive
-        return redirect()->route('teams.index')->with('success','Équipe supprimée.');
+        return redirect()->route('teams.index')->with('success', 'Équipe supprimée.');
     }
-
 
     // ----- Corbeille -----
 
     public function trash(Request $request)
     {
         $this->authorize('viewAny', Team::class);
-        $teams = Team::onlyTrashed()->orderBy('deleted_at','desc')->paginate(15);
+        $teams = Team::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(15);
         return view('teams.trash', compact('teams'));
     }
 
@@ -214,7 +211,7 @@ $team->save();
         $this->authorize('restore', Team::class);
         $team = Team::onlyTrashed()->findOrFail($id);
         $team->restore();
-        return redirect()->route('teams.trash')->with('success','Équipe restaurée.');
+        return redirect()->route('teams.trash')->with('success', 'Équipe restaurée.');
     }
 
     public function forceDelete(int $id)
@@ -222,29 +219,26 @@ $team->save();
         $this->authorize('forceDelete', Team::class);
         $team = Team::onlyTrashed()->findOrFail($id);
         $team->forceDelete();
-        return redirect()->route('teams.trash')->with('success','Équipe supprimée définitivement.');
+        return redirect()->route('teams.trash')->with('success', 'Équipe supprimée définitivement.');
     }
 
-
-
-
-     /**
+    /**
      * Créer un nouvel utilisateur + l’ajouter à l’équipe
      * (pratique pour créer rapidement un technicien)
      */
     public function createAndAddMember(Request $request, Team $team)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:120',
-            'email'    => 'required|email|unique:users,email',
+            'name' => 'required|string|max:120',
+            'email' => 'required|email|unique:users,email',
             'password' => 'nullable|string|min:6',
-            'role'     => 'nullable|string' // si Spatie
+            'role' => 'nullable|string', // si Spatie
         ]);
 
         $password = $data['password'] ?? 'password123'; // valeur par défaut
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => Hash::make($password),
         ]);
 
@@ -255,7 +249,7 @@ $team->save();
 
         $team->members()->attach($user->id);
 
-        return back()->with('success',"Utilisateur créé et ajouté à l’équipe.");
+        return back()->with('success', 'Utilisateur créé et ajouté à l’équipe.');
     }
 
     // ----- Actions rapides -----
@@ -264,7 +258,7 @@ $team->save();
     {
         $this->authorize('update', $team); // ou permission:teams.assign-lead
         $team->setLeader($user);
-        return back()->with('success','Chef d’équipe mis à jour.');
+        return back()->with('success', 'Chef d’équipe mis à jour.');
     }
 
     public function addMember(Request $request, Team $team)
@@ -272,7 +266,7 @@ $team->save();
         $this->authorize('update', $team);
 
         $request->validate([
-            'name' => 'required|string|max:120'
+            'name' => 'required|string|max:120',
         ]);
 
         // Récupérer les membres actuels
@@ -288,13 +282,12 @@ $team->save();
         return back()->with('success', 'Membre ajouté à l’équipe.');
     }
 
-
     public function removeMember(Request $request, Team $team)
     {
         $this->authorize('update', $team);
 
         $request->validate([
-            'name' => 'required|string'
+            'name' => 'required|string',
         ]);
 
         // Récupérer les membres actuels
@@ -311,23 +304,21 @@ $team->save();
     }
 
     /**
- * Retirer un dossier assigné de l'équipe.
- */
-public function removeDossier(Team $team, DossierRaccordement $dossier)
-{
-    $this->authorize('update', $team);
+     * Retirer un dossier assigné de l'équipe.
+     */
+    public function removeDossier(Team $team, DossierRaccordement $dossier)
+    {
+        $this->authorize('update', $team);
 
-    // Vérifier que le dossier appartient bien à cette équipe
-    if ($dossier->assigned_team_id !== $team->id) {
-        return back()->with('error', 'Ce dossier n’est pas assigné à cette équipe.');
+        // Vérifier que le dossier appartient bien à cette équipe
+        if ($dossier->assigned_team_id !== $team->id) {
+            return back()->with('error', 'Ce dossier n’est pas assigné à cette équipe.');
+        }
+
+        // Désassigner le dossier
+        $dossier->assigned_team_id = null;
+        $dossier->save();
+
+        return back()->with('success', "Dossier '{$dossier->reference}' retiré de l’équipe.");
     }
-
-    // Désassigner le dossier
-    $dossier->assigned_team_id = null;
-    $dossier->save();
-
-    return back()->with('success', "Dossier '{$dossier->reference}' retiré de l’équipe.");
-}
-
-
 }
