@@ -21,7 +21,7 @@
 
     {{-- Custom stylesheets (pre AdminLTE) --}}
     @yield('adminlte_css_pre')
-    <link rel="stylesheet" href="{{ asset('css/optimux-adminlte.css') }}">
+
     {{-- Base Stylesheets (depends on Laravel asset bundling tool) --}}
     @if(config('adminlte.enabled_laravel_mix', false))
         <link rel="stylesheet" href="{{ mix(config('adminlte.laravel_mix_css_path', 'css/app.css')) }}">
@@ -130,6 +130,20 @@
 
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const notifList = document.getElementById('notif-list');
+    if (!notifList) return;
+    const items = notifList.querySelectorAll('.dropdown-item').length;
+    if (items > 8) {
+        notifList.style.maxHeight = '360px';
+        notifList.style.overflowY = 'auto';
+    } else {
+        notifList.style.maxHeight = 'none';
+        notifList.style.overflowY = 'visible';
+    }
+});
+</script>
 
 </body>
 

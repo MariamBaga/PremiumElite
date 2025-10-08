@@ -220,5 +220,41 @@
 #notif-list::-webkit-scrollbar-thumb:hover {
     background-color: #555;
 }
+/* Notifications dropdown : forcer largeur et rendre le conteneur scrollable */
+#notifications-dropdown .dropdown-menu.dropdown-menu-lg.dropdown-menu-right {
+    width: 380px !important;
+    padding: 0 !important;
+    overflow: visible !important; /* laisse le conteneur parent visible si besoin */
+}
+
+/* zone scrollable interne — priorité maximale */
+#notifications-dropdown #notif-list {
+    display: block !important;
+    max-height: 360px !important;       /* ajuste pour ~8 notifications */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* items : multi-line, espacement confortable */
+#notifications-dropdown #notif-list .dropdown-item {
+    white-space: normal !important;
+    padding: .6rem .9rem !important;
+    display: block !important;
+}
+
+/* si AdminLTE applique un overflow hidden sur un parent, nous forçons la visibilité */
+#notifications-dropdown .dropdown-menu,
+#notifications-dropdown .dropdown-menu .dropdown-header,
+#notifications-dropdown .dropdown-divider {
+    overflow: visible !important;
+}
+
+/* Scrollbar (optionnel, discret) */
+#notifications-dropdown #notif-list::-webkit-scrollbar { width: 6px; }
+#notifications-dropdown #notif-list::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,.25);
+    border-radius: 4px;
+}
 
 
