@@ -307,6 +307,24 @@ class ClientController extends Controller
         return view('clients.dossiers.en_equipe', compact('clients'));
     }
 
+    public function depassementLineaire()
+{
+    $clients = Client::whereHas('dossiers', fn($q) =>
+        $q->where('statut', StatutDossier::DEPASSEMENT_LINEAIRE->value)
+    )->paginate(10);
+
+    return view('clients.dossiers.depassement_lineaire', compact('clients'));
+}
+
+public function implantationPoteau()
+{
+    $clients = Client::whereHas('dossiers', fn($q) =>
+        $q->where('statut', StatutDossier::IMPLANTATION_POTEAU->value)
+    )->paginate(10);
+
+    return view('clients.dossiers.implantation_poteau', compact('clients'));
+}
+
     public function deleteMultiple(Request $request)
     {
         $request->validate([

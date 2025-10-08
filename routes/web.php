@@ -179,6 +179,11 @@ Route::get('/rendezvous/manques', [DashboardController::class, 'rdvManques'])
 
     Route::get('/en-appel', [ClientController::class, 'enAppel'])->name('clients.en_appel');
     Route::get('/injoignables', [ClientController::class, 'injoignables'])->name('clients.injoignables');
+    Route::get('/dossiers/depassement-lineaire', [ClientController::class, 'depassementLineaire'])
+    ->name('clients.dossiers.depassement_lineaire');
+
+Route::get('/dossiers/implantation-poteau', [ClientController::class, 'implantationPoteau'])
+    ->name('clients.dossiers.implantation_poteau');
 
     Route::get('/dossiers/indisponible', [ClientController::class, 'indisponible'])->name('clients.dossiers.indisponible');
 Route::get('/dossiers/pbo-sature', [ClientController::class, 'pboSature'])->name('clients.dossiers.pbo_sature');

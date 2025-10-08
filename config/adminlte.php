@@ -406,6 +406,16 @@ return [
                     'route' => 'clients.dossiers.zone_depourvue',
                     'icon' => 'fas fa-map-marker-alt',
                 ],
+                [
+                    'text' => 'Dépassement linéaire',
+                    'route' => 'clients.dossiers.depassement_lineaire',
+                    'icon' => 'fas fa-ruler-horizontal',
+                ],
+                [
+                    'text' => 'Implantation poteau',
+                    'route' => 'clients.dossiers.implantation_poteau',
+                    'icon' => 'fas fa-thumbtack',
+                ],
             ],
         ],
 
