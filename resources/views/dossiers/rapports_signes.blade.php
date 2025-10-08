@@ -38,7 +38,7 @@
                 {{-- Rapport signé --}}
                 @if($dossier->rapport_satisfaction)
                     @php
-                        $path = Storage::url($dossier->rapport_satisfaction);
+                        $path = asset('storage/' . $dossier->rapport_satisfaction);
                         $extension = pathinfo($dossier->rapport_satisfaction, PATHINFO_EXTENSION);
                         $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
                     @endphp
