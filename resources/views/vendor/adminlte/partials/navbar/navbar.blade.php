@@ -1,6 +1,7 @@
 @inject('layoutHelper', 'JeroenNoten\LaravelAdminLte\Helpers\LayoutHelper')
 
-<nav class="main-header navbar
+<nav
+    class="main-header navbar
     {{ config('adminlte.classes_topnav_nav', 'navbar-expand') }}
     {{ config('adminlte.classes_topnav', 'navbar-white navbar-light') }}">
 
@@ -25,10 +26,10 @@
         @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-right'), 'item')
 
         <ul class="navbar-nav ml-auto">
-    {{-- Lien personnalisé Alertes RDV --}}
-   
+            {{-- Lien personnalisé Alertes RDV --}}
 
-<li class="nav-item dropdown" id="notifications-dropdown">
+
+            <li class="nav-item dropdown" id="notifications-dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="far fa-bell"></i>
                     @if (auth()->user()->unreadNotifications->count())
@@ -70,19 +71,19 @@
                 </div>
             </li>
 
-        {{-- User menu link --}}
-        @if(Auth::user())
-            @if(config('adminlte.usermenu_enabled'))
-                @include('adminlte::partials.navbar.menu-item-dropdown-user-menu')
-            @else
-                @include('adminlte::partials.navbar.menu-item-logout-link')
+            {{-- User menu link --}}
+            @if (Auth::user())
+                @if (config('adminlte.usermenu_enabled'))
+                    @include('adminlte::partials.navbar.menu-item-dropdown-user-menu')
+                @else
+                    @include('adminlte::partials.navbar.menu-item-logout-link')
+                @endif
             @endif
-        @endif
 
-        {{-- Right sidebar toggler link --}}
-        @if($layoutHelper->isRightSidebarEnabled())
-            @include('adminlte::partials.navbar.menu-item-right-sidebar-toggler')
-        @endif
-    </ul>
+            {{-- Right sidebar toggler link --}}
+            @if ($layoutHelper->isRightSidebarEnabled())
+                @include('adminlte::partials.navbar.menu-item-right-sidebar-toggler')
+            @endif
+        </ul>
 
 </nav>
