@@ -27,6 +27,16 @@ class DossierRaccordement extends Model
         'action_injoignable','raison_non_activation',
         'rapport_pbo_path','rapport_zone_path','rapport_activation_path',
         'fiche_client_path','rapport_intervention_path','satisfaction_client_path',
+
+
+    // 🔹 nouvelles colonnes pour Dépassement et Implantation
+    'depassement_distance',
+    'depassement_gps_abonne',
+    'depassement_gps_pbo',
+    'depassement_nom_pbo',
+    'implantation_gps_abonne',
+    'implantation_gps_fat',
+    'capture_message',
     ];
 
     protected $casts = [
