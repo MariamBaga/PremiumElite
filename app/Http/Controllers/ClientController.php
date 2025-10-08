@@ -234,96 +234,202 @@ class ClientController extends Controller
         return redirect()->route('clients.index')->with('success', 'Tous les clients (et dossiers liés) ont été supprimés.');
     }
 
-    public function active()
+    public function active(Request $request)
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'active');
-        })->paginate(10);
+        })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.active', compact('clients'));
     }
 
-    public function realise()
+    public function realise(Request $request)
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'realise');
-        })->paginate(10); // ✅ paginate au lieu de get()
+        })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10); // ✅ paginate au lieu de get()
 
         return view('clients.dossiers.realise', compact('clients'));
     }
 
-    public function nouveauRdv()
+    public function nouveauRdv(Request $request)
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'nouveau_rendez_vous');
-        })->paginate(10); // ✅ pagination 10 par page
+        })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10); // ✅ pagination 10 par page
 
         return view('clients.dossiers.nouveau_rdv', compact('clients'));
     }
 
-    public function enAppel()
+    public function enAppel(Request $request)
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'en_appel');
-        })->paginate(10);
+        })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.en_appel', compact('clients'));
     }
 
-    public function injoignables()
+    public function injoignables(Request $request)
     {
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'injoignable');
-        })->paginate(10);
+        })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.injoignables', compact('clients'));
     }
 
-    public function indisponible()
+    public function indisponible(Request $request)
     {
-        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))->paginate(10);
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.indisponible', compact('clients'));
     }
 
-    public function pboSature()
+    public function pboSature(Request $request)
     {
-        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))->paginate(10);
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.pbo_sature', compact('clients'));
     }
 
-    public function zoneDepourvue()
+    public function zoneDepourvue(Request $request)
     {
-        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))->paginate(10);
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.zone_depourvue', compact('clients'));
     }
 
-    public function enEquipe()
+    public function enEquipe(Request $request)
     {
-        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))->paginate(10);
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
         return view('clients.dossiers.en_equipe', compact('clients'));
     }
 
-    public function depassementLineaire()
-{
-    $clients = Client::whereHas('dossiers', fn($q) =>
-        $q->where('statut', StatutDossier::DEPASSEMENT_LINEAIRE->value)
-    )->paginate(10);
+    public function depassementLineaire(Request $request)
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::DEPASSEMENT_LINEAIRE->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
-    return view('clients.dossiers.depassement_lineaire', compact('clients'));
-}
+        return view('clients.dossiers.depassement_lineaire', compact('clients'));
+    }
 
-public function implantationPoteau()
-{
-    $clients = Client::whereHas('dossiers', fn($q) =>
-        $q->where('statut', StatutDossier::IMPLANTATION_POTEAU->value)
-    )->paginate(10);
+    public function implantationPoteau(Request $request)
+    {
+        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::IMPLANTATION_POTEAU->value))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nom', 'like', "%$search%")
+                        ->orWhere('prenom', 'like', "%$search%")
+                        ->orWhere('numero_ligne', 'like', "%$search%")
+                        ->orWhere('telephone', 'like', "%$search%");
+                });
+            })
+            ->paginate(10);
 
-    return view('clients.dossiers.implantation_poteau', compact('clients'));
-}
+        return view('clients.dossiers.implantation_poteau', compact('clients'));
+    }
 
     public function deleteMultiple(Request $request)
     {
