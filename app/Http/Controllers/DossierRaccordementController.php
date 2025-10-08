@@ -109,15 +109,12 @@ class DossierRaccordementController extends Controller
             'date_planifiee' => 'nullable|date',
         ]);
 
+        // 3) empêcher assignment d'une équipe si dossier EN_APPEL
+        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier ? $dossier->statut->value : (string) ($dossier->statut ?? '');
 
-    // 3) empêcher assignment d'une équipe si dossier EN_APPEL
-        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier
-        ? $dossier->statut->value
-        : (string) ($dossier->statut ?? '');
-
-    if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
-        return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
-    }
+        if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+        }
         if (!$dossier->isModifiable()) {
             return back()->withErrors('Impossible de modifier l’affectation : dossier activé ou réalisé.');
         }
@@ -203,45 +200,43 @@ class DossierRaccordementController extends Controller
     }
 
     public function storeRapport(Request $request)
-    {
-        $request->validate(
-            [
-                'dossier_id' => 'required|exists:dossiers_raccordement,id',
-                'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
-                'rapport_intervention' => 'required|string',
-                'port' => 'required|string|max:50',
-                'lineaire_m' => 'required|integer|min:0', // linéaire câble tiré
-                'type_cable' => 'required|string|max:100',
-            ],
-            [
-                'rapport_file.mimes' => 'Le fichier doit être un PDF, Word ou Texte.',
-                'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
-            ],
-        );
+{
+    $request->validate([
+        'dossier_id' => 'required|exists:dossiers_raccordement,id',
+        // ✅ Utilisation de mimetypes (insensible à la casse)
+        'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
+        'rapport_intervention' => 'required|string',
+        'port' => 'required|string|max:50',
+        'lineaire_m' => 'required|integer|min:0',
+        'type_cable' => 'required|string|max:100',
+    ], [
+        'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
+        'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+    ]);
 
-        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-        // Upload fichier PDF
-        if ($request->hasFile('rapport_file')) {
-            $file = $request->file('rapport_file');
-            $filename = 'rapport_' . $dossier->id . '_' . time() . '.pdf';
-            $path = $file->storeAs('rapports', $filename, 'public');
-            $dossier->rapport_satisfaction = $path;
-        }
-
-        // Sauvegarde du texte et des infos techniques
-        $dossier->rapport_intervention = $request->rapport_intervention;
-        $dossier->port = $request->port;
-        $dossier->lineaire_m = $request->lineaire_m; // ici on stocke le linéaire câble tiré
-        $dossier->type_cable = $request->type_cable;
-
-        // Mettre le statut à "active"
-        $dossier->statut = 'active';
-
-        $dossier->save();
-
-        return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
+    // ✅ Upload du fichier (compatible JPG, PNG, PDF, etc.)
+    if ($request->hasFile('rapport_file')) {
+        $file = $request->file('rapport_file');
+        $extension = strtolower($file->getClientOriginalExtension()); // sécurisation
+        $filename = 'rapport_' . $dossier->id . '_' . time() . '.' . $extension;
+        $path = $file->storeAs('rapports', $filename, 'public');
+        $dossier->rapport_satisfaction = $path;
     }
+
+    // Informations supplémentaires
+    $dossier->rapport_intervention = $request->rapport_intervention;
+    $dossier->port = $request->port;
+    $dossier->lineaire_m = $request->lineaire_m;
+    $dossier->type_cable = $request->type_cable;
+
+    // Mise à jour du statut
+    $dossier->statut = 'active';
+    $dossier->save();
+
+    return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
+}
 
     public function storeNouveauRdv(Request $request)
     {
@@ -277,7 +272,7 @@ class DossierRaccordementController extends Controller
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
             'action_pris' => 'required|string|max:255',
-            'capture_file' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'capture_file' => 'nullable|image|mimes:jpeg,png,jpg,JPG,PNG,JPEG|max:5120',
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
@@ -376,33 +371,35 @@ class DossierRaccordementController extends Controller
     {
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            'rapport_file' => 'required|mimes:pdf,doc,docx,txt|max:5120',
+            // ✅ Validation insensible à la casse
+            'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
             'rapport_intervention' => 'required|string',
             'raison_non_activation' => 'required|string',
+        ], [
+            'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
+            'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
         ]);
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-        // Upload du rapport signé (PDF/Word)
+        // ✅ Upload compatible avec extensions majuscules
         if ($request->hasFile('rapport_file')) {
             $file = $request->file('rapport_file');
-            $filename = 'rapport_realise_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = 'rapport_realise_' . $dossier->id . '_' . time() . '.' . $extension;
             $path = $file->storeAs('rapports', $filename, 'public');
             $dossier->rapport_satisfaction = $path;
         }
 
-        // Texte intervention
+        // Texte intervention + raison non activation
         $dossier->rapport_intervention = $request->rapport_intervention;
-
-        // Raison de non activation
         $dossier->raison_non_activation = $request->raison_non_activation;
-
-        // Statut réalisé
         $dossier->statut = 'realise';
         $dossier->save();
 
         return back()->with('success', 'Dossier marqué comme réalisé avec rapport et raison de non activation.');
     }
+
 
     public function storeIndisponible(Request $request)
     {
@@ -542,15 +539,12 @@ class DossierRaccordementController extends Controller
             'assigned_team_id' => ['nullable', Rule::exists('teams', 'id')],
         ]);
 
+        // 3) empêcher assignment d'une équipe si dossier EN_APPEL
+        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier ? $dossier->statut->value : (string) ($dossier->statut ?? '');
 
-    // 3) empêcher assignment d'une équipe si dossier EN_APPEL
-        $statutValue = $dossier->statut instanceof \App\Enums\StatutDossier
-        ? $dossier->statut->value
-        : (string) ($dossier->statut ?? '');
-
-    if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
-        return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
-    }
+        if ($statutValue === \App\Enums\StatutDossier::EN_APPEL->value && !empty($data['assigned_team_id'])) {
+            return back()->withErrors(['assigned_team_id' => 'Un dossier en appel ne peut pas être assigné à une équipe.']);
+        }
         if (!$dossier->isModifiable()) {
             return back()->withErrors('Impossible de modifier l’équipe : dossier activé.');
         }

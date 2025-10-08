@@ -19,8 +19,8 @@
                     {{-- Capture optionnelle --}}
                     <div class="mb-3">
                         <label for="capture_file" class="form-label">Capture (optionnelle)</label>
-                        <input type="file" name="capture_file" id="capture_file" class="form-control" accept="image/jpeg,image/png,image/jpg">
-                        <small class="text-muted">Formats acceptés : jpeg, jpg, png — Max 5 Mo</small>
+                        <input type="file" name="capture_file" id="capture_file" class="form-control" accept="image/jpeg,image/png,image/jpg,image/JPEG,image/PNG,image/JPG">
+                        <small class="text-muted">Formats acceptés : jpeg, jpg, png, JPEG, JPG, PNG — Max 5 Mo</small>
                     </div>
                 </div>
                 <div class="modal-footer">

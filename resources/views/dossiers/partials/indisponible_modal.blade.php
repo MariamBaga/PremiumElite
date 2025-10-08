@@ -14,7 +14,7 @@
                         <textarea name="raison" class="form-control" rows="3" required placeholder="Décrivez la raison..."></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Capture (JPEG/PNG)</label>
+                        <label class="form-label">Capture (IMAGE)</label>
                         <input type="file" name="capture_file" class="form-control" accept="image/*" required>
                         <small class="text-muted">Max 5 Mo</small>
                     </div>

@@ -52,14 +52,34 @@
                 @endif
 
                 {{-- Rapport signé --}}
-                @if($dossier->rapport_satisfaction)
-                    <p>
-                        <strong>Rapport Signé :</strong>
-                        <a href="{{ Storage::url($dossier->rapport_satisfaction) }}" target="_blank" class="btn btn-primary btn-sm">
-                            📄 Voir le fichier
-                        </a>
-                    </p>
-                @endif
+@if($dossier->rapport_satisfaction)
+    @php
+        $path = Storage::url($dossier->rapport_satisfaction);
+        $extension = pathinfo($dossier->rapport_satisfaction, PATHINFO_EXTENSION);
+        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
+    @endphp
+
+    <p><strong>Rapport signé :</strong></p>
+
+    @if($isImage)
+        {{-- 🔹 Affichage direct de l’image --}}
+        <div class="mt-2 mb-3">
+            <img src="{{ $path }}"
+                 alt="Rapport signé"
+                 class="img-fluid rounded shadow-sm"
+                 style="max-width: 400px; border: 1px solid #ddd;">
+        </div>
+        <a href="{{ $path }}" target="_blank" class="btn btn-secondary btn-sm">
+            🔍 Voir en taille réelle
+        </a>
+    @else
+        {{-- 🔹 Lien pour les fichiers non image --}}
+        <a href="{{ $path }}" target="_blank" class="btn btn-primary btn-sm">
+            📄 Voir le fichier
+        </a>
+    @endif
+@endif
+
             </div>
         </div>
     @empty

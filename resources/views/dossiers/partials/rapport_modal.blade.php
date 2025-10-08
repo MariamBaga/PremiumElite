@@ -11,14 +11,22 @@
                 </div>
                 <div class="modal-body">
 
-                    <!-- Fichier rapport -->
-                    <div class="mb-3">
-                        <label for="rapport_file" class="form-label">Fichier rapport signé (PDF/DOC)</label>
-                        <input type="file" name="rapport_file" id="rapport_file" class="form-control" accept=".pdf,.doc,.docx,.txt" required>
-                        @error('rapport_file')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                 <!-- Fichier rapport -->
+<div class="mb-3">
+    <label for="rapport_file" class="form-label">Fichier rapport signé (PDF, DOC, TXT, IMAGE)</label>
+    <input
+        type="file"
+        name="rapport_file"
+        id="rapport_file"
+        class="form-control"
+        accept=".pdf,.PDF,.doc,.DOC,.docx,.DOCX,.txt,.TXT,.jpg,.JPG,.jpeg,.JPEG,.png,.PNG,.gif,.GIF"
+        required
+    >
+    @error('rapport_file')
+        <div class="text-danger small mt-1">{{ $message }}</div>
+    @enderror
+</div>
+
 
                     <!-- Rapport d'intervention -->
                     <div class="mb-3">

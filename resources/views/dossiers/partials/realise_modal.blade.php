@@ -24,10 +24,17 @@
                     </div>
 
                     {{-- Upload du rapport (fichier obligatoire) --}}
-                    <div class="mb-3">
-                        <label for="rapport_file">Rapport signé (PDF, DOC, DOCX, TXT)</label>
-                        <input type="file" name="rapport_file" class="form-control" accept=".pdf,.doc,.docx,.txt" required>
-                    </div>
+<div class="mb-3">
+    <label for="rapport_file">Rapport signé (PDF, DOC, DOCX, TXT, IMAGE)</label>
+    <input
+        type="file"
+        name="rapport_file"
+        class="form-control"
+        accept=".pdf,.PDF,.doc,.DOC,.docx,.DOCX,.txt,.TXT,.jpg,.JPG,.jpeg,.JPEG,.png,.PNG,.gif,.GIF"
+        required
+    >
+</div>
+
                 </div>
 
                 <div class="modal-footer">
