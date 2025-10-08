@@ -457,6 +457,8 @@ class DossierRaccordementController extends Controller
         $request->validate([
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
             'gps_abonne' => 'required|string|max:255',
+
+            'gps_fat'    => 'required|string|max:255', // 🔹 nouveau champ obligatoire
             'date_rdv' => 'required|date|after_or_equal:today',
         ]);
 
@@ -466,7 +468,8 @@ class DossierRaccordementController extends Controller
             'statut' => \App\Enums\StatutDossier::IMPLANTATION_POTEAU->value,
             'implantation_gps_abonne' => $request->gps_abonne,
             'date_planifiee' => $request->date_rdv, // ✅ on réutilise ton champ existant
-            'description' => "Implantation poteau - Abonné: {$request->gps_abonne}, RDV prévu le {$request->date_rdv}",
+            'implantation_gps_fat' => $request->gps_fat, // 🔹 nouveau champ
+            'description' => "Implantation poteau - Abonné: {$request->gps_abonne}, FAT: {$request->gps_fat}, RDV prévu le {$request->date_rdv}",
         ]);
 
         return back()->with('success', 'Dossier marqué comme Implantation Poteau avec date de rendez-vous planifiée.');

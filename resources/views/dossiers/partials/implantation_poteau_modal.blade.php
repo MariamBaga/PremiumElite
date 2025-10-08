@@ -16,6 +16,10 @@
                         <label for="gps_abonne" class="form-label">Coordonnées GPS Abonné</label>
                         <input type="text" name="gps_abonne" id="gps_abonne" class="form-control" required>
                     </div>
+                    <div class="mb-3">
+    <label for="gps_fat" class="form-label">Coordonnées GPS FAT</label>
+    <input type="text" name="gps_fat" id="gps_fat" class="form-control">
+</div>
 
                     <div class="mb-3">
                         <label for="date_rdv" class="form-label">Date du rendez-vous</label>
