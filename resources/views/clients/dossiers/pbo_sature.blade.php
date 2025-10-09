@@ -32,6 +32,14 @@
 
 @section('content')
 <div class="card">
+<form method="GET" action="{{ url()->current() }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control"
+               placeholder="Rechercher un client (nom, ligne, contact...)"
+               value="{{ request('search') }}">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+    </div>
+</form>
     <div class="card-body">
         {{-- Wrapper pour scrollbar horizontale en haut --}}
         <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
