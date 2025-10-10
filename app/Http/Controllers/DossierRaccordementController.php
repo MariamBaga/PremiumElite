@@ -566,5 +566,33 @@ class DossierRaccordementController extends Controller
         return back()->with('success', $data['assigned_team_id'] ? 'Équipe assignée au dossier.' : 'Équipe retirée du dossier.');
     }
 
+
+
+    public function activerTous()
+{
+    $this->authorize('updateStatus', DossierRaccordement::class);
+
+    // Récupère uniquement les dossiers EN_APPEL
+    $dossiers = DossierRaccordement::where('statut', 'en_appel')->get();
+
+    foreach ($dossiers as $dossier) {
+        // Activation uniquement si le dossier est en appel
+        if ($dossier->statut === 'en_appel') {
+            $dossier->statut = 'active'; // ou StatutDossier::ACTIVE->value si tu utilises l'enum
+            $dossier->save();
+
+            // Synchronisation avec la corbeille d’équipe
+            if ($dossier->assigned_team_id) {
+                TeamDossier::updateOrCreate(
+                    ['team_id' => $dossier->assigned_team_id, 'dossier_id' => $dossier->id],
+                    ['etat' => 'en_cours', 'updated_by' => auth()->id()]
+                );
+            }
+        }
+    }
+
+    return back()->with('success', 'Tous les dossiers en appel ont été activés.');
+
     // Retourne les dossiers avec rendez-vous pour aujourd'hui ou demain
+}
 }

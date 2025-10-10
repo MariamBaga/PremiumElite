@@ -217,20 +217,27 @@
                     </form>
                 </div>
             @endcan
+            <div class="d-flex align-items-center mb-2 gap-2">
+    @can('clients.delete')
+        <form action="{{ route('dossiers.activer-tous-en-appel') }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment activer tous les dossiers en appel ?');">
+            @csrf
+            <button type="submit" class="btn btn-success">
+                Activer tous les dossiers en appel
+            </button>
+        </form>
+    @endcan
 
-            <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
-                @csrf
-                @method('DELETE')
-                @can('clients.delete')
-    <div class="mb-2">
-        <button id="bulkDeleteBtn" class="btn btn-danger"
-            onclick="deleteSelectedClients(event)">
-            Supprimer sélection
-        </button>
-    </div>
-@endcan
+    <form action="{{ route('clients.delete-multiple') }}" method="POST" id="bulkDeleteForm">
+        @csrf
+        @method('DELETE')
+        @can('clients.delete')
+            <button id="bulkDeleteBtn" class="btn btn-danger" onclick="deleteSelectedClients(event)">
+                Supprimer sélection
+            </button>
+        @endcan
+    </form>
+</div>
 
-                </form> <!-- ✅ fermeture ici -->
                 <div class="scroll-top-wrapper mb-1" style="overflow-x:auto; overflow-y:hidden; height:20px;"></div>
 
                 <div class="table-responsive" style="max-height:600px; overflow-y:auto; overflow-x:hidden;">

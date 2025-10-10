@@ -40,8 +40,12 @@ Route::get('/', fn() => view('welcome'))->name('welcome');
 |--------------------------------------------------------------------------
 | Authenticated area
 |--------------------------------------------------------------------------
-*/
+*/Route::post('/dossiers/activer-tous-en-appel', [DossierRaccordementController::class, 'activerTousEnAppel'])
+->name('dossiers.activer-tous-en-appel')
+->middleware('auth'); // ajoute les middlewares nécessaires (auth, rôle, etc.)
+
 Route::middleware(['auth','verified'])->group(function () {
+
 
     /*
     |--------------------------------------------------------------------------
@@ -310,6 +314,7 @@ Route::middleware(['auth','verified','role:superadmin|admin'])
             ->except('show')
             ->names('admin.users');
     });
+
 
 
 
