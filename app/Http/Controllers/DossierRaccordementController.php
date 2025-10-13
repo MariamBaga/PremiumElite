@@ -452,6 +452,26 @@ class DossierRaccordementController extends Controller
         return back()->with('success', 'Dossier marqué comme Dépassement Linéaire.');
     }
 
+    public function storeAbandon(Request $request)
+{
+    $request->validate([
+        'dossier_id' => 'required|exists:dossiers_raccordement,id',
+        'raison_abandon' => 'required|string|max:1000',
+    ]);
+
+    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+
+   
+
+    $dossier->update([
+        'statut' => \App\Enums\StatutDossier::ABANDON->value,
+        'description' => $request->raison_abandon,
+    ]);
+
+    return back()->with('success', 'Dossier marqué comme abandonné avec raison précisée.');
+}
+
+
     public function storeImplantationPoteau(Request $request)
     {
         $request->validate([

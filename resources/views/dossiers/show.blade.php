@@ -232,6 +232,7 @@
         @include('dossiers.partials.realise_modal')
         @include('dossiers.partials.depassement_lineaire_modal')
         @include('dossiers.partials.implantation_poteau_modal')
+        @include('dossiers.partials.abandon_modal')
 
     </div>
 

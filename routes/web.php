@@ -99,6 +99,8 @@ Route::post('/pbo_sature', [DossierRaccordementController::class,'storePboSature
 Route::post('/zone_depourvue', [DossierRaccordementController::class,'storeZoneDepourvue'])->name('dossiers.zone_depourvue');
 
 Route::post('/realise', [DossierRaccordementController::class,'storeRealise'])->name('dossiers.realise');
+Route::post('/abandon', [DossierRaccordementController::class, 'storeAbandon'])->name('dossiers.storeAbandon');
+
 
 
 Route::get('/dossiers/rapports-signes', [DossierRaccordementController::class, 'listRapportsSignes'])
@@ -185,6 +187,10 @@ Route::get('/rendezvous/manques', [DashboardController::class, 'rdvManques'])
     Route::get('/injoignables', [ClientController::class, 'injoignables'])->name('clients.injoignables');
     Route::get('/dossiers/depassement-lineaire', [ClientController::class, 'depassementLineaire'])
     ->name('clients.dossiers.depassement_lineaire');
+
+    Route::get('/dossiers/abandon', [ClientController::class, 'abandon'])
+    ->name('clients.dossiers.abandon');
+
 
 Route::get('/dossiers/implantation-poteau', [ClientController::class, 'implantationPoteau'])
     ->name('clients.dossiers.implantation_poteau');

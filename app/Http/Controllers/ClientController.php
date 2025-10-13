@@ -431,6 +431,26 @@ class ClientController extends Controller
         return view('clients.dossiers.implantation_poteau', compact('clients'));
     }
 
+    public function abandon(Request $request)
+{
+    $clients = Client::whereHas('dossiers', fn($q) =>
+        $q->where('statut', \App\Enums\StatutDossier::ABANDON->value)
+    )
+    ->when($request->filled('search'), function ($q) use ($request) {
+        $search = $request->input('search');
+        $q->where(function ($sub) use ($search) {
+            $sub->where('nom', 'like', "%$search%")
+                ->orWhere('prenom', 'like', "%$search%")
+                ->orWhere('numero_ligne', 'like', "%$search%")
+                ->orWhere('telephone', 'like', "%$search%");
+        });
+    })
+    ->paginate(10);
+
+    return view('clients.dossiers.abandon', compact('clients'));
+}
+
+
     public function deleteMultiple(Request $request)
     {
         $request->validate([

@@ -400,6 +400,7 @@
 
             @include('dossiers.partials.realise_modal')
             @include('dossiers.partials.implantation_poteau_modal')
+            @include('dossiers.partials.abandon_modal')
 
 
 
@@ -576,7 +577,14 @@
                     modal = new bootstrap.Modal(document.getElementById('implantationPoteauModal'));
                     modal.show();
                     this.value = this.dataset.oldValue; // garde l'ancien statut tant que pas validé
-                } else {
+                // ✅ Ajout du cas "abandon"
+            } else if (this.value === 'abandon') {
+    document.getElementById('abandonDossierId').value = dossierId;
+    modal = new bootstrap.Modal(document.getElementById('abandonModal'));
+    modal.show();
+    this.value = this.dataset.oldValue; // garde l'ancien statut visuellement
+}
+ else {
                     this.dataset.oldValue = this.value;
                 }
             });

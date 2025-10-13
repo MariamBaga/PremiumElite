@@ -16,6 +16,8 @@ enum StatutDossier: string
     case DEPASSEMENT_LINEAIRE = 'depassement_lineaire'; // ✅ nouveau statut
     case IMPLANTATION_POTEAU = 'implantation_poteau'; // ✅ nouveau statut
 
+    case ABANDON        = 'abandon'; // ✅ nouveau statut
+
     public static function labels(): array
     {
         return [
@@ -30,6 +32,7 @@ enum StatutDossier: string
             self::NOUVEAU_RENDEZ_VOUS->value => 'Nouveau rendez-vous',
             self::DEPASSEMENT_LINEAIRE->value => 'Dépassement linéaire', // ✅ label
             self::IMPLANTATION_POTEAU->value => 'Implantation poteau', // ✅ label
+            self::ABANDON->value        => 'Abandonné', // ✅ label
         ];
     }
 }

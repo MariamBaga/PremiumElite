@@ -416,6 +416,12 @@ return [
                     'route' => 'clients.dossiers.implantation_poteau',
                     'icon' => 'fas fa-thumbtack',
                 ],
+                [
+                    'text' => 'Abandonnés',
+                    'route' => 'clients.dossiers.abandon',
+                    'icon' => 'fas fa-user-times',
+                ],
+
             ],
         ],
 
