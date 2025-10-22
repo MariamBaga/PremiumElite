@@ -200,43 +200,52 @@ class DossierRaccordementController extends Controller
     }
 
     public function storeRapport(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        // ✅ Utilisation de mimetypes (insensible à la casse)
-        'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
-        'rapport_intervention' => 'required|string',
-        'port' => 'required|string|max:50',
-        'lineaire_m' => 'required|integer|min:0',
-        'type_cable' => 'required|string|max:100',
-    ], [
-        'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
-        'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
-    ]);
+    {
+        $request->validate(
+            [
+                'dossier_id' => 'required|exists:dossiers_raccordement,id',
+                // ✅ Utilisation de mimetypes (insensible à la casse)
+                'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
+                'rapport_intervention' => 'required|string',
+                'port' => 'required|string|max:50',
+                'lineaire_m' => 'required|integer|min:0',
+                'type_cable' => 'required|string|max:100',
+            ],
+            [
+                'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
+                'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+            ],
+        );
 
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-    // ✅ Upload du fichier (compatible JPG, PNG, PDF, etc.)
-    if ($request->hasFile('rapport_file')) {
-        $file = $request->file('rapport_file');
-        $extension = strtolower($file->getClientOriginalExtension()); // sécurisation
-        $filename = 'rapport_' . $dossier->id . '_' . time() . '.' . $extension;
-        $path = $file->storeAs('rapports', $filename, 'public');
-        $dossier->rapport_satisfaction = $path;
+        // ✅ Upload du fichier (compatible JPG, PNG, PDF, etc.)
+        if ($request->hasFile('rapport_file')) {
+            $file = $request->file('rapport_file');
+            $extension = strtolower($file->getClientOriginalExtension()); // sécurisation
+            $filename = 'rapport_' . $dossier->id . '_' . time() . '.' . $extension;
+            $destinationPath = public_path('rapportdesfichiers');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            $file->move($destinationPath, $filename);
+            $path = 'rapportdesfichiers/' . $filename;
+
+            $dossier->rapport_satisfaction = $path;
+        }
+
+        // Informations supplémentaires
+        $dossier->rapport_intervention = $request->rapport_intervention;
+        $dossier->port = $request->port;
+        $dossier->lineaire_m = $request->lineaire_m;
+        $dossier->type_cable = $request->type_cable;
+
+        // Mise à jour du statut
+        $dossier->statut = 'active';
+        $dossier->save();
+
+        return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
     }
-
-    // Informations supplémentaires
-    $dossier->rapport_intervention = $request->rapport_intervention;
-    $dossier->port = $request->port;
-    $dossier->lineaire_m = $request->lineaire_m;
-    $dossier->type_cable = $request->type_cable;
-
-    // Mise à jour du statut
-    $dossier->statut = 'active';
-    $dossier->save();
-
-    return redirect()->back()->with('success', 'Rapport enregistré et statut mis à jour.');
-}
 
     public function storeNouveauRdv(Request $request)
     {
@@ -282,7 +291,12 @@ class DossierRaccordementController extends Controller
         if ($request->hasFile('capture_file')) {
             $file = $request->file('capture_file');
             $filename = 'injoignable_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('captures', $filename, 'public');
+            $destinationPath = public_path('rapportdesfichiers');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            $file->move($destinationPath, $filename);
+            $path = 'rapportdesfichiers/' . $filename;
         }
 
         $dossier->update([
@@ -369,16 +383,19 @@ class DossierRaccordementController extends Controller
 
     public function storeRealise(Request $request)
     {
-        $request->validate([
-            'dossier_id' => 'required|exists:dossiers_raccordement,id',
-            // ✅ Validation insensible à la casse
-            'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
-            'rapport_intervention' => 'required|string',
-            'raison_non_activation' => 'required|string',
-        ], [
-            'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
-            'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
-        ]);
+        $request->validate(
+            [
+                'dossier_id' => 'required|exists:dossiers_raccordement,id',
+                // ✅ Validation insensible à la casse
+                'rapport_file' => 'required|mimetypes:image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain|max:5120',
+                'rapport_intervention' => 'required|string',
+                'raison_non_activation' => 'required|string',
+            ],
+            [
+                'rapport_file.mimetypes' => 'Le fichier doit être un PDF, Word, Texte ou une image (jpg, jpeg, png, gif).',
+                'rapport_file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+            ],
+        );
 
         $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
@@ -387,7 +404,13 @@ class DossierRaccordementController extends Controller
             $file = $request->file('rapport_file');
             $extension = strtolower($file->getClientOriginalExtension());
             $filename = 'rapport_realise_' . $dossier->id . '_' . time() . '.' . $extension;
-            $path = $file->storeAs('rapports', $filename, 'public');
+            $destinationPath = public_path('rapportdesfichiers');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            $file->move($destinationPath, $filename);
+            $path = 'rapportdesfichiers/' . $filename;
+
             $dossier->rapport_satisfaction = $path;
         }
 
@@ -399,7 +422,6 @@ class DossierRaccordementController extends Controller
 
         return back()->with('success', 'Dossier marqué comme réalisé avec rapport et raison de non activation.');
     }
-
 
     public function storeIndisponible(Request $request)
     {
@@ -416,7 +438,12 @@ class DossierRaccordementController extends Controller
         if ($request->hasFile('capture_file')) {
             $file = $request->file('capture_file');
             $filename = 'indisponible_' . $dossier->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('captures', $filename, 'public');
+            $destinationPath = public_path('rapportdesfichiers');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            $file->move($destinationPath, $filename);
+            $path = 'rapportdesfichiers/' . $filename;
         }
 
         $dossier->update([
@@ -453,24 +480,21 @@ class DossierRaccordementController extends Controller
     }
 
     public function storeAbandon(Request $request)
-{
-    $request->validate([
-        'dossier_id' => 'required|exists:dossiers_raccordement,id',
-        'raison_abandon' => 'required|string|max:1000',
-    ]);
+    {
+        $request->validate([
+            'dossier_id' => 'required|exists:dossiers_raccordement,id',
+            'raison_abandon' => 'required|string|max:1000',
+        ]);
 
-    $dossier = DossierRaccordement::findOrFail($request->dossier_id);
+        $dossier = DossierRaccordement::findOrFail($request->dossier_id);
 
-   
+        $dossier->update([
+            'statut' => \App\Enums\StatutDossier::ABANDON->value,
+            'description' => $request->raison_abandon,
+        ]);
 
-    $dossier->update([
-        'statut' => \App\Enums\StatutDossier::ABANDON->value,
-        'description' => $request->raison_abandon,
-    ]);
-
-    return back()->with('success', 'Dossier marqué comme abandonné avec raison précisée.');
-}
-
+        return back()->with('success', 'Dossier marqué comme abandonné avec raison précisée.');
+    }
 
     public function storeImplantationPoteau(Request $request)
     {
@@ -478,7 +502,7 @@ class DossierRaccordementController extends Controller
             'dossier_id' => 'required|exists:dossiers_raccordement,id',
             'gps_abonne' => 'required|string|max:255',
 
-            'gps_fat'    => 'required|string|max:255', // 🔹 nouveau champ obligatoire
+            'gps_fat' => 'required|string|max:255', // 🔹 nouveau champ obligatoire
             'date_rdv' => 'required|date|after_or_equal:today',
         ]);
 
@@ -586,33 +610,28 @@ class DossierRaccordementController extends Controller
         return back()->with('success', $data['assigned_team_id'] ? 'Équipe assignée au dossier.' : 'Équipe retirée du dossier.');
     }
 
-
-
     public function activerTous()
-{
-    $this->authorize('updateStatus', DossierRaccordement::class);
+    {
+        $this->authorize('updateStatus', DossierRaccordement::class);
 
-    // Récupère uniquement les dossiers EN_APPEL
-    $dossiers = DossierRaccordement::where('statut', 'en_appel')->get();
+        // Récupère uniquement les dossiers EN_APPEL
+        $dossiers = DossierRaccordement::where('statut', 'en_appel')->get();
 
-    foreach ($dossiers as $dossier) {
-        // Activation uniquement si le dossier est en appel
-        if ($dossier->statut === 'en_appel') {
-            $dossier->statut = 'active'; // ou StatutDossier::ACTIVE->value si tu utilises l'enum
-            $dossier->save();
+        foreach ($dossiers as $dossier) {
+            // Activation uniquement si le dossier est en appel
+            if ($dossier->statut === 'en_appel') {
+                $dossier->statut = 'active'; // ou StatutDossier::ACTIVE->value si tu utilises l'enum
+                $dossier->save();
 
-            // Synchronisation avec la corbeille d’équipe
-            if ($dossier->assigned_team_id) {
-                TeamDossier::updateOrCreate(
-                    ['team_id' => $dossier->assigned_team_id, 'dossier_id' => $dossier->id],
-                    ['etat' => 'en_cours', 'updated_by' => auth()->id()]
-                );
+                // Synchronisation avec la corbeille d’équipe
+                if ($dossier->assigned_team_id) {
+                    TeamDossier::updateOrCreate(['team_id' => $dossier->assigned_team_id, 'dossier_id' => $dossier->id], ['etat' => 'en_cours', 'updated_by' => auth()->id()]);
+                }
             }
         }
+
+        return back()->with('success', 'Tous les dossiers en appel ont été activés.');
+
+        // Retourne les dossiers avec rendez-vous pour aujourd'hui ou demain
     }
-
-    return back()->with('success', 'Tous les dossiers en appel ont été activés.');
-
-    // Retourne les dossiers avec rendez-vous pour aujourd'hui ou demain
-}
 }

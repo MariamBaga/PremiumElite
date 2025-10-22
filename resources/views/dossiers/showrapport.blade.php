@@ -16,7 +16,7 @@
                     {{ $dossier->client?->nom ?? ($dossier->client?->raison_sociale ?? '—') }}
                 </strong>
 
-                {{-- 🔹 Contact du client (téléphone ou email) --}}
+                {{-- 🔹 Contact du client --}}
                 @if ($dossier->client?->telephone || $dossier->client?->email)
                     <span class="ms-3">
                         📞 {{ $dossier->client?->telephone ?? '—' }}
@@ -26,7 +26,7 @@
                     </span>
                 @endif
 
-                {{-- Statut du dossier --}}
+                {{-- 🔹 Statut --}}
                 <span class="badge bg-info ms-3">
                     {{ strtoupper(str_replace('_', ' ', $dossier->statut?->value ?? '—')) }}
                 </span>
@@ -40,46 +40,45 @@
                     <dt class="col-sm-4">Description / Commentaire</dt>
                     <dd class="col-sm-8">{{ $dossier->description ?? '—' }}</dd>
 
-                    @if($dossier->raison_non_activation)
+                    @if ($dossier->raison_non_activation)
                         <dt class="col-sm-4">Raison non activation</dt>
                         <dd class="col-sm-8">{{ $dossier->raison_non_activation }}</dd>
                     @endif
                 </dl>
 
                 {{-- Rapport d'intervention --}}
-                @if($dossier->rapport_intervention)
+                @if ($dossier->rapport_intervention)
                     <p><strong>Rapport d'intervention :</strong> {{ $dossier->rapport_intervention }}</p>
                 @endif
 
                 {{-- Rapport signé --}}
-@if($dossier->rapport_satisfaction)
-    @php
-        $path = asset('storage/' . $dossier->rapport_satisfaction);
-        $extension = pathinfo($dossier->rapport_satisfaction, PATHINFO_EXTENSION);
-        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
-    @endphp
+                @if ($dossier->rapport_satisfaction)
+                    @php
+                        $rapportPath = basename($dossier->rapport_satisfaction);
+                        $extension = strtolower(pathinfo($rapportPath, PATHINFO_EXTENSION));
+                        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                        $fullPath = asset('rapportdesfichiers/' . $rapportPath);
+                    @endphp
 
-    <p><strong>Rapport signé :</strong></p>
+                    <p><strong>Rapport signé :</strong></p>
 
-    @if($isImage)
-        {{-- 🔹 Affichage direct de l’image --}}
-        <div class="mt-2 mb-3">
-            <img src="{{ $path }}"
-                 alt="Rapport signé"
-                 class="img-fluid rounded shadow-sm"
-                 style="max-width: 400px; border: 1px solid #ddd;">
-        </div>
-        <a href="{{ $path }}" target="_blank" class="btn btn-secondary btn-sm">
-            🔍 Voir en taille réelle
-        </a>
-    @else
-        {{-- 🔹 Lien pour les fichiers non image --}}
-        <a href="{{ $path }}" target="_blank" class="btn btn-primary btn-sm">
-            📄 Voir le fichier
-        </a>
-    @endif
-@endif
-
+                    @if ($isImage)
+                        {{-- 🔹 Affiche directement les images --}}
+                        <div class="mt-2 mb-3">
+                            <img src="{{ $fullPath }}" alt="Rapport signé"
+                                 class="img-fluid rounded shadow-sm"
+                                 style="max-width: 400px; border: 1px solid #ddd;">
+                        </div>
+                        <a href="{{ $fullPath }}" target="_blank" class="btn btn-secondary btn-sm">
+                            🔍 Voir en taille réelle
+                        </a>
+                    @else
+                        {{-- 🔹 Lien pour PDF / Word --}}
+                        <a href="{{ $fullPath }}" target="_blank" class="btn btn-primary btn-sm">
+                            📄 Voir le fichier
+                        </a>
+                    @endif
+                @endif
             </div>
         </div>
     @empty

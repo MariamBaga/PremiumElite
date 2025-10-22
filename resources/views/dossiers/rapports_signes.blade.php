@@ -16,7 +16,7 @@
                     {{ $dossier->client?->nom ?? ($dossier->client?->raison_sociale ?? '—') }}
                 </strong>
 
-                {{-- 🔹 Contact du client (téléphone ou email) --}}
+                {{-- 🔹 Contact du client --}}
                 @if ($dossier->client?->telephone || $dossier->client?->email)
                     <span class="ms-3">
                         📞 {{ $dossier->client?->telephone ?? '—' }}
@@ -30,42 +30,49 @@
                 <span class="badge bg-success ms-3">
                     {{ strtoupper(str_replace('_', ' ', $dossier->statut?->value ?? '—')) }}
                 </span>
-
             </div>
 
             <div class="card-body">
-                {{-- Rapport signé --}}
-                {{-- Rapport signé --}}
-                @if($dossier->rapport_satisfaction)
+                {{-- 🔹 Rapport signé --}}
+                @if ($dossier->rapport_satisfaction)
                     @php
-                        $path = asset('storage/' . $dossier->rapport_satisfaction);
-                        $extension = pathinfo($dossier->rapport_satisfaction, PATHINFO_EXTENSION);
-                        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif']);
+                        // Récupère uniquement le nom du fichier sans le chemin "rapports/"
+                        $rapportPath = basename($dossier->rapport_satisfaction);
+
+                        $extension = strtolower(pathinfo($rapportPath, PATHINFO_EXTENSION));
+
+                        // Vérifie si c’est une image
+                        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+
+                        // Nouveau dossier selon le type
+                        if ($isImage) {
+                            $fullPath = asset('captures/' . $rapportPath);
+                        } else {
+                            $fullPath = asset('rapportdesfichiers/' . $rapportPath);
+                        }
                     @endphp
 
                     <p><strong>Rapport signé :</strong></p>
 
-                    @if($isImage)
-                        {{-- 🔹 Affichage direct de l’image --}}
+                    @if ($isImage)
+                        {{-- 🔹 Affiche directement les images --}}
                         <div class="mt-2 mb-3">
-                            <img src="{{ $path }}"
-                                 alt="Rapport signé"
+                            <img src="{{ $fullPath }}" alt="Rapport signé"
                                  class="img-fluid rounded shadow-sm"
                                  style="max-width: 400px; border: 1px solid #ddd;">
                         </div>
-                        <a href="{{ $path }}" target="_blank" class="btn btn-secondary btn-sm">
+                        <a href="{{ $fullPath }}" target="_blank" class="btn btn-secondary btn-sm">
                             🔍 Voir en taille réelle
                         </a>
                     @else
-                        {{-- 🔹 Lien pour fichiers non image --}}
-                        <a href="{{ $path }}" target="_blank" class="btn btn-primary btn-sm">
-                            📄 Voir le fichier
+                        {{-- 🔹 Lien pour fichiers PDF/Word --}}
+                        <a href="{{ $fullPath }}" target="_blank" class="btn btn-primary btn-sm">
+                            📄 Voir le rapport
                         </a>
                     @endif
                 @endif
 
-
-                {{-- Rapport intervention (texte) --}}
+                {{-- 🔹 Rapport intervention --}}
                 @if ($dossier->rapport_intervention)
                     <p><strong>Rapport Intervention :</strong> {{ $dossier->rapport_intervention }}</p>
                 @endif
