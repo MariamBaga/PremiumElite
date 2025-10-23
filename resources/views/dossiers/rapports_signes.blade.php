@@ -56,7 +56,7 @@
                         <div class="mt-2 mb-3">
                             <img src="{{ $fullPath }}" alt="Rapport signé"
                                  class="img-fluid rounded shadow-sm"
-                                 style="max-width: 400px; border: 1px solid #ddd;">
+                                 style="max-width: 400px; border: 1px solid #ddd;" loading="lazy">
                         </div>
                         <a href="{{ $fullPath }}" target="_blank" class="btn btn-secondary btn-sm">
                             🔍 Voir en taille réelle
