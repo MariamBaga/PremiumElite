@@ -45,11 +45,8 @@
                         $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
                         // Nouveau dossier selon le type
-                        if ($isImage) {
-                            $fullPath = asset('captures/' . $rapportPath);
-                        } else {
-                            $fullPath = asset('rapportdesfichiers/' . $rapportPath);
-                        }
+                        $fullPath = asset('rapportdesfichiers/' . $rapportPath);
+
                     @endphp
 
                     <p><strong>Rapport signé :</strong></p>
