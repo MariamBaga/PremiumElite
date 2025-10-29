@@ -463,7 +463,7 @@ return [
         ],
 
            [
-            'text' => ' Rapports activité Clients',
+            'text' => ' Download Dossiers Actifs',
             'route' => 'export.view.clients',
             'icon' => 'fas fa-user-check', // clients actifs
             // optionnel si tu utilises Spatie Permissions
