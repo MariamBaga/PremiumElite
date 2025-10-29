@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+  use App\Http\Controllers\ExportDossierController;
 // Controllers
 use App\Http\Controllers\{
     DashboardController,
@@ -321,6 +321,28 @@ Route::middleware(['auth','verified','role:superadmin|admin'])
             ->names('admin.users');
     });
 
+
+
+    Route::middleware(['auth'])->group(function () {
+
+
+          /**
+     * 📄 VUES (affichage des pages d'export)
+     */
+    Route::get('/export/clients-actives', [ExportDossierController::class, 'viewClientsActives'])
+    ->name('export.view.clients');
+
+Route::get('/export/equipe-statuts', [ExportDossierController::class, 'viewEquipeStatut'])
+    ->name('export.view.team');
+
+        // Téléchargement des dossiers activés
+        Route::get('/export/clients-actives/pdf', [ExportDossierController::class, 'exportClientsActivesPdf'])->name('export.clients.pdf');
+        Route::get('/export/clients-actives/excel', [ExportDossierController::class, 'exportClientsActivesExcel'])->name('export.clients.excel');
+
+        // Téléchargement des dossiers traités par équipe selon le statut
+        Route::get('/export/equipe/{teamId}/statut/{statut}/pdf', [ExportDossierController::class, 'exportByTeamAndStatutPdf'])->name('export.team.pdf');
+        Route::get('/export/equipe/{teamId}/statut/{statut}/excel', [ExportDossierController::class, 'exportByTeamAndStatutExcel'])->name('export.team.excel');
+    });
 
 
 

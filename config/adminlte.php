@@ -462,6 +462,21 @@ return [
             // optionnel si tu utilises Spatie Permissions
         ],
 
+           [
+            'text' => ' Rapports activité Clients',
+            'route' => 'export.view.clients',
+            'icon' => 'fas fa-user-check', // clients actifs
+            // optionnel si tu utilises Spatie Permissions
+        ],
+
+           [
+            'text' => ' Rapports team',
+            'route' => 'export.view.team',
+            'icon' => 'fas fa-users-cog', // gestion d'équipe
+            // optionnel si tu utilises Spatie Permissions
+        ],
+
+
         [
             'text' => 'Rapports Signés',
             'route' => 'dossiers.rapports-signes',
