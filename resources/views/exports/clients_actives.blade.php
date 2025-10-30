@@ -44,4 +44,8 @@
         @endforeach
     </tbody>
 </table>
+
+<div class="mt-3">
+            {{ $dossiers->links('pagination::bootstrap-5') }}
+        </div>
 @stop

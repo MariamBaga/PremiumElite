@@ -18,10 +18,11 @@ class ExportDossierController extends Controller
     {
         $dossiers = DossierRaccordement::with('client')
             ->where('statut', 'active')
-            ->get();
+            ->paginate(10); // ✅ Pagination
 
         return view('exports.clients_actives', compact('dossiers'));
     }
+
 
     /**
      * 🟦 Vue : Dossiers par équipe et statut
@@ -38,7 +39,7 @@ class ExportDossierController extends Controller
         $dossiers = DossierRaccordement::with('client')
             ->when($teamId, fn($q) => $q->where('assigned_team_id', $teamId))
             ->when($statut, fn($q) => $q->where('statut', $statut))
-            ->get();
+            ->paginate(10); // ✅ Pagination
 
         // ✅ Passer aussi la liste des équipes à la vue
         return view('exports.equipe_statut', compact('dossiers', 'teamId', 'statut', 'equipes'));

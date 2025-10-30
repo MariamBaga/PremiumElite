@@ -106,6 +106,10 @@
             </tbody>
         </table>
     </div>
+
+    <div class="mt-3">
+            {{ $dossiers->links('pagination::bootstrap-5') }}
+        </div>
 </div>
 @endif
 @stop
