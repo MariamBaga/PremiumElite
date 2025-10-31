@@ -236,8 +236,23 @@ class ClientController extends Controller
 
     public function active(Request $request)
     {
+
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'active');
+        })
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
         })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
@@ -255,8 +270,24 @@ class ClientController extends Controller
 
     public function realise(Request $request)
     {
-        $clients = Client::whereHas('dossiers', function ($q) {
+
+
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+   $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'realise');
+        })
+
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
         })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
@@ -274,8 +305,22 @@ class ClientController extends Controller
 
     public function nouveauRdv(Request $request)
     {
-        $clients = Client::whereHas('dossiers', function ($q) {
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
+       $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'nouveau_rendez_vous');
+        })
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
         })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
@@ -293,8 +338,23 @@ class ClientController extends Controller
 
     public function enAppel(Request $request)
     {
-        $clients = Client::whereHas('dossiers', function ($q) {
+
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
+          $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'en_appel');
+        })
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
         })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
@@ -312,8 +372,23 @@ class ClientController extends Controller
 
     public function injoignables(Request $request)
     {
+
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', function ($q) {
             $q->where('statut', 'injoignable');
+        })
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
         })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
@@ -331,7 +406,21 @@ class ClientController extends Controller
 
     public function indisponible(Request $request)
     {
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::INDISPONIBLE->value))
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -348,7 +437,22 @@ class ClientController extends Controller
 
     public function pboSature(Request $request)
     {
-        $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
+     $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::PBO_SATURE->value))
+
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -365,7 +469,22 @@ class ClientController extends Controller
 
     public function zoneDepourvue(Request $request)
     {
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ZONE_DEPOURVUE->value))
+
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -382,7 +501,21 @@ class ClientController extends Controller
 
     public function enEquipe(Request $request)
     {
+
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::EN_EQUIPE->value))
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -399,7 +532,20 @@ class ClientController extends Controller
 
     public function depassementLineaire(Request $request)
     {
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::DEPASSEMENT_LINEAIRE->value))
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -416,7 +562,20 @@ class ClientController extends Controller
 
     public function implantationPoteau(Request $request)
     {
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::IMPLANTATION_POTEAU->value))
+         // ➕ restriction chef d’équipe
+         ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+            return !empty($teamIds)
+                ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+                : $qry->whereRaw('0 = 1');
+        })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function ($sub) use ($search) {
@@ -433,9 +592,20 @@ class ClientController extends Controller
 
     public function abandon(Request $request)
 {
-    $clients = Client::whereHas('dossiers', fn($q) =>
-        $q->where('statut', \App\Enums\StatutDossier::ABANDON->value)
-    )
+    $user = auth()->user();
+    $teamIds = [];
+
+    if ($user->hasRole('chef_equipe')) {
+        $teamIds = \App\Models\Team::where('lead_id', $user->id)->pluck('id')->toArray();
+    }
+
+    $clients = Client::whereHas('dossiers', fn($q) => $q->where('statut', StatutDossier::ABANDON->value))
+     // ➕ restriction chef d’équipe
+     ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+        return !empty($teamIds)
+            ? $qry->whereHas('dossiers', fn($dq) => $dq->whereIn('assigned_team_id', $teamIds))
+            : $qry->whereRaw('0 = 1');
+    })
     ->when($request->filled('search'), function ($q) use ($request) {
         $search = $request->input('search');
         $q->where(function ($sub) use ($search) {

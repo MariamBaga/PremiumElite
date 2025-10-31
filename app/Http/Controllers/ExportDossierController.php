@@ -16,9 +16,21 @@ class ExportDossierController extends Controller
 
     public function viewClientsActives()
     {
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $dossiers = DossierRaccordement::with('client')
             ->where('statut', 'active')
-            ->paginate(10); // ✅ Pagination
+            ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+                return !empty($teamIds)
+                    ? $qry->whereIn('assigned_team_id', $teamIds)
+                    : $qry->whereRaw('0 = 1');
+            })
+            ->paginate(10);
 
         return view('exports.clients_actives', compact('dossiers'));
     }
@@ -29,21 +41,31 @@ class ExportDossierController extends Controller
      */
     public function viewEquipeStatut(Request $request)
     {
+        $user = auth()->user();
+        $teamIds = [];
+
+        if ($user->hasRole('chef_equipe')) {
+            $teamIds = Team::where('lead_id', $user->id)->pluck('id')->toArray();
+        }
+
         $teamId = $request->team_id ?? null;
         $statut = $request->statut ?? null;
 
-        // ✅ Récupérer toutes les équipes depuis la base
-        $equipes = \App\Models\Team::orderBy('name')->get();
+        $equipes = Team::orderBy('name')->get();
 
-        // ✅ Charger les dossiers filtrés (si filtres appliqués)
         $dossiers = DossierRaccordement::with('client')
             ->when($teamId, fn($q) => $q->where('assigned_team_id', $teamId))
             ->when($statut, fn($q) => $q->where('statut', $statut))
-            ->paginate(10); // ✅ Pagination
+            ->when($user->hasRole('chef_equipe'), function ($qry) use ($teamIds) {
+                return !empty($teamIds)
+                    ? $qry->whereIn('assigned_team_id', $teamIds)
+                    : $qry->whereRaw('0 = 1');
+            })
+            ->paginate(10);
 
-        // ✅ Passer aussi la liste des équipes à la vue
         return view('exports.equipe_statut', compact('dossiers', 'teamId', 'statut', 'equipes'));
     }
+
 
     // 🔹 Export PDF des clients activés
     public function exportClientsActivesPdf()
