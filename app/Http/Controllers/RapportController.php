@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\DossierRaccordement;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RapportActiviteExport;
+use App\Models\Team; // Ajouter cette importation
 
 class RapportController extends Controller
 {
     public function index()
     {
-        return view('rapports.index');
+        $teams = Team::all(); // Récupérer toutes les équipes
+        return view('rapports.index', compact('teams'));
     }
 
     public function export(Request $request)
@@ -21,6 +23,7 @@ class RapportController extends Controller
             'date_to'   => 'required|date|after_or_equal:date_from',
             'statut'    => 'nullable|array',
             'statut.*'  => 'string',
+            'team_id'   => 'nullable|exists:teams,id',
             'format'    => 'required|in:excel,csv,pdf',
         ]);
 
@@ -43,5 +46,4 @@ class RapportController extends Controller
                 return $pdf->download($fileName.'.pdf');
         }
     }
-
 }

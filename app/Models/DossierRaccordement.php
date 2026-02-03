@@ -84,7 +84,7 @@ class DossierRaccordement extends Model
 
     public function isModifiable(): bool
     {
-        return !in_array($this->statut?->value, ['active', 'realise']);
+        return !in_array($this->statut?->value, ['active']);
     }
 
 

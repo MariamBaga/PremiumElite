@@ -21,6 +21,15 @@
                     <label>Date fin</label>
                     <input type="date" name="date_to" class="form-control" required>
                 </div>
+                <div class="col-md-4">
+                    <label>Équipe</label>
+                    <select name="team_id" class="form-control">
+                        <option value="">Toutes les équipes</option>
+                        @foreach(\App\Models\Team::all() as $team)
+                            <option value="{{ $team->id }}">{{ $team->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             {{-- Cases à cocher pour les statuts --}}

@@ -6,6 +6,7 @@
         <th>Téléphone</th>
         <th>Statut</th>
         <th>Date RDV</th>
+        <th>Équipe</th> <!-- Colonne Équipe ajoutée -->
         <th>Port utilisé</th>
         <th>Linéaire câble tiré (m)</th>
         <th>Type de câble</th>
@@ -30,6 +31,7 @@
             <td>{{ $dossier->client->telephone ?? '-' }}</td>
             <td>{{ \Illuminate\Support\Str::headline($dossier->statut?->value ?? $dossier->statut) }}</td>
             <td>{{ optional($dossier->date_planifiee)->format('d/m/Y H:i') }}</td>
+            <td>{{ $dossier->team?->name ?? '-' }}</td> <!-- Affichage du nom de l'équipe -->
             <td>{{ $dossier->port ?? '-' }}</td>
             <td>{{ $dossier->lineaire_m ?? '-' }}</td>
             <td>{{ $dossier->type_cable ?? '-' }}</td>
@@ -53,5 +55,4 @@
         </tr>
     @endforeach
 </tbody>
-
 </table>
