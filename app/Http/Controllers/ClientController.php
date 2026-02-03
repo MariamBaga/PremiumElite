@@ -18,6 +18,10 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
+
+
+         set_time_limit(180); // 3 minutes au lieu de 30s par défaut
+    ini_set('memory_limit', '512M'); // 512 Mo au lieu de 128M
         $user = auth()->user();
 
         // Si l'utilisateur est chef d'équipe, récupérer tous les IDs d'équipes dont il est lead
